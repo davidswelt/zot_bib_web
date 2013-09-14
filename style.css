@@ -1,7 +1,27 @@
+div.bib-item {
+font-family:Arial,sans-serif;
+font-size:80%;
+margin-top:20px;
+}
 
+div.bib {
+font-family:Menlo,Courier,monospaced;
+color:brown;
+padding-left:30px;
+padding-bottom:10px;
+}
 
-div.bib-item {font-family: Arial,sans-serif;  font-size:80%; margin-top:20px;}
-div.bib {font-family:Menlo,Courier,monospaced; color:blue; font-size:80%; padding-left:30px; padding-bottom:10px;}
-span.blink {font-size:80%;}
-span.blink a:link, span.blink a:visited {color:blue;}
+div.abstract {
+color:black;
+padding-left:30px;
+padding-bottom:10px;
+}
 
+.doctitle {
+font-weight:700;
+}
+
+a.doctitle:link,a.doctitle:visited,a.doctitle,a.doctitle:hover,a.doctitle.active {
+color:blue;
+font-weight:700;
+}
