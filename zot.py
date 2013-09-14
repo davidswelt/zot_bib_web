@@ -14,7 +14,7 @@ library_type ='group'  # or 'group' # group or userm
 api_key = '3JsK6ixlKIK1YFgRklj021S1'  # secret key (from Zotero)
 
 toplevelfilter = 'MGID93AS'   # collection where to start retrieving
-catchallcollection = '4KATF6MA'  # include "Miscellaneous" category at end - all items not mentioend anywhere else
+catchallcollection = '4KATF6MA'  # include "Miscellaneous" category at end containing all items not mentioend anywhere else
 
 
 
@@ -28,11 +28,19 @@ order_by = 'date'   # order in each category: e.g., 'dateAdded', 'dateModified',
 
 sort_order = 'desc'   # "desc" or "asc"
 
-write_full_html_header = True   # False to not output HTML headers.  In this case, expect a file in UTF-8 encoding.
+write_full_html_header = False   # False to not output HTML headers.  In this case, expect a file in UTF-8 encoding.
 
 outputfile = 'zotero-bib.html'  # relative or absolute path name of output file
 category_outputfile_prefix = 'zotero'  # relative or absolute path prefix
 
+
+
+####  Program arguments
+
+# zot.py
+# zot.py TOPLEVELFILTER
+# zot.py TOPLEVELFILTER CATCHALLCOLLECTION
+# zot.py TOPLEVELFILTER CATCHALLCOLLECTION OUTPUTFILE
 
 
 
@@ -59,22 +67,16 @@ import sys
 
 from pyzotero import zotero
 
-
-script_html = """
-<style type='text/css'>
+script_html = """<style type="text/css">
 .bib {display:none;}
 .blink {display:none;}
 </style>
 <script type="text/javascript">
-
-function show_parent(elem) {
-
-for (var i = 0; i < elem.parentNode.childNodes.length; ++i) {
-   elem.parentNode.childNodes[i].style.display = 'block';
-}
-
-}
-
+function show(elem) {
+  var elems = elem.parentNode.parentNode.parentNode.getElementsByTagName('*'), i;
+    for (i in elems) {
+        if((' ' + elems[i].className + ' ').indexOf(' ' + 'bib' + ' ') > -1) 
+           { elems[i].style.display = 'block';}}}
 function changeCSS() {
 	if (!document.styleSheets) return;
 	var theRules = new Array();
@@ -84,13 +86,8 @@ function changeCSS() {
 	else if (ss.rules)
 		theRules = ss.rules
 	else return;
-	theRules[theRules.length-1].style.display = 'inline';
-}
-
-changeCSS();
-
-    </script>
-"""
+	theRules[theRules.length-1].style.display = 'inline';}
+changeCSS();</script>"""
 
 if write_full_html_header:
     html_header = u'<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN"><html><head><meta charset="UTF-8"><title>Bibliography</title>'+script_html+u'</head><body>'
@@ -144,7 +141,7 @@ def write_some_html (body, outfile, title=None):
     
 def make_html (bibitems, htmlitems, items, title, exclude={}):
     
-    string = '<h3 class="collectiontitle">'+title+"</h3>\n\n"
+    string = '<h3 class="collectiontitle">'+title+"</h3>\n"
 
     for bibitem,htmlitem,item in zip(bibitems,htmlitems,items):
         if not exclude.has_key(item[u'id']):
@@ -158,16 +155,19 @@ def make_html (bibitems, htmlitems, items, title, exclude={}):
                     u = item[u'url']
 
                 if u:
-                    new = htmlitem.replace(t, u"<a class=\"doclink\" href=\"%s\">%s</a>"%(u,t))
+                    new = htmlitem.replace(t, u"<a class=\"doctitle\" href=\"%s\">%s</a>"%(u,t))
                     if new == htmlitem:
                         # replacement not successful
-                        htmlitem += u"<span class=\"blink\"><a class=\"doclink\" href=\"%s\">PDF</a></span>"%u
+                        htmlitem += u"<span class=\"blink\"><a class=\"doctitle\" href=\"%s\">PDF</a></span>"%u
                     else:
-                        htmlitem = new    
+                        htmlitem = new
+                else:
+                    htmlitem = htmlitem.replace(t, u"<span class=\"doctitle\">%s</span>"%(t))
+                    
                 if bibitem:
-                    htmlitem += u"<span class=\"blink\"><a href=\"javascript:show_parent(this);\" onclick=\"show_parent(this);\">bib</a><div class=\"bib\">%s</div></span>"%(bibitem)
+                    htmlitem += u"<span class=\"blink\"><a href=\"javascript:show(this);\" onclick=\"show(this);\">bib</a><div class=\"bib\">%s</div></span>"%(bibitem)
 
-                string += "<div class=\"bib-item\">" + htmlitem + "</div>\n\n"
+                string += "<div class=\"bib-item\">" + htmlitem + "</div>\n"
 
 
             #        print item[u'title']
@@ -175,6 +175,10 @@ def make_html (bibitems, htmlitems, items, title, exclude={}):
             #print item
             #print('Item Type: %s | Key: %s') % (item['itemType'], item['key'])
 
+    # Wordpress likes to insert <P>, which is not a good idea here.
+    string = string.replace("\n\n","\n")
+    string = string.replace("\n\n","\n")
+    
     return string
 
 
@@ -183,8 +187,18 @@ def make_html (bibitems, htmlitems, items, title, exclude={}):
 zot = zotero.Zotero(library_id, library_type, api_key)
 
 if len(sys.argv)>1:
-    toplevelfilter =sys.argv[1]
-
+    if not sys.argv[1] == "None":
+        toplevelfilter = sys.argv[1]
+if len(sys.argv)>2:
+    if not sys.argv[2] == "None":
+        catchallcollection =sys.argv[2]
+if len(sys.argv)>3:
+    if not sys.argv[3] == "None":
+        outputfile =sys.argv[3]
+if len(sys.argv)>4:
+    if sys.argv[4] == "--div":
+        write_full_html_header = False
+        
 
     
 collection_ids = {}
@@ -273,6 +287,3 @@ for collection_name in sortedkeys:
 
 write_some_html(fullhtml, outputfile)
 
-
-    
-# [{u'collectionVersion': 108, u'updated': 'Thu, 12 Sep 2013 14:38:14 EST', u'collectionKey': u'7SR3CBEH', u'name': u'Other', u'parent': u'MGID93AS', u'etag': '0928cd904548f0ba5ab00b719a517660', u'key': u'7SR3CBEH', u'group_id': u'160464'}, {u'collectionVersion': 108, u'updated': 'Thu, 12 Sep 2013 14:38:31 EST', u'collectionKey': u'GJW55P4X', u'name': u'David', u'parent': False, u'etag': 'f56e0d7d3588029226c25eede18321c5', u'key': u'GJW55P4X', u'group_id': u'160464'}, {u'collectionVersion': 108, u'updated': 'Thu, 12 Sep 2013 14:38:37 EST', u'collectionKey': u'MIR96Q4W', u'name': u'Frank', u'parent': False, u'etag': '50b91a48abe1186eecfb9aac285a26d1', u'key': u'MIR96Q4W', u'group_id': u'160464'}, {u'collectionVersion': 108, u'updated': 'Thu, 12 Sep 2013 14:38:33 EST', u'collectionKey': u'D3K3EDFS', u'name': u'Martin', u'parent': False, u'etag': '5d9eecd133dfb2d04f024fefc15be1a8', u'key': u'D3K3EDFS', u'group_id': u'160464'}, {u'collectionVersion': 102, u'updated': 'Wed, 11 Sep 2013 21:27:33 EST', u'collectionKey': u'CXXK8XEU', u'name': u'Social Cognition', u'parent': u'MGID93AS', u'etag': '47eba66a923d91c3405f989dc0ec20db', u'key': u'CXXK8XEU', u'group_id': u'160464'}, {u'collectionVersion': 107, u'updated': 'Thu, 12 Sep 2013 14:37:35 EST', u'collectionKey': u'9WF9BDUW', u'name': u'General', u'parent': u'DTDTV2EP', u'etag': '720740d7f5774845a85786af973c3f51', u'key': u'9WF9BDUW', u'group_id': u'160464'}, {u'collectionVersion': 94, u'updated': 'Wed, 11 Sep 2013 21:19:27 EST', u'collectionKey': u'VKCEE7SG', u'name': u'Soar', u'parent': u'DTDTV2EP', u'etag': 'ca6dce702d760a3ac1374b2bf9dcbe33', u'key': u'VKCEE7SG', u'group_id': u'160464'}, {u'collectionVersion': 94, u'updated': 'Wed, 11 Sep 2013 21:19:37 EST', u'collectionKey': u'MWXM72N2', u'name': u'ACT-R', u'parent': u'DTDTV2EP', u'etag': '1505496b75d52f76db49098fd4aef0f7', u'key': u'MWXM72N2', u'group_id': u'160464'}, {u'collectionVersion': 108, u'updated': 'Thu, 12 Sep 2013 14:37:59 EST', u'collectionKey': u'55G4P6RA', u'name': u'Human-Computer Interaction', u'parent': u'MGID93AS', u'etag': 'bb3d409d788a632010ff55d6e6347ed7', u'key': u'55G4P6RA', u'group_id': u'160464'}, {u'collectionVersion': 77, u'updated': 'Wed, 11 Sep 2013 20:19:00 EST', u'collectionKey': u'DTDTV2EP', u'name': u'Cognitive Architecture', u'parent': u'MGID93AS', u'etag': '677e35466e7dce02920f1d8e13a5204c', u'key': u'DTDTV2EP', u'group_id': u'160464'}, {u'collectionVersion': 104, u'updated': 'Wed, 11 Sep 2013 21:29:32 EST', u'collectionKey': u'4KATF6MA', u'name': u'All', u'parent': u'MGID93AS', u'etag': '4e8749634935f16969b8eff0bd5bc4f1', u'key': u'4KATF6MA', u'group_id': u'160464'}, {u'collectionVersion': 93, u'updated': 'Wed, 11 Sep 2013 21:18:17 EST', u'collectionKey': u'6Q5U5REX', u'name': u'Language', u'parent': u'MGID93AS', u'etag': '6fae6f1dd5442223830e4c769de0de5a', u'key': u'6Q5U5REX', u'group_id': u'160464'}, {u'collectionVersion': 113, u'updated': 'Fri, 13 Sep 2013 11:03:57 EST', u'collectionKey': u'XV6KXZ93', u'name': u'Decision-Making', u'parent': u'55G4P6RA', u'etag': 'b3edea36e0f6e945ae7129d0ae4720d6', u'key': u'XV6KXZ93', u'group_id': u'160464'}, {u'collectionVersion': 106, u'updated': 'Thu, 12 Sep 2013 14:36:46 EST', u'collectionKey': u'XQMGSSEH', u'name': u'Physiology', u'parent': u'MGID93AS', u'etag': '059b3532936beff8612121ca2d5fc7f9', u'key': u'XQMGSSEH', u'group_id': u'160464'}, {u'collectionVersion': 106, u'updated': 'Thu, 12 Sep 2013 14:36:07 EST', u'collectionKey': u'MGID93AS', u'name': u'website', u'parent': False, u'etag': 'e6f8e8dece3076fe53eb7fbac0a879ec', u'key': u'MGID93AS', u'group_id': u'160464'}]
