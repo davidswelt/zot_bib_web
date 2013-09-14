@@ -5,9 +5,22 @@
 # License: GNU General Public License version 3 or higher
 
 
+# This will retrieve a set of collections and format an interactive bibliography in HTML5.
+# The bibliography contains BibTeX records and abstracts that can be revealed upon clicking.
+# The output is ready to be included in other websites (there are options), and it can be 
+# easily styles using CSS (see style.css).
+
+# Bibliographic style can be chosen (APA) is default.
+
+####  Program arguments
+
+# zot.py
+# zot.py TOPLEVELFILTER
+# zot.py TOPLEVELFILTER CATCHALLCOLLECTION
+# zot.py TOPLEVELFILTER CATCHALLCOLLECTION OUTPUTFILE
 
 
-# You must configure the following items
+#### You must configure the following items
 
 library_id = '160464' # your group or user ID (e.g., six numeric digits)
 library_type ='group'  # or 'group' # group or userm
@@ -35,14 +48,6 @@ category_outputfile_prefix = 'zotero'  # relative or absolute path prefix
 
 
 
-####  Program arguments
-
-# zot.py
-# zot.py TOPLEVELFILTER
-# zot.py TOPLEVELFILTER CATCHALLCOLLECTION
-# zot.py TOPLEVELFILTER CATCHALLCOLLECTION OUTPUTFILE
-
-
 
 
 
@@ -68,7 +73,7 @@ import sys
 from texconv import tex2unicode
 import re
 
-script_html = """<style type="text/css">
+script_html = """<style type="text/css" scoped>
 .bibshowhide {display:none;}
 .abstract {display:none;}
 .blink {margin:0;margin-right:15px;padding:0;display:none;}
@@ -113,12 +118,8 @@ def write_bib (items, outfile):
         
     file = codecs.open(outfile, "w", "utf-8")
 
-    # print items
     for item in items:
-        print item
         file.write(item)
-        #print item
-        #print('Item Type: %s | Key: %s') % (item['itemType'], item['key'])
 
     file.close()
 
@@ -197,13 +198,6 @@ def make_html (bibitems, htmlitems, items, exclude={}):
                     
                 string += "<div class=\"bib-item\">" + htmlitem + "</div>"
 
-
-            #        print item[u'title']
-            #        file.write(item)
-            #print item
-            #print('Item Type: %s | Key: %s') % (item['itemType'], item['key'])
-
-    
     return cleanup_lines(string)
 
 
@@ -251,10 +245,10 @@ if lastsize>1:  # has sub-collections?
     for n,k in collection_ids.items():
         if k == toplevelfilter:
             del collection_ids[n]
-            print "(Top-level collection will be ignored.)"
+            print("(Top-level collection will be ignored.)")
             break
     
-print "%s collections: "%lastsize
+print("%s collections: "%lastsize)
 
 sortedkeys = collection_ids.keys()
 sortedkeys.sort()
@@ -280,7 +274,7 @@ def compile_data(collection_id, collection_name, exclude={}):
     global item_ids
     global bib_style
 
-    print collection_name + "..."
+    print(collection_name + "...")
     
     b = retrieve_bib(collection_id,'bibtex', '')
     h = retrieve_bib(collection_id,'bib', bib_style)
@@ -290,7 +284,7 @@ def compile_data(collection_id, collection_name, exclude={}):
         for i in a:
             key = i[u'id']
             if item_ids.has_key(key):
-                print "warning - item %s included additionally in collection %s"%(key, collection_name)
+                print("warning - item %s included additionally in collection %s"%(key, collection_name))
             item_ids[key] = True
     
     
