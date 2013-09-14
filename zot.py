@@ -61,22 +61,24 @@ category_outputfile_prefix = 'zotero'  # relative or absolute path prefix
 
 #############################################################################
 
-import codecs
-import sys
-
-
 from pyzotero import zotero
 
+import codecs
+import sys
+from texconv import tex2unicode
+import re
+
 script_html = """<style type="text/css">
-.bib {display:none;}
-.blink {display:none;}
+.bibshowhide {display:none;}
+.abstract {display:none;}
+.blink {margin:0;margin-right:15px;padding:0;display:none;}
 </style>
 <script type="text/javascript">
 function show(elem) {
-  var elems = elem.parentNode.parentNode.parentNode.getElementsByTagName('*'), i;
+  var elems = elem.parentNode.getElementsByTagName('*'), i;
     for (i in elems) {
-        if((' ' + elems[i].className + ' ').indexOf(' ' + 'bib' + ' ') > -1) 
-           { elems[i].style.display = 'block';}}}
+        if((' ' + elems[i].className + ' ').indexOf(' ' + 'bibshowhide' + ' ') > -1) 
+           { if (elems[i].style.display == 'block') {elems[i].style.display = 'none';} else {elems[i].style.display = 'block';}}}}
 function changeCSS() {
 	if (!document.styleSheets) return;
 	var theRules = new Array();
@@ -86,7 +88,8 @@ function changeCSS() {
 	else if (ss.rules)
 		theRules = ss.rules
 	else return;
-	theRules[theRules.length-1].style.display = 'inline';}
+	theRules[theRules.length-2].style.display = 'inline';
+    theRules[theRules.length-1].style.display = 'inline';}
 changeCSS();</script>"""
 
 if write_full_html_header:
@@ -130,6 +133,20 @@ def retrieve_atom (collection):
     return items
 
 
+def format_bib(bib):
+    return bib.replace("},","},\n")
+
+def extract_abstract(bib):
+    m = re.match(r'(.*)abstract\s*=\s*{?(.*?)}\s*(,|})(.*)', bib, re.DOTALL|re.IGNORECASE)
+    if m:
+        a = m.group(2)
+        b = m.group(1)+m.group(4)
+        a = a.replace("{","")
+        a = a.replace("}","")
+        a = a.replace("\?&", "&amp;")
+        return tex2unicode(a),b
+    return None,bib
+
 def write_some_html (body, outfile, title=None):
     file = codecs.open(outfile, "w", "utf-8")
     file.write(html_header)
@@ -138,11 +155,15 @@ def write_some_html (body, outfile, title=None):
     file.write(body)
     file.write(html_footer)
     file.close()
-    
-def make_html (bibitems, htmlitems, items, title, exclude={}):
-    
-    string = '<h3 class="collectiontitle">'+title+"</h3>\n"
 
+def cleanup_lines (string):
+    "Remove double line feeds to protect from <P> insertion in Wordpress."
+    # Wordpress likes to insert <P>, which is not a good idea here.
+    return re.sub(r'\n\s*\n', '\n', string, flags=re.DOTALL)
+    
+def make_html (bibitems, htmlitems, items, exclude={}):
+
+    string = ""
     for bibitem,htmlitem,item in zip(bibitems,htmlitems,items):
         if not exclude.has_key(item[u'id']):
             if item.has_key(u'title'):
@@ -158,16 +179,23 @@ def make_html (bibitems, htmlitems, items, title, exclude={}):
                     new = htmlitem.replace(t, u"<a class=\"doctitle\" href=\"%s\">%s</a>"%(u,t))
                     if new == htmlitem:
                         # replacement not successful
-                        htmlitem += u"<span class=\"blink\"><a class=\"doctitle\" href=\"%s\">PDF</a></span>"%u
+                        htmlitem += u"<div class=\"blink\"><a class=\"doctitle\" href=\"%s\">PDF</a></div>"%u
                     else:
                         htmlitem = new
                 else:
                     htmlitem = htmlitem.replace(t, u"<span class=\"doctitle\">%s</span>"%(t))
                     
                 if bibitem:
-                    htmlitem += u"<span class=\"blink\"><a href=\"javascript:show(this);\" onclick=\"show(this);\">bib</a><div class=\"bib\">%s</div></span>"%(bibitem)
 
-                string += "<div class=\"bib-item\">" + htmlitem + "</div>\n"
+                    abstract,bibitem2 = extract_abstract(bibitem)
+
+                    if abstract:
+                        htmlitem += u"<div class=\"blink\"><a href=\"javascript:show(this);\" onclick=\"show(this);\">abstract</a><div class=\"bibshowhide\"><div class=\"abstract\">%s</div></div></div>"%(abstract)
+                    
+                    htmlitem += u"<div class=\"blink\"><a href=\"javascript:show(this);\" onclick=\"show(this);\">bib</a><div class=\"bibshowhide\"><div class=\"bib\">%s</div></div></div>"%(bibitem2)
+    
+                    
+                string += "<div class=\"bib-item\">" + htmlitem + "</div>"
 
 
             #        print item[u'title']
@@ -175,11 +203,8 @@ def make_html (bibitems, htmlitems, items, title, exclude={}):
             #print item
             #print('Item Type: %s | Key: %s') % (item['itemType'], item['key'])
 
-    # Wordpress likes to insert <P>, which is not a good idea here.
-    string = string.replace("\n\n","\n")
-    string = string.replace("\n\n","\n")
     
-    return string
+    return cleanup_lines(string)
 
 
 
@@ -271,9 +296,9 @@ def compile_data(collection_id, collection_name, exclude={}):
     
     # write_html([None] * len(h), h, a, 'out.html')
     #html = "dummy"
-    html = make_html(b, h, a, collection_name, exclude=exclude)
+    html = "<h3 id=\"%s\" class=\"collectiontitle\">%s</h3>\n"%(collection_id,collection_name)
+    html += make_html(b, h, a, exclude=exclude)
     write_some_html(html, category_outputfile_prefix+"-%s.html"%collection_id)
-    fullhtml += "<a name='%s'></a>\n"%collection_id
     fullhtml += html
 
 
