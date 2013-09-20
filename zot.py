@@ -46,11 +46,8 @@ write_full_html_header = False   # False to not output HTML headers.  In this ca
 outputfile = 'zotero-bib.html'  # relative or absolute path name of output file
 category_outputfile_prefix = 'zotero'  # relative or absolute path prefix
 
-
-
-
-
-
+show_search_box = True  # show a Javascript/JQuery based search box to filter pubs by keyword.  Must define jquery_path.
+jquery_path = "../wp-includes/js/jquery/jquery.js"  # path to jquery file on the server - default: wordpress location
 
 
 
@@ -104,6 +101,33 @@ if write_full_html_header:
 else:
     html_header = u'<div class="bibliography">'+script_html
     html_footer = u'</div>'
+
+search_box = ""
+if show_search_box and jquery_path:
+    search_box= """<form id="pubSearchBox" name="pubSearchBox"><input id="pubSearchInputBox" type="text" name="keyword" />&nbsp;<input id="pubSearchButton" type="button" value="Search" onClick="searchFunction()" /></form><script type="text/javascript" src="%s"></script><script type="text/javascript">
+  function searchFunction() {
+  var searchTerm = document.pubSearchBox.keyword.value;
+  jQuery( ".bib-item").css( "display", "none" );
+  jQuery( ".bib-item:contains('"+searchTerm+"')" ).css( "display", "block" );}
+  jQuery(function() {    // <== Doc ready  
+  // stackoverflow q 3971524
+    var inputVal = jQuery("#pubSearchInputBox").val(), 
+        timer,
+        checkForChange = function() {
+            var self = this; // or just use .bind(this)
+            if (timer) { clearTimeout(timer); }
+            // check for change of the text field after each key up
+            timer = setTimeout(function() {
+                if(self.value != inputVal) {
+                    searchFunction();
+                    inputVal = self.value
+                }
+            }, 250);
+        };
+    jQuery("#pubSearchInputBox").bind('keyup paste cut', checkForChange);
+});</script>
+"""%(jquery_path)
+    
         
 
 def retrieve_bib (collection, content, style):
@@ -182,6 +206,10 @@ def make_html (bibitems, htmlitems, items, exclude={}):
                         # replacement not successful
                         htmlitem += u"<div class=\"blink\"><a class=\"doctitle\" href=\"%s\">PDF</a></div>"%u
                     else:
+                        # remove "Retrieved from"
+                        # URL detector from http://daringfireball.net/2010/07/improved_regex_for_matching_urls
+                        new = re.sub(r"Retrieved from (?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?]))", "", new)
+                        # this is the new item
                         htmlitem = new
                 else:
                     htmlitem = htmlitem.replace(t, u"<span class=\"doctitle\">%s</span>"%(t))
@@ -261,12 +289,12 @@ if catchallcollection:
 # start with links to subsections
 fullhtml = ""
 
-fullhtml = "<ul>"
+fullhtml = '<ul class="bib-cat">'
 for collection_name in sortedkeys:
     anchor = collection_ids[collection_name]
     fullhtml += "   <li class='link'><a href='#%s'>%s</a></li>\n"%(anchor,collection_name)
 fullhtml += "</ul>"
-
+fullhtml += search_box
 item_ids = {}
 
 def compile_data(collection_id, collection_name, exclude={}):
