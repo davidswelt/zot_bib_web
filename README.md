@@ -1,16 +1,26 @@
 Zot/Bib/Web
+A program to export Zotero bibliographies to interactive HTML
 ===========
 
-This tool generates interactive HTML bibliographies based on one or
-more collections in the Zotero database.
+This tool generates interactive web bibliographies based on one or
+more collections in a Zotero repository.
 
-Bibliographies are automatically sorted by collection.  BibTeX records
-are provided for visitors to see, and PDF files are automatically
-available via weblink.
+Collections can be maintained by groups of people, using Zotero's web
+interface or their desktop applications.
 
-The content generated is static.
 
-Available on Github.
+Bibliographies
+- are grouped by collection
+- editable in Zotero by one or more users
+- are interactively searchable
+- linked to PDF documents or other URLs
+- have BibTeX records
+- and can be exported to HTML or pushed to a Wordpress database
+
+The content generated is static.  This program is meant to 
+be run regularly.  
+
+Zot_bib_web is available on Github.
 
 
 Requirements
