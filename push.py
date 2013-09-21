@@ -1,18 +1,49 @@
 #!/usr/bin/python
 
-# insert <!--zot_bib_web--> into your page for this to work.
-# set the post_id to the page number (see page's URL)
+# This tool updates a given Page on your Wordpress site.
 
-wp_url = 'https://cc.ist.psu.edu/wp/xmlrpc.php'
-wp_username = 'pubpusher'
-wp_password = 'push47293738zot'
-wp_blogid = "0"
+# insert <!--zot_bib_web  COLLID1 COLLID2 --> into your page where you would like the
+# bibliography to be inserted.  
+# COLLID1 is the ID (hex, 8 digits) of the top-level collection. 
+#     All sub-collections to this will be rendered.
+# COLLID2 is the ID of a collection containing all records; 
+#     All records contained in COLLID2 minus the ones present
+#     under COLLID1 will be rendered under a "Miscellaneous" heading.
 
-post_id = 225
+# (C) 2013 David Reitter, The Pennsylvania State University
+# Released under the GNU General Public License, V.3 or later.
 
-infile = "zotero-bib.html"
 
-#####
+
+wp_url = 'http://example.com/wp/xmlrpc.php'   # Wordpress XMLRPC URL
+wp_username = 'pubpushuser'   # create a user.  Insert name here.
+wp_password = 'xxxxxxxxxxxxxxx'   # password
+wp_blogid = "0"  # typically 0, unless you have other blogs on the site
+
+post_id = 225   # set the post_id to the page number (see page's URL)
+
+infile = "zotero-bib.html"  # input file
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#############################################################################
+try:
+    from settings import *
+except ImportError:
+    pass
+#############################################################################
+
 
 import datetime, xmlrpclib
 import codecs
@@ -30,6 +61,7 @@ def get_bibliography (coll, catchall):
     
     if coll:
         infile = 'zotero-bib.html'
+        # to do: why call as a sub-process when we can just import it?
         call(["./zot.py", coll, catchall, infile, '--div'])
         
     if infile:

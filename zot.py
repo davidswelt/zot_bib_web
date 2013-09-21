@@ -1,16 +1,16 @@
 #!/usr/bin/python
 
-# David Reitter, Penn State
-# 2013
-# License: GNU General Public License version 3 or higher
-
-
 # This will retrieve a set of collections and format an interactive bibliography in HTML5.
 # The bibliography contains BibTeX records and abstracts that can be revealed upon clicking.
 # The output is ready to be included in other websites (there are options), and it can be 
 # easily styles using CSS (see style.css).
 
 # Bibliographic style can be chosen (APA) is default.
+
+
+# (C) 2013 David Reitter, The Pennsylvania State University
+# Released under the GNU General Public License, V.3 or later.
+
 
 ####  Program arguments
 
@@ -21,19 +21,20 @@
 
 
 #### You must configure the following items
+# the values given here are mere examples
 
 library_id = '160464' # your group or user ID (e.g., six numeric digits)
 library_type ='group'  # or 'group' # group or userm
-api_key = '3JsK6ixlKIK1YFgRklj021S1'  # secret key (from Zotero)
+api_key = 'xxxxxxxxxxxxxxxxx'  # secret key (from Zotero)
 
 toplevelfilter = 'MGID93AS'   # collection where to start retrieving
 catchallcollection = '4KATF6MA'  # include "Miscellaneous" category at end containing all items not mentioend anywhere else
 
+limit=5   # None, or set a limit (integer<100) for each collection for debugging
 
 
 ###### Special settings
 
-limit=None   # None, or set a limit (integer<100) for each collection for debugging
 
 bib_style =  'apa'     # bibliography style format (e.g., 'apa' or 'mla') - Any valid CSL style in the Zotero style repository
 
@@ -59,8 +60,11 @@ jquery_path = "../wp-includes/js/jquery/jquery.js"  # path to jquery file on the
 
 
 
-
-
+#############################################################################
+try:
+    from settings import *
+except ImportError:
+    pass
 #############################################################################
 
 from pyzotero import zotero
@@ -277,6 +281,9 @@ if lastsize>1:  # has sub-collections?
             break
     
 print("%s collections: "%lastsize)
+
+if limit:
+    print("Output limited to %s per collection."%limit)
 
 sortedkeys = collection_ids.keys()
 sortedkeys.sort()

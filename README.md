@@ -55,7 +55,7 @@ For Wordpress inclusion:
   [zot_bib_web COLLECTION] where you'd like the bibliography
   inserted. (More options: see push.py)
 - configure push.py (at the top) and make sure it is executable
-- run push.py regularly or on demand
+- run push.py regularly or on demand.  It will call zot.py automatically.
 
 push.py can automatically update the Wordpress page with the
 bibliography.
