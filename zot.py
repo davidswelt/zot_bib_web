@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2.7
 
 # This will retrieve a set of collections and format an interactive bibliography in HTML5.
 # The bibliography contains BibTeX records and abstracts that can be revealed upon clicking.
