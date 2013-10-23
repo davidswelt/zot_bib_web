@@ -109,10 +109,20 @@ else:
 search_box = ""
 if show_search_box and jquery_path:
     search_box= """<form id="pubSearchBox" name="pubSearchBox"><input id="pubSearchInputBox" type="text" name="keyword" />&nbsp;<input id="pubSearchButton" type="button" value="Search" onClick="searchFunction()" /></form><script type="text/javascript" src="%s"></script><script type="text/javascript">
-  function searchFunction() {
-  var searchTerm = document.pubSearchBox.keyword.value;
+  function getURLParameter(name) {
+    return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null;
+  }
+  jQuery( document ).ready(function() {
+    jQuery('#pubSearchInputBox').val(getURLParameter("keyword"));
+    searchFunction();
+  });
+function searchFunction() {
+  var searchTerms = document.pubSearchBox.keyword.value.split(" ");
   jQuery( ".bib-item").css( "display", "none" );
-  jQuery( ".bib-item:contains('"+searchTerm+"')" ).css( "display", "block" );}
+  var q = ".bib-item";
+  jQuery.each(searchTerms, function(i,x) {q = q + ":contains('"+x+"')";});
+  jQuery(q).css( "display", "block" );
+}
   jQuery(function() {    // <== Doc ready  
   // stackoverflow q 3971524
     var inputVal = jQuery("#pubSearchInputBox").val(), 
