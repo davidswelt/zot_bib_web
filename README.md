@@ -24,8 +24,8 @@ Zot_bib_web is available on Github.
 
 
 Requirements
------------------------------------------
-- Python installation
+----------------------------------------
+- Python 2.7 installation (Python 3 not yet supported by Pyzotero)
 - Pyzotero
 - Bibliographic entries in Zotero (as user or as group)
 
