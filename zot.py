@@ -108,7 +108,7 @@ else:
 
 search_box = ""
 if show_search_box and jquery_path:
-    search_box= """<form id="pubSearchBox" name="pubSearchBox"><input id="pubSearchInputBox" type="text" name="keyword" />&nbsp;<input id="pubSearchButton" type="button" value="Search" onClick="searchFunction()" /></form><script type="text/javascript" src="%s"></script><script type="text/javascript">
+    search_box= '<form id="pubSearchBox" name="pubSearchBox"><input id="pubSearchInputBox" type="text" name="keyword" />&nbsp;<input id="pubSearchButton" type="button" value="Search" onClick="searchFunction()" /></form><script type="text/javascript" src="'+jquery_path+""""></script><script type="text/javascript">
   function getURLParameter(name) {
     return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null;
   }
@@ -140,7 +140,7 @@ function searchFunction() {
         };
     jQuery("#pubSearchInputBox").bind('keyup paste cut', checkForChange);
 });</script>
-"""%(jquery_path)
+"""
     
         
 
