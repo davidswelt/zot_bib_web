@@ -35,6 +35,8 @@ Installation
 
 - Install Pyzotero, a library for python:
   sudo pip install pyzotero
+or:
+  sudo easy_install pyzotero
   
 - At the top of zot.py, add configuration as documented.
   Go to zotero.org to get your API secret key.
