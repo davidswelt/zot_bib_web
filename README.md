@@ -61,11 +61,39 @@ push.py can automatically update the Wordpress page with the
 bibliography.
 
 
-Planned for future versions
+How it works
 -----------------------------------------
 
-- show abstract similar to .bib
+Zot.py produces annotated, beautiful bibliographies for the web from a
+Zotero collection.  It is designed for individuals and for research
+groups.
 
+This program will load settings.py for its configuration.
+It will retrieve all publications for the given user or
+group.  If subcollections are present, each subcollection will form a
+separate section.  The top-level collection can be ignored (depending
+on configuration.)
+
+The output of zot.py consists of HTML: either a full document, or a snippet, as
+configured.
+
+Each bibliographic entry is annotated with a bib record and an abstract,
+each of which can be revealed by the reader (client-side javascript).
+
+
+Tips
+-----------------------------------------
+
+- To put collections in a certain order, just add a number to their
+  names, like so:
+
+10 Selected Publications
+20 Refereed Works
+30 Presentations
+
+Zot.py will automatically remove the number for display.
+
+- Use the push.py script to update a page in Wordpress.
 
 Author
 -----------------------------------------

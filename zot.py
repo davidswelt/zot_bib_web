@@ -42,7 +42,7 @@ order_by = 'date'   # order in each category: e.g., 'dateAdded', 'dateModified',
 
 sort_order = 'desc'   # "desc" or "asc"
 
-write_full_html_header = False   # False to not output HTML headers.  In this case, expect a file in UTF-8 encoding.
+write_full_html_header = True   # False to not output HTML headers.  In this case, expect a file in UTF-8 encoding.
 
 outputfile = 'zotero-bib.html'  # relative or absolute path name of output file
 category_outputfile_prefix = 'zotero'  # relative or absolute path prefix
@@ -65,6 +65,7 @@ try:
     from settings import *
 except ImportError:
     pass
+
 #############################################################################
 
 from pyzotero import zotero
@@ -98,13 +99,15 @@ function changeCSS() {
     theRules[theRules.length-1].style.display = 'inline';}
 changeCSS();</script>"""
 
+html_header = u''
+html_footer = u''
 if write_full_html_header:
-    html_header = u'<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN"><html><head><meta charset="UTF-8"><title>Bibliography</title>'+script_html+u'</head><body>'
+    html_header += u'<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN"><html><head><meta charset="UTF-8"><title>Bibliography</title>'+script_html+u'</head><body>'
     html_header += '<h1 class="title">'+'Bibliography'+"</h1>\n";
-    html_footer = u'</body></html>'
+    html_footer += u'</body></html>'
 else:
-    html_header = u'<div class="bibliography">'+script_html
-    html_footer = u'</div>'
+    html_header += u'<div class="bibliography">'+script_html
+    html_footer += u'</div>'
 
 search_box = ""
 if show_search_box and jquery_path:
@@ -187,6 +190,8 @@ def extract_abstract(bib):
     return None,bib
 
 def write_some_html (body, outfile, title=None):
+    global html_header
+    global html_footer
     file = codecs.open(outfile, "w", "utf-8")
     file.write(html_header)
     if title:
@@ -242,6 +247,9 @@ def make_html (bibitems, htmlitems, items, exclude={}):
 
     return cleanup_lines(string)
 
+
+def strip(string):
+    return string.lstrip("0123456789 ")
 
 
     
@@ -309,7 +317,7 @@ fullhtml = ""
 fullhtml = '<ul class="bib-cat">'
 for collection_name in sortedkeys:
     anchor = collection_ids[collection_name]
-    fullhtml += "   <li class='link'><a href='#%s'>%s</a></li>\n"%(anchor,collection_name)
+    fullhtml += "   <li class='link'><a href='#%s'>%s</a></li>\n"%(anchor,strip(collection_name))
 fullhtml += "</ul>"
 fullhtml += search_box
 item_ids = {}
@@ -345,9 +353,9 @@ for collection_name in sortedkeys:
     if collection_ids[collection_name] == catchallcollection:
         # now for "Other"
         # Other has everything that isn't mentioned above
-        compile_data(collection_ids[collection_name], collection_name, exclude=item_ids)
+        compile_data(collection_ids[collection_name], strip(collection_name), exclude=item_ids)
     else:
-        compile_data(collection_ids[collection_name], collection_name)
+        compile_data(collection_ids[collection_name], strip(collection_name))
 
 write_some_html(fullhtml, outputfile)
 
