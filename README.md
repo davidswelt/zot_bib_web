@@ -41,24 +41,37 @@ Installation
 
 - ensure zot.py is executable (chmod ug+x zot.py)
 
-For HTML generation or inclusion in any website:
-- run once/on demand, or install as cron job or service on a server
-  Do not run it more than once a day. 
+To generate HTML and include it in a website:
+- run zot.py once/on demand, or install as cron job or service on a server
+Do not run it more than once a day.  Configure it directly in zot.py,
+or in a separate file settings.py to make upgrading simple.
+
 - include the resulting file zotero-bib.html (or as configured) in
   your website as you see fit.  You may also include individual
-  collection files, which are also generated.
-- You may want to style your bibliography using CSS.  An example style
+  collection files, which are also generated.   You can configure
+  zot.py to generate a complete HTML document, or just a portion of it.
+  
+- Style your bibliography using CSS.  An example style
   file is included.
 
-For Wordpress inclusion:
-- create a page or a post for the bibliography. Insert
-  [zot_bib_web COLLECTION] where you'd like the bibliography
-  inserted. (More options: see push.py)
-- configure push.py (at the top) and make sure it is executable
-- run push.py regularly or on demand.  It will call zot.py automatically.
 
-push.py can automatically update the Wordpress page with the
-bibliography.
+Wordpress Support
+-----------------------------------------
+
+This package can push directly to a Wordpress site.  A separate
+program "push.py" is included to do this.
+
+Follow these steps:
+1. Set up zot.py to generate a bibliography you like.
+2. Create a WP page or a post for the bibliography. Insert
+    [zot_bib_web COLLECTION] where you'd like the bibliography
+    inserted.  Replace COLLECTION with the ID of the collection.
+	(More options: see push.py)
+3. Configure push.py (at the top).  You will need to know a few simple
+   details about your WP installation.
+4. Run push.py regularly or on demand.  It will call zot.py
+   automatically and then update the page in WP.
+
 
 
 How it works
