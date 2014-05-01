@@ -50,7 +50,7 @@ category_outputfile_prefix = 'zotero'  # relative or absolute path prefix
 show_search_box = True  # show a Javascript/JQuery based search box to filter pubs by keyword.  Must define jquery_path.
 jquery_path = "../wp-includes/js/jquery/jquery.js"  # path to jquery file on the server - default: wordpress location
 
-
+show_links = ['abstract', 'pdf', 'bib']   # unconditionally show these items if they are available.
 
 
 
@@ -75,28 +75,34 @@ import sys
 from texconv import tex2unicode
 import re
 
-script_html = """<style type="text/css" scoped>
+script_html = """<style type="text/css" id="zoterostylesheet" scoped>
 .bibshowhide {display:none;}
 .abstract {display:none;}
 .blink {margin:0;margin-right:15px;padding:0;display:none;}
 </style>
 <script type="text/javascript">
 function show(elem) {
-  var elems = elem.parentNode.getElementsByTagName('*'), i;
+  if (elem.parentNode) {
+   var elems = elem.parentNode.getElementsByTagName('*'), i;
     for (i in elems) {
         if((' ' + elems[i].className + ' ').indexOf(' ' + 'bibshowhide' + ' ') > -1) 
-           { if (elems[i].style.display == 'block') {elems[i].style.display = 'none';} else {elems[i].style.display = 'block';}}}}
+           { if (elems[i].style.display == 'block') {elems[i].style.display = 'none';} else {elems[i].style.display = 'block';}}}}}
 function changeCSS() {
 	if (!document.styleSheets) return;
 	var theRules = new Array();
-    ss = document.styleSheets[document.styleSheets.length-1];
+    //ss = document.styleSheets[document.styleSheets.length-1];
+    var ss = document.getElementById('zoterostylesheet');
+    if (ss) {
+    ss = ss.sheet
 	if (ss.cssRules)
 		theRules = ss.cssRules
 	else if (ss.rules)
 		theRules = ss.rules
 	else return;
 	theRules[theRules.length-2].style.display = 'inline';
-    theRules[theRules.length-1].style.display = 'inline';}
+    theRules[theRules.length-1].style.display = 'inline';
+    }
+    }
 changeCSS();</script>"""
 
 html_header = u''
@@ -144,8 +150,7 @@ function searchFunction() {
     jQuery("#pubSearchInputBox").bind('keyup paste cut', checkForChange);
 });</script>
 """
-    
-        
+
 
 def retrieve_bib (collection, content, style):
     global limit
@@ -204,6 +209,17 @@ def cleanup_lines (string):
     "Remove double line feeds to protect from <P> insertion in Wordpress."
     # Wordpress likes to insert <P>, which is not a good idea here.
     return re.sub(r'\n\s*\n', '\n', string, flags=re.DOTALL)
+
+def tryreplacing (source, strings, repl):
+    new = None
+    for s in strings:
+        repl2 = repl.replace("\\0", s)
+    	new = source.replace(s, repl2)
+	if not new == source:
+	   return new
+   
+    return source
+
     
 def make_html (bibitems, htmlitems, items, exclude={}):
 
@@ -212,6 +228,9 @@ def make_html (bibitems, htmlitems, items, exclude={}):
         if not exclude.has_key(item[u'id']):
             if item.has_key(u'title'):
 
+                global show_links
+                show_items = show_links
+                
                 t =  item[u'title']
                 u = None
                 if item.has_key(u'URL'):
@@ -220,10 +239,13 @@ def make_html (bibitems, htmlitems, items, exclude={}):
                     u = item[u'url']
 
                 if u:
-                    new = htmlitem.replace(t, u"<a class=\"doctitle\" href=\"%s\">%s</a>"%(u,t))
+
+                    new = tryreplacing(htmlitem, ["<i>"+t+"</i>.",t+".",t], u"<a class=\"doctitle\" href=\"%s\">%s</a>"%(u,"\\0"))
+                    
                     if new == htmlitem:
                         # replacement not successful
-                        htmlitem += u"<div class=\"blink\"><a class=\"doctitle\" href=\"%s\">PDF</a></div>"%u
+                        if not 'pdf' in show_items and not 'PDF' in show_items:
+                            show_items += ['pdf']
                     else:
                         # remove "Retrieved from"
                         # URL detector from http://daringfireball.net/2010/07/improved_regex_for_matching_urls
@@ -231,17 +253,22 @@ def make_html (bibitems, htmlitems, items, exclude={}):
                         # this is the new item
                         htmlitem = new
                 else:
-                    htmlitem = htmlitem.replace(t, u"<span class=\"doctitle\">%s</span>"%(t))
+                    htmlitem = tryreplacing(htmlitem, ["<i>"+t+"</i>.",t+".",t], u"<span class=\"doctitle\">%s</span>"%("\\0"))
+
                     
                 if bibitem:
 
                     abstract,bibitem2 = extract_abstract(bibitem)
 
-                    if abstract:
-                        htmlitem += u"<div class=\"blink\"><a href=\"javascript:show(this);\" onclick=\"show(this);\">abstract</a><div class=\"bibshowhide\"><div class=\"abstract\">%s</div></div></div>"%(abstract)
-                    
-                    htmlitem += u"<div class=\"blink\"><a href=\"javascript:show(this);\" onclick=\"show(this);\">bib</a><div class=\"bibshowhide\"><div class=\"bib\">%s</div></div></div>"%(bibitem2)
-    
+                    # we print the original item name as label so that capitalization may be chosen via the items list
+                    for item in show_items:
+                        if 'abstract' == item.lower() and abstract:
+                            htmlitem += u"<div class=\"blink\"><a href=\"javascript:show(this);\" onclick=\"show(this);\">%s</a><div class=\"bibshowhide\"><div class=\"abstract\">%s</div></div></div>"%(item,abstract)
+
+                        elif 'bib' == item.lower() and bibitem2:
+                            htmlitem += u"<div class=\"blink\"><a href=\"javascript:show(this);\" onclick=\"show(this);\">%s</a><div class=\"bibshowhide\"><div class=\"bib\">%s</div></div></div>"%(item,bibitem2)
+                        elif 'pdf' == item.lower() and u:
+                            htmlitem += u"<div class=\"blink\"><a href=\"%s\">%s</a></div>"%(u,item)
                     
                 string += "<div class=\"bib-item\">" + htmlitem + "</div>"
 
@@ -339,14 +366,16 @@ def compile_data(collection_id, collection_name, exclude={}):
             if item_ids.has_key(key):
                 print("warning - item %s included additionally in collection %s"%(key, collection_name))
             item_ids[key] = True
+
+    corehtml = make_html(b, h, a, exclude=exclude)
     
-    
-    # write_html([None] * len(h), h, a, 'out.html')
-    #html = "dummy"
-    html = "<h3 id=\"%s\" class=\"collectiontitle\">%s</h3>\n"%(collection_id,collection_name)
-    html += make_html(b, h, a, exclude=exclude)
-    write_some_html(html, category_outputfile_prefix+"-%s.html"%collection_id)
-    fullhtml += html
+    if corehtml and len(corehtml)>0:  # was anything found in this category?
+        # write_html([None] * len(h), h, a, 'out.html')
+        #html = "dummy"
+        html = "<h3 id=\"%s\" class=\"collectiontitle\">%s</h3>\n"%(collection_id,collection_name)
+        html += corehtml
+        write_some_html(html, category_outputfile_prefix+"-%s.html"%collection_id)
+        fullhtml += html
 
 
 for collection_name in sortedkeys:
