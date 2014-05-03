@@ -8,9 +8,10 @@
 # Bibliographic style can be chosen (APA) is default.
 
 
-# (C) 2013 David Reitter, The Pennsylvania State University
+# (C) 2014 David Reitter, The Pennsylvania State University
 # Released under the GNU General Public License, V.3 or later.
 
+from __future__ import print_function
 
 ####  Program arguments
 
@@ -50,7 +51,7 @@ category_outputfile_prefix = 'zotero'  # relative or absolute path prefix
 show_search_box = True  # show a Javascript/JQuery based search box to filter pubs by keyword.  Must define jquery_path.
 jquery_path = "../wp-includes/js/jquery/jquery.js"  # path to jquery file on the server - default: wordpress location
 
-show_links = ['abstract', 'pdf', 'bib']   # unconditionally show these items if they are available.
+show_links = ['abstract', 'pdf', 'bib', 'ris']   # unconditionally show these items if they are available.
 
 
 
@@ -74,6 +75,8 @@ import codecs
 import sys
 from texconv import tex2unicode
 import re
+def warning(*objs):
+    print("WARNING: ", *objs, file=sys.stderr)
 
 script_html = """<style type="text/css" id="zoterostylesheet" scoped>
 .bibshowhide {display:none;}
@@ -81,12 +84,27 @@ script_html = """<style type="text/css" id="zoterostylesheet" scoped>
 .blink {margin:0;margin-right:15px;padding:0;display:none;}
 </style>
 <script type="text/javascript">
+ function downloadFile(elem) {
+  filename = "article.ris"
+  if (elem.parentNode) {
+    var elems = elem.parentNode.getElementsByTagName('*');
+    for (i in elems) {
+        if((' ' + elems[i].className + ' ').indexOf(' ' + 'bibshowhide' + ' ') > -1) 
+           {
+  var ee = elems[i]
+  if (ee.childNodes[0]) { ee = ee.childNodes[0] } 
+  var pom = document.createElement('a');
+  pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(ee.innerHTML));
+  pom.setAttribute('download', filename);
+  pom.click();
+}}}}
 function show(elem) {
   if (elem.parentNode) {
    var elems = elem.parentNode.getElementsByTagName('*'), i;
     for (i in elems) {
         if((' ' + elems[i].className + ' ').indexOf(' ' + 'bibshowhide' + ' ') > -1) 
-           { if (elems[i].style.display == 'block') {elems[i].style.display = 'none';} else {elems[i].style.display = 'block';}}}}}
+           { if (elems[i].style.display == 'block') {elems[i].style.display = 'none';} else {elems[i].style.display = 'block';}}}}
+  return false;}
 function changeCSS() {
 	if (!document.styleSheets) return;
 	var theRules = new Array();
@@ -183,6 +201,9 @@ def retrieve_atom (collection):
 def format_bib(bib):
     return bib.replace("},","},\n")
 
+def format_ris(bib):
+    return bib.replace("\n","\\n").replace("\r","\\r")
+
 def extract_abstract(bib):
     m = re.match(r'(.*)abstract\s*=\s*{?(.*?)}\s*(,|})(.*)', bib, re.DOTALL|re.IGNORECASE)
     if m:
@@ -221,16 +242,15 @@ def tryreplacing (source, strings, repl):
     return source
 
     
-def make_html (bibitems, htmlitems, items, exclude={}):
+def make_html (bibitems, htmlitems, risitems, items, exclude={}):
 
     string = ""
-    for bibitem,htmlitem,item in zip(bibitems,htmlitems,items):
+    for bibitem,htmlitem,risitem,item in zip(bibitems,htmlitems,risitems,items):
         if not exclude.has_key(item[u'id']):
             if item.has_key(u'title'):
 
                 global show_links
                 show_items = show_links
-                
                 t =  item[u'title']
                 u = None
                 if item.has_key(u'URL'):
@@ -269,6 +289,9 @@ def make_html (bibitems, htmlitems, items, exclude={}):
                             htmlitem += u"<div class=\"blink\"><a href=\"javascript:show(this);\" onclick=\"show(this);\">%s</a><div class=\"bibshowhide\"><div class=\"bib\">%s</div></div></div>"%(item,bibitem2)
                         elif 'pdf' == item.lower() and u:
                             htmlitem += u"<div class=\"blink\"><a href=\"%s\">%s</a></div>"%(u,item)
+                        elif 'ris' == item.lower() and risitem:
+                            # htmlitem += u"<div class=\"blink\"><a href=\"javascript:show(this);\" onclick=\"show(this);\">%s</a><div class=\"bibshowhide\"><div class=\"bib\">%s</div></div></div>"%(item,risitem)
+                            htmlitem += u"<div class=\"blink\"><a title=\"Download EndNote record\" href=\"javascript:downloadFile(this);\" onclick=\"downloadFile(this);\">%s</a><div class=\"bibshowhide\"><div class=\"ris\">%s</div></div></div>"%(item,risitem)
                     
                 string += "<div class=\"bib-item\">" + htmlitem + "</div>"
 
@@ -358,6 +381,10 @@ def compile_data(collection_id, collection_name, exclude={}):
     
     b = retrieve_bib(collection_id,'bibtex', '')
     h = retrieve_bib(collection_id,'bib', bib_style)
+    if 'ris' in show_links or "RIS" in show_links or "EndNote" in show_links:
+        r = retrieve_bib(collection_id,'ris', '')
+    else:
+        r = [None for _x in h]
     a = retrieve_atom(collection_id)
 
     if not exclude:
@@ -367,7 +394,7 @@ def compile_data(collection_id, collection_name, exclude={}):
                 print("warning - item %s included additionally in collection %s"%(key, collection_name))
             item_ids[key] = True
 
-    corehtml = make_html(b, h, a, exclude=exclude)
+    corehtml = make_html(b, h, r, a, exclude=exclude)
     
     if corehtml and len(corehtml)>0:  # was anything found in this category?
         # write_html([None] * len(h), h, a, 'out.html')
