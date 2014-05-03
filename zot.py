@@ -134,8 +134,9 @@ else:
     html_footer += u'</div>'
 
 search_box = ""
-if show_search_box and jquery_path:
-    search_box= '<form id="pubSearchBox" name="pubSearchBox"><input id="pubSearchInputBox" type="text" name="keyword" />&nbsp;<input id="pubSearchButton" type="button" value="Search" onClick="searchFunction()" /></form><script type="text/javascript" src="'+jquery_path+""""></script><script type="text/javascript">
+if show_search_box:
+    if jquery_path:
+        search_box= '<form id="pubSearchBox" name="pubSearchBox"><input id="pubSearchInputBox" type="text" name="keyword" />&nbsp;<input id="pubSearchButton" type="button" value="Search" onClick="searchFunction()" /></form><script type="text/javascript" src="'+jquery_path+""""></script><script type="text/javascript">
   function getURLParameter(name) {
     return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null;
   }
@@ -143,11 +144,15 @@ if show_search_box and jquery_path:
     jQuery('#pubSearchInputBox').val(getURLParameter("keyword"));
     searchFunction();
   });
+  jQuery.expr[":"].icontains = jQuery.expr.createPseudo(function(arg) {
+    return function( elem ) {
+        return jQuery(elem).text().toUpperCase().indexOf(arg.toUpperCase()) >= 0;
+    };});
 function searchFunction() {
   var searchTerms = document.pubSearchBox.keyword.value.split(" ");
   jQuery( ".bib-item").css( "display", "none" );
   var q = ".bib-item";
-  jQuery.each(searchTerms, function(i,x) {q = q + ":contains('"+x+"')";});
+  jQuery.each(searchTerms, function(i,x) {q = q + ":icontains('"+x+"')";});
   jQuery(q).css( "display", "block" );
 }
   jQuery(function() {    // <== Doc ready  
@@ -168,7 +173,9 @@ function searchFunction() {
     jQuery("#pubSearchInputBox").bind('keyup paste cut', checkForChange);
 });</script>
 """
-
+    else:
+        warning("show_search_box set, but jquery_path undefined.")
+        
 
 def retrieve_bib (collection, content, style):
     global limit
