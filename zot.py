@@ -327,19 +327,20 @@ if len(sys.argv)>4:
         
 
     
-collection_ids = {}
+collection_ids = {}  # collection names -> IDs
 c=zot.collections()
 
 
 collection_filter = {toplevelfilter:False}
 lastsize = 0
 while True:
-    for x in c:
-        if x.has_key(u'parent') and  x[u'parent'] in collection_filter:
-            collection_filter[x[u'key']] = True  # allow children, include their items
+    for coll in c:  # for each collection
+        coll_key = coll[u'key']
+        if coll.has_key(u'parent') and coll[u'parent'] in collection_filter:
+            collection_filter[coll_key] = True  # allow children, include their items
 
-        if x[u'key'] in collection_filter:
-            collection_ids[x[u'name']] = x[u'key']  #[x[u'key']]
+        if coll_key in collection_filter:
+            collection_ids[coll[u'name']] = coll_key  #[x[u'key']]
 
     size = len(collection_ids.keys())
     if size == lastsize:
@@ -368,15 +369,8 @@ if catchallcollection:
     sortedkeys += ["Miscellaneous"]
     collection_ids['Miscellaneous'] = catchallcollection
 
-# start with links to subsections
-fullhtml = ""
 
-fullhtml = '<ul class="bib-cat">'
-for collection_name in sortedkeys:
-    anchor = collection_ids[collection_name]
-    fullhtml += "   <li class='link'><a href='#%s'>%s</a></li>\n"%(anchor,strip(collection_name))
-fullhtml += "</ul>"
-fullhtml += search_box
+fullhtml = ""
 item_ids = {}
 
 def compile_data(collection_id, collection_name, exclude={}):
@@ -394,12 +388,14 @@ def compile_data(collection_id, collection_name, exclude={}):
         r = [None for _x in h]
     a = retrieve_atom(collection_id)
 
+    counter = 0
     if not exclude:
         for i in a:
             key = i[u'id']
             if item_ids.has_key(key):
                 print("warning - item %s included additionally in collection %s"%(key, collection_name))
             item_ids[key] = True
+            counter += 1
 
     corehtml = make_html(b, h, r, a, exclude=exclude)
     
@@ -411,14 +407,28 @@ def compile_data(collection_id, collection_name, exclude={}):
         write_some_html(html, category_outputfile_prefix+"-%s.html"%collection_id)
         fullhtml += html
 
+    return counter # number of items included
+
+
+# start with links to subsections
+headerhtml = '<ul class="bib-cat">'
 
 for collection_name in sortedkeys:
+    c = 0
     if collection_ids[collection_name] == catchallcollection:
         # now for "Other"
         # Other has everything that isn't mentioned above
-        compile_data(collection_ids[collection_name], strip(collection_name), exclude=item_ids)
+        c = compile_data(collection_ids[collection_name], strip(collection_name), exclude=item_ids)
     else:
-        compile_data(collection_ids[collection_name], strip(collection_name))
+        c = compile_data(collection_ids[collection_name], strip(collection_name))
 
-write_some_html(fullhtml, outputfile)
+    if c>0:
+        anchor = collection_ids[collection_name]
+        headerhtml += "   <li class='link'><a style='white-space: nowrap;' href='#%s'>%s</a></li>\n"%(anchor,strip(collection_name))
+
+headerhtml += "</ul>"
+headerhtml += search_box
+
+        
+write_some_html(headerhtml+fullhtml, outputfile)
 
