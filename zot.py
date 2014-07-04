@@ -393,7 +393,20 @@ def compile_data(collection_id, collection_name, exclude={}):
         for i in a:
             key = i[u'id']
             if item_ids.has_key(key):
-                print("warning - item %s included additionally in collection %s"%(key, collection_name))
+                auth = ""
+                # if u'author' in i:
+                #     a += ",".join(i[u'author'].values())
+                # elif u'editor' in i:
+                #     a +=  ",".join(i[u'editor'])
+                if u'title' in i:
+                    auth = i[u'title'][:14]
+
+                year = ""
+                if u'issued' in i and u'raw' in i[u'issued']:
+                    year = i[u'issued'][u'raw']
+                    
+                ref = "%s (%s)"%(auth, year)
+                print("warning - item %s also included in collection %s"%(ref, collection_name))
             item_ids[key] = True
             counter += 1
 
