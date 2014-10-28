@@ -104,7 +104,7 @@ function show(elem) {
     for (i in elems) {
         if((' ' + elems[i].className + ' ').indexOf(' ' + 'bibshowhide' + ' ') > -1) 
            { if (elems[i].style.display == 'block') {elems[i].style.display = 'none';} else {elems[i].style.display = 'block';}}}}
-  return false;}
+  return(void(0));}
 function changeCSS() {
 	if (!document.styleSheets) return;
 	var theRules = new Array();
