@@ -23,6 +23,13 @@ be run regularly.
 Zot_bib_web is available on Github.
 
 
+Example Installations
+----------------------------------------
+
+http://acs.ist.psu.edu/wp/pub/
+http://david-reitter.com/pub/
+
+
 Requirements
 ----------------------------------------
 - Python 2.7 installation (Python 3 not yet supported by Pyzotero)
