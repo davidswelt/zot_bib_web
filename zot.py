@@ -68,15 +68,22 @@ except ImportError:
     pass
 
 #############################################################################
-
-from pyzotero import zotero
-
-import codecs
 import sys
-from texconv import tex2unicode
 import re
 def warning(*objs):
     print("WARNING: ", *objs, file=sys.stderr)
+
+from pyzotero import zotero
+
+try:
+    v = float("%d.%02d%02d"%tuple(map(int,zotero.__version__.split(r'.'))))
+    if v>=1 and v<1.0103:
+        warning("Pyzotero version may be incompatible.  Upgrade to 1.1.3 or later.")
+except:
+        warning("Pyzotero version could not be validated. 1.1.3 or later recommended.")
+    
+import codecs
+from texconv import tex2unicode
 
 script_html = """<style type="text/css" id="zoterostylesheet" scoped>
 .bibshowhide {display:none;}
