@@ -326,21 +326,30 @@ if len(sys.argv)>4:
         write_full_html_header = False
         
 
+def coll_data(c):
+    if not (u'key' in c and u'name' in c) and u'data' in c:
+        c = c[u'data']
+    return c
     
 collection_ids = {}  # collection names -> IDs
-c=zot.collections()
-
+c=zot.collections_sub(toplevelfilter)  # this will probably return a maximum of 25
 
 collection_filter = {toplevelfilter:False}
 lastsize = 0
 while True:
     for coll in c:  # for each collection
-        coll_key = coll[u'key']
-        if coll.has_key(u'parent') and coll[u'parent'] in collection_filter:
+        # pyzotero or Zotero API has changed at some point, so...
+        data = coll_data(coll)
+        coll_key = data[u'key']
+        if (data.has_key(u'parentCollection') and data[u'parentCollection'] in collection_filter) or (data.has_key(u'parent') and data[u'parent'] in collection_filter):
             collection_filter[coll_key] = True  # allow children, include their items
+            for coll2 in zot.collections_sub(coll_key):  # get children
+                cd = coll_data(coll2)
+                if not cd[u'key'] in c:
+                    c += [coll2]  # add child to agenda for crawling
 
         if coll_key in collection_filter:
-            collection_ids[coll[u'name']] = coll_key  #[x[u'key']]
+            collection_ids[data[u'name']] = coll_key  #[x[u'key']]
 
     size = len(collection_ids.keys())
     if size == lastsize:
