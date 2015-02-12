@@ -60,8 +60,13 @@ show_links = ['abstract', 'pdf', 'bib', 'ris']   # unconditionally show these it
 
 
 
+#############################################################################
+
+__version__ = "1.1.0"
 
 #############################################################################
+
+
 try:
     from settings import *
 except ImportError:
