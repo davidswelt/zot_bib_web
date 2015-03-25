@@ -1,4 +1,5 @@
 #!/usr/bin/python2.7
+# coding: utf-8
 
 # This will retrieve a set of collections and format an interactive bibliography in HTML5.
 # The bibliography contains BibTeX records and abstracts that can be revealed upon clicking.
@@ -192,9 +193,9 @@ function searchFunction() {
 def retrieve_bib (collection, content, style):
     global limit
     if limit:
-        items = zot.collection_items(collection, content=content, style=style, limit=limit, order=order_by, sort=sort_order)
+        items = zot.collection_items(collection, content=content, style=style, limit=limit, order=order_by, sort=sort_order, itemType='-attachment || note')
     else:
-        items = zot.everything(zot.collection_items(collection, content=content, style=style, order=order_by, sort=sort_order))
+        items = zot.everything(zot.collection_items(collection, content=content, style=style, order=order_by, sort=sort_order, itemType='-attachment || note'))
     return items
 
 def write_bib (items, outfile):
