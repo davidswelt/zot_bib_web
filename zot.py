@@ -8,7 +8,7 @@
 # Bibliographic style can be chosen (APA) is default.
 
 
-# (C) 2014 David Reitter, The Pennsylvania State University
+# (C) 2014,2015 David Reitter, The Pennsylvania State University
 # Released under the GNU General Public License, V.3 or later.
 
 from __future__ import print_function
@@ -23,6 +23,7 @@ from __future__ import print_function
 
 #### You must configure the following items
 # the values given here are mere examples
+# You may, alternatively, configure this in a file called "settings.py"
 
 library_id = '160464' # your group or user ID (e.g., six numeric digits)
 library_type ='group'  # or 'group' # group or userm
@@ -436,7 +437,8 @@ def compile_data(collection_id, collection_name, exclude={}):
     if corehtml and len(corehtml)>0:  # was anything found in this category?
         # write_html([None] * len(h), h, a, 'out.html')
         #html = "dummy"
-        html = "<h3 id=\"%s\" class=\"collectiontitle\">%s</h3>\n"%(collection_id,collection_name)
+        html = "<a id='%s' style='{display: block; position: relative; top: -150px; visibility: hidden;}'></a>"%collection_id
+        html += "<h3 class=\"collectiontitle\">%s</h3>\n"%(collection_name)
         html += corehtml
         write_some_html(html, category_outputfile_prefix+"-%s.html"%collection_id)
         fullhtml += html
