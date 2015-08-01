@@ -394,34 +394,41 @@ def coll_data(c):
     if not (u'key' in c and u'name' in c) and u'data' in c:
         c = c[u'data']
     return c
+
+def coll_key(c):
+    if u'key' in c:
+        return c[u'key']
+    return c[u'data'][u'key']
+
     
 collection_ids = {}  # collection names -> IDs
-c=zot.collections_sub(toplevelfilter)  # this will probably return a maximum of 25
+collection_depths = {}  # collection names -> depth
+c=[(x,0) for x in zot.collections_sub(toplevelfilter)]  # this will probably return a maximum of 25
+c=zot.collections_sub(toplevelfilter)
 
 collection_filter = {toplevelfilter:False}
-lastsize = 0
-while True:
-    for coll in c:  # for each collection
-        # pyzotero or Zotero API has changed at some point, so...
-        data = coll_data(coll)
-        coll_key = data[u'key']
-        if (data.has_key(u'parentCollection') and data[u'parentCollection'] in collection_filter) or (data.has_key(u'parent') and data[u'parent'] in collection_filter):
-            collection_filter[coll_key] = True  # allow children, include their items
-            for coll2 in zot.collections_sub(coll_key):  # get children
-                cd = coll_data(coll2)
-                if not cd[u'key'] in c:
-                    c += [coll2]  # add child to agenda for crawling
+for coll in c:  # for each collection
+    # pyzotero or Zotero API has changed at some point, so...
+    data = coll_data(coll)
+    key = data[u'key']
 
-        if coll_key in collection_filter:
-            collection_ids[data[u'name']] = coll_key  #[x[u'key']]
+    if not collection_depths.has_key(key):
+        collection_depths[key] = 0
+    depth = collection_depths[key]
 
-    size = len(collection_ids.keys())
-    if size == lastsize:
-        break
-    lastsize = size
-            
+    if (data.has_key(u'parentCollection') and data[u'parentCollection'] in collection_filter) or (data.has_key(u'parent') and data[u'parent'] in collection_filter):
+        collection_filter[key] = True  # allow children, include their items
+        for coll2 in zot.collections_sub(key):  # get children
+            key2 = coll_key(coll2)
+            if not key2 in c:
+                c += [coll2]  # add child to agenda for crawling
+                collection_depths[key2] = depth + 1
 
-if lastsize>1:  # has sub-collections?
+    if key in collection_filter:
+        collection_ids[data[u'name']] = key  #[x[u'key']]
+
+
+if collection_depths.values().count(0)==1:  # only one top-level collection?
     # remove top level collection
     for n,k in collection_ids.items():
         if k == toplevelfilter:
@@ -429,7 +436,7 @@ if lastsize>1:  # has sub-collections?
             print("(Top-level collection will be ignored.)")
             break
     
-print("%s collections: "%lastsize)
+print("%s collections: "%len(collection_ids.items()))
 
 if limit:
     print("Output limited to %s per collection."%limit)
@@ -451,7 +458,7 @@ def compile_data(collection_id, collection_name, exclude={}, shorten=False):
     global item_ids
     global bib_style
 
-    print(collection_name + "...")
+    print(" "+" "*collection_depths.get(collection_id,0) + collection_name + "...")
     
     b = retrieve_bib(collection_id,'bibtex', '')
     h = retrieve_bib(collection_id,'bib', bib_style)
@@ -479,7 +486,7 @@ def compile_data(collection_id, collection_name, exclude={}, shorten=False):
                     year = i[u'issued'][u'raw']
                     
                 ref = "%s (%s)"%(auth, year)
-                print("warning - item %s also included in collection %s"%(ref, item_ids[key]))
+                print("Warning: item %s also included in collection %s"%(ref, item_ids[key]))
             item_ids[key] = collection_name
             counter += 1
 
@@ -489,7 +496,8 @@ def compile_data(collection_id, collection_name, exclude={}, shorten=False):
         # write_html([None] * len(h), h, a, 'out.html')
         #html = "dummy"
         html = "<a id='%s' style='{display: block; position: relative; top: -150px; visibility: hidden;}'></a>"%collection_id
-        html += "<h3 class=\"collectiontitle\">%s</h3>\n"%(collection_name)
+        d = 2+collection_depths.get(collection_id,0)
+        html += "<h%s class=\"collectiontitle\">%s</h3>\n"%(d,collection_name)
         html += corehtml
         write_some_html(html, category_outputfile_prefix+"-%s.html"%collection_id)
         fullhtml += html
