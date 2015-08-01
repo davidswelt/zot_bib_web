@@ -304,7 +304,7 @@ def tryreplacing (source, strings, repl):
     return source
 
     
-def make_html (bibitems, htmlitems, risitems, items, exclude={}):
+def make_html (bibitems, htmlitems, risitems, items, exclude={}, shorten=False):
 
     string = ""
     for bibitem,htmlitem,risitem,item in zip(bibitems,htmlitems,risitems,items):
@@ -337,6 +337,15 @@ def make_html (bibitems, htmlitems, risitems, items, exclude={}):
                 else:
                     htmlitem = tryreplacing(htmlitem, ["<i>"+t+"</i>.",t+".",t], u"<span class=\"doctitle\">%s</span>"%("\\0"))
 
+                if shorten:
+                    y = ""
+                    if item.has_key(u'date'):
+                        y = "(%s)"%item[u'date']
+                    elif item.has_key(u'issued'):
+                        i = item[u'issued']
+                        if i.has_key(u'raw'):
+                            y = "(%s)"%i[u'raw']  # to do: get year from more complex date?
+                    htmlitem = u"<a href=\"javascript:show(this);\" onclick=\"show(this);\">&#8862;</a> <span class=\"doctitle-short\">%s</span> %s"%(t,y) + "<div class=\"bibshowhide\" style=\"padding-left:20px;\">"+htmlitem+"</div></div><div style=\"padding-left:20px;\">"
                     
                 if bibitem:
 
@@ -354,14 +363,22 @@ def make_html (bibitems, htmlitems, risitems, items, exclude={}):
                         elif 'ris' == item.lower() and risitem:
                             # htmlitem += u"<div class=\"blink\"><a href=\"javascript:show(this);\" onclick=\"show(this);\">%s</a><div class=\"bibshowhide\"><div class=\"bib\">%s</div></div></div>"%(item,risitem)
                             htmlitem += u"<div class=\"blink\"><a title=\"Download EndNote record\" href=\"javascript:downloadFile(this);\" onclick=\"downloadFile(this);\">%s</a><div class=\"bibshowhide\"><div class=\"ris\">%s</div></div></div>"%(item,risitem)
-                    
+
                 string += "<div class=\"bib-item\">" + htmlitem + "</div>"
+
+    if shorten:
+        string = "<div class=\"short-bib-section\">" + string + "</div>"
+    else:
+        string = "<div class=\"full-bib-section\">" + string + "</div>"
 
     return cleanup_lines(string)
 
 
+def shortcollection(st):
+    return "*" in st.partition(' ')[0]
+
 def strip(string):
-    return string.lstrip("0123456789 ")
+    return string.lstrip("0123456789* ")
 
 
     
@@ -423,7 +440,7 @@ if catchallcollection:
 fullhtml = ""
 item_ids = {}
 
-def compile_data(collection_id, collection_name, exclude={}):
+def compile_data(collection_id, collection_name, exclude={}, shorten=False):
     global fullhtml
     global item_ids
     global bib_style
@@ -479,12 +496,13 @@ headerhtml = '<ul class="bib-cat">'
 
 for collection_name in sortedkeys:
     c = 0
+    s=shortcollection(collection_name)
     if collection_ids[collection_name] == catchallcollection:
         # now for "Other"
         # Other has everything that isn't mentioned above
-        c = compile_data(collection_ids[collection_name], strip(collection_name), exclude=item_ids)
+        c = compile_data(collection_ids[collection_name], strip(collection_name), exclude=item_ids, shorten=s)
     else:
-        c = compile_data(collection_ids[collection_name], strip(collection_name))
+        c = compile_data(collection_ids[collection_name], strip(collection_name), shorten=s)
 
     if c>0:
         anchor = collection_ids[collection_name]
