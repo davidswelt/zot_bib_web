@@ -10,17 +10,17 @@ interface or their desktop applications.
 
 
 Bibliographies
-- are grouped by collection
-- editable in Zotero by one or more users
-- are interactively searchable
-- linked to PDF documents or other URLs
-- have BibTeX records
-- and can be exported to HTML or pushed to a Wordpress database
+-  are grouped by collection
+-  editable in Zotero by one or more users
+-  are interactively searchable
+-  linked to PDF documents or other URLs
+-  have BibTeX records
+-  and can be exported to HTML or pushed to a Wordpress database
 
 The content generated is static.  This program is meant to 
-be run regularly.  
+be run regularly. 
 
-Zot_bib_web is available on Github.
+Zot/bib/web is available on Github.
 
 
 Example Installations
@@ -54,7 +54,8 @@ or:
 - ensure zot.py is executable (chmod ug+x zot.py)
 
 To generate HTML and include it in a website:
-- run zot.py once/on demand, or install as cron job or service on a server
+
+-  run zot.py once/on demand, or install as cron job or service on a server
 Do not run it more than once a day.  Configure it directly in zot.py,
 or in a separate file settings.py to make upgrading simple.
 
@@ -89,16 +90,16 @@ Bibliography
 
 Here's an example of a bibliography structure:
 
-My Publications [MGID90AT]
-	10* Selected Works
-	15 In Preparation / Under Review
-	20 Refereed Works by Topic
-		Semantics
-		Parsing
-		Dialogue
-		Machine Learning
-	30 Theses
-	40 Talks (Without Paper)
+    My Publications [MGID90AT]
+		10* Selected Works
+		15 In Preparation / Under Review
+		20 Refereed Works by Topic
+			Semantics
+			Parsing
+			Dialogue
+			Machine Learning
+		30 Theses
+		40 Talks (Without Paper)
 
 Set toplevelfilter and catchallcollection to MGID90AT in settings.py.
 
@@ -111,15 +112,19 @@ This package can push directly to a Wordpress site.  A separate
 program "push.py" is included to do this.
 
 Follow these steps:
-1. Set up zot.py to generate a bibliography you like.
-2. Create a WP page or a post for the bibliography. Insert
+
+1.  Set up zot.py to generate a bibliography you like.
+    Call zot.py --full to generate a complete zotero-bib.html file
+    for debugging purposes.  Configure settings.py to not generate
+    the full HTML code.
+2.  Create a WP page or a post for the bibliography. Insert
     [zot_bib_web COLLECTION] where you'd like the bibliography
     inserted.  Replace COLLECTION with the ID of the collection.
 	(More options: see push.py)
-3. Configure push.py (at the top).  You will need to know a few simple
-   details about your WP installation.
-4. Run push.py regularly or on demand.  It will call zot.py
-   automatically and then update the page in WP.
+3.  Configure push.py (at the top).  You will need to know a few simple
+    details about your WP installation.
+4.  Run push.py regularly or on demand.  It will call zot.py
+    automatically and then update the page in WP.
 
 
 
@@ -143,19 +148,6 @@ Each bibliographic entry is annotated with a bib record and an abstract,
 each of which can be revealed by the reader (client-side javascript).
 
 
-Tips
------------------------------------------
-
-- To put collections in a certain order, just add a number to their
-  names, like so:
-
-10 Selected Publications
-20 Refereed Works
-30 Presentations
-
-Zot.py will automatically remove the number for display.
-
-- Use the push.py script to update a page in Wordpress.
 
 Author
 -----------------------------------------
