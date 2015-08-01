@@ -1,14 +1,15 @@
 /* The bibliography */
 div.bibliography 
    {
-       font-family:Calibri,Arial,sans-serif;
+       font-family:Palatino,serif;
    }
 
 /* Collection titles */
-div.bibliography h1, div.bibliography h3
+div.bibliography h1, div.bibliography h2, div.bibliography h3, div.bibliography h4
    {
-       font-family:Calibri,Arial,sans-serif;
+       font-family:Optima,sans-serif;
        font-weight:1000;
+       color:DarkSlateGray ;
    }
 
 /* The entire bibliographic item */
@@ -34,8 +35,8 @@ div.bib {
 
 /* Text "bib" or "abstract" */
 .blink a {
+    font-family:Arial,sans-serif;
     font-variant: small-caps;
-    xxxdisplay:inline-block;
     clear: both;
     padding:0;
     margin:0;
@@ -45,7 +46,7 @@ div.full-bib-section .blink a {
 }
 div.short-bib-section .blink {
     display:inline-block; /* needed to make margin-top work (collapsed margins) */
-    margin-top:-10px;
+    margin-top:-5px;
     margin-bottom:10px;
 }
 
@@ -81,7 +82,7 @@ a.doctitle,span.doctitle {
 
 /* Search box */
 #pubSearchButton {
-    border: 0 solid #d4d0ba;
+    /* border: 0 solid #d4d0ba; */
     font-family: inherit;
     padding: 0;
 }
