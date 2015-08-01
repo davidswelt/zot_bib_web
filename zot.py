@@ -46,12 +46,14 @@ order_by = 'date'   # order in each category: e.g., 'dateAdded', 'dateModified',
 sort_order = 'desc'   # "desc" or "asc"
 
 write_full_html_header = True   # False to not output HTML headers.  In this case, expect a file in UTF-8 encoding.
+stylesheet_url = "style.css"  # If set and write_full_html_header is True, link to this style sheet (a URL)
 
 outputfile = 'zotero-bib.html'  # relative or absolute path name of output file
 category_outputfile_prefix = 'zotero'  # relative or absolute path prefix
 
 show_search_box = True  # show a Javascript/JQuery based search box to filter pubs by keyword.  Must define jquery_path.
-jquery_path = "../wp-includes/js/jquery/jquery.js"  # path to jquery file on the server - default: wordpress location
+jquery_path = "jquery_min.js"  # path to jquery file on the server
+# jquery_path = "../wp-includes/js/jquery/jquery.js"  # wordpress location
 
 show_links = ['abstract', 'pdf', 'bib', 'ris']   # unconditionally show these items if they are available.
 
@@ -140,7 +142,12 @@ changeCSS();</script>"""
 html_header = u''
 html_footer = u''
 if write_full_html_header:
-    html_header += u'<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN"><html><head><meta charset="UTF-8"><title>Bibliography</title>'+script_html+u'</head><body>'
+    style_html = u''
+    if stylesheet_url:
+        style_html = u"<link rel=\"stylesheet\" type=\"text/css\" href=\"%s\">"%stylesheet_url
+    html_header += u'<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN"><html><head><meta charset="UTF-8"><title>Bibliography</title>'+style_html+u'</head><body>'
+    html_header += u'<div class="bibliography">'+script_html
+    html_footer += u'</div>'
     html_header += '<h1 class="title">'+'Bibliography'+"</h1>\n";
     html_footer += u'</body></html>'
 else:
