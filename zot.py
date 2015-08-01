@@ -94,6 +94,35 @@ except:
 import codecs
 from texconv import tex2unicode
 
+
+def print_usage ():
+    print("Usage:  zot.py [--div|--full] TOPLEVEL_COLLECTION_ID [CATCHALL_COLLECTION_ID [OUTPUTFILE]]")
+
+if "--div" in sys.argv:
+    write_full_html_header = False
+    sys.argv.remove('--div')
+if "--full" in sys.argv:
+    write_full_html_header = True
+    sys.argv.remove('--full')
+        
+if "-h" in sys.argv:
+    sys.argv.remove('-h')
+    print_usage()
+if "--help" in sys.argv:
+    sys.argv.remove('--help')
+    print_usage()
+
+if len(sys.argv)>1:
+    if not sys.argv[1] == "None":
+        toplevelfilter = sys.argv[1]
+if len(sys.argv)>2:
+    if not sys.argv[2] == "None":
+        catchallcollection =sys.argv[2]
+if len(sys.argv)>3:
+    if not sys.argv[3] == "None":
+        outputfile =sys.argv[3]
+
+
 script_html = """<style type="text/css" id="zoterostylesheet" scoped>
 .bibshowhide {display:none;}
 .abstract {display:none;}
@@ -332,20 +361,6 @@ def strip(string):
 
     
 zot = zotero.Zotero(library_id, library_type, api_key)
-
-if len(sys.argv)>1:
-    if not sys.argv[1] == "None":
-        toplevelfilter = sys.argv[1]
-if len(sys.argv)>2:
-    if not sys.argv[2] == "None":
-        catchallcollection =sys.argv[2]
-if len(sys.argv)>3:
-    if not sys.argv[3] == "None":
-        outputfile =sys.argv[3]
-if len(sys.argv)>4:
-    if sys.argv[4] == "--div":
-        write_full_html_header = False
-        
 
 def coll_data(c):
     if not (u'key' in c and u'name' in c) and u'data' in c:
