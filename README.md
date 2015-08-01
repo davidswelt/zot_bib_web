@@ -37,16 +37,19 @@ Requirements
 - Bibliographic entries in Zotero (as user or as group)
 
 
-Installation
+Setup
 -----------------------------------------
 
 - Install Pyzotero, a library for python:
   sudo pip install pyzotero
 or:
   sudo easy_install pyzotero
-  
-- At the top of zot.py, add configuration as documented.
+
+- In a new file called settings.py, add configuration as documented.
+  See settings_example.py for an example. 
   Go to zotero.org to get your API secret key.
+
+- Upload jquery.js to your server (or find it).
 
 - ensure zot.py is executable (chmod ug+x zot.py)
 
@@ -62,6 +65,43 @@ or in a separate file settings.py to make upgrading simple.
   
 - Style your bibliography using CSS.  An example style
   file is included.
+
+
+Bibliography
+-----------------------------------------
+
+- With Zotero, create a bibliography and note its ID (e.g., from the
+  URL in the Zotero web interface).  Example: "MGID90AT".
+  This ID is what you need for the "toplevelfilter" variable in
+  settings.py.
+
+- You can and should add sub-collections to your bibliography.
+
+- To define an order for the sub-collections, name them starting with
+  a number: "10 Journal Articles".
+
+- To cause zot_bib_web to format a sub-collection in "short" mode, add
+  a * at the beginning of the collection name: "05* Selected Works".
+  This sub-collection will be shown using titles and years only, which
+  can then be expanded.
+  You may want to copy bibliographic items from other parts of the
+  bibliography into this sub-collection.
+
+Here's an example of a bibliography structure:
+
+My Publications [MGID90AT]
+	10* Selected Works
+	15 In Preparation / Under Review
+	20 Refereed Works
+		Semantics
+		Parsing
+		Dialogue
+		Machine Learning
+	30 Theses
+	40 Talks (Without Paper)
+
+Set toplevelfilter and catchallcollection to MGID90AT in settings.py.
+
 
 
 Wordpress Support
