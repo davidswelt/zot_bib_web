@@ -90,6 +90,11 @@ try:
         warning("Pyzotero version may be incompatible.  Upgrade to 1.1.3 or later.")
 except:
         warning("Pyzotero version could not be validated. 1.1.3 or later recommended.")
+
+# redirect warnings (needed for InsecurePlatformWarning on Macs with standard Python)
+import logging
+logging.basicConfig(filename='zot_warnings.log',level=logging.NOTSET)
+logging.captureWarnings(True)
     
 import codecs
 from texconv import tex2unicode
