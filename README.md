@@ -92,7 +92,7 @@ Here's an example of a bibliography structure:
 My Publications [MGID90AT]
 	10* Selected Works
 	15 In Preparation / Under Review
-	20 Refereed Works
+	20 Refereed Works by Topic
 		Semantics
 		Parsing
 		Dialogue
