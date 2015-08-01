@@ -345,24 +345,30 @@ def make_html (bibitems, htmlitems, risitems, items, exclude={}, shorten=False):
                         i = item[u'issued']
                         if i.has_key(u'raw'):
                             y = "(%s)"%i[u'raw']  # to do: get year from more complex date?
-                    htmlitem = u"<a href=\"javascript:show(this);\" onclick=\"show(this);\">&#8862;</a> <span class=\"doctitle-short\">%s</span> %s"%(t,y) + "<div class=\"bibshowhide\" style=\"padding-left:20px;\">"+htmlitem+"</div></div><div style=\"padding-left:20px;\">"
+                    htmlitem = u"<a href=\"javascript:show(this);\" onclick=\"show(this);\">&#8862;</a> <span class=\"doctitle-short\">%s</span> %s"%(t,y) + "<div class=\"bibshowhide\" style=\"padding-left:20px;\">"+htmlitem+"</div>"
+                    htmlitem = u"<div>" + htmlitem + "</div>" # to limit was is being expanded
                     
                 if bibitem:
 
                     abstract,bibitem2 = extract_abstract(bibitem)
-
+                    blinkitem = u""
                     # we print the original item name as label so that capitalization may be chosen via the items list
                     for item in show_items:
                         if 'abstract' == item.lower() and abstract:
-                            htmlitem += u"<div class=\"blink\"><a href=\"javascript:show(this);\" onclick=\"show(this);\">%s</a><div class=\"bibshowhide\"><div class=\"abstract\">%s</div></div></div>"%(item,abstract)
+                            blinkitem += u"<div class=\"blink\"><a href=\"javascript:show(this);\" onclick=\"show(this);\">%s</a><div class=\"bibshowhide\"><div class=\"abstract\">%s</div></div></div>"%(item,abstract)
 
                         elif 'bib' == item.lower() and bibitem2:
-                            htmlitem += u"<div class=\"blink\"><a href=\"javascript:show(this);\" onclick=\"show(this);\">%s</a><div class=\"bibshowhide\"><div class=\"bib\">%s</div></div></div>"%(item,bibitem2)
+                            blinkitem += u"<div class=\"blink\"><a href=\"javascript:show(this);\" onclick=\"show(this);\">%s</a><div class=\"bibshowhide\"><div class=\"bib\">%s</div></div></div>"%(item,bibitem2)
                         elif 'pdf' == item.lower() and u:
-                            htmlitem += u"<div class=\"blink\"><a href=\"%s\">%s</a></div>"%(u,item)
+                            blinkitem += u"<div class=\"blink\"><a href=\"%s\">%s</a></div>"%(u,item)
                         elif 'ris' == item.lower() and risitem:
-                            # htmlitem += u"<div class=\"blink\"><a href=\"javascript:show(this);\" onclick=\"show(this);\">%s</a><div class=\"bibshowhide\"><div class=\"bib\">%s</div></div></div>"%(item,risitem)
-                            htmlitem += u"<div class=\"blink\"><a title=\"Download EndNote record\" href=\"javascript:downloadFile(this);\" onclick=\"downloadFile(this);\">%s</a><div class=\"bibshowhide\"><div class=\"ris\">%s</div></div></div>"%(item,risitem)
+                            # blinkitem += u"<div class=\"blink\"><a href=\"javascript:show(this);\" onclick=\"show(this);\">%s</a><div class=\"bibshowhide\"><div class=\"bib\">%s</div></div></div>"%(item,risitem)
+                            blinkitem += u"<div class=\"blink\"><a title=\"Download EndNote record\" href=\"javascript:downloadFile(this);\" onclick=\"downloadFile(this);\">%s</a><div class=\"bibshowhide\"><div class=\"ris\">%s</div></div></div>"%(item,risitem)
+
+                    if shorten:
+                        blinkitem = "<div style=\"padding-left:20px;\">" + blinkitem + "</div>"
+                        
+                    htmlitem += blinkitem
 
                 string += "<div class=\"bib-item\">" + htmlitem + "</div>"
 
