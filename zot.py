@@ -456,11 +456,11 @@ def compile_data(collection_id, collection_name, exclude={}):
                     year = i[u'issued'][u'raw']
                     
                 ref = "%s (%s)"%(auth, year)
-                print("warning - item %s also included in collection %s"%(ref, collection_name))
-            item_ids[key] = True
+                print("warning - item %s also included in collection %s"%(ref, item_ids[key]))
+            item_ids[key] = collection_name
             counter += 1
 
-    corehtml = make_html(b, h, r, a, exclude=exclude)
+    corehtml = make_html(b, h, r, a, exclude=exclude, shorten=shorten)
     
     if corehtml and len(corehtml)>0:  # was anything found in this category?
         # write_html([None] * len(h), h, a, 'out.html')
