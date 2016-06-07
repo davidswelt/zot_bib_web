@@ -255,9 +255,9 @@ def write_bib (items, outfile):
 def retrieve_atom (collection):
     global limit
     if limit:
-        items = zot.collection_items(collection, format='atom',content='csljson', limit=limit, order=order_by, sort=sort_order)
+        items = zot.collection_items(collection, format='atom',content='csljson', limit=limit, order=order_by, sort=sort_order, itemType='-attachment || note')
     else:
-        items = zot.everything(zot.collection_items(collection, format='atom',content='csljson', order=order_by, sort=sort_order))
+        items = zot.everything(zot.collection_items(collection, format='atom',content='csljson', order=order_by, sort=sort_order, itemType='-attachment || note'))
 
     return items
 
