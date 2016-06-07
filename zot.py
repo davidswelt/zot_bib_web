@@ -405,7 +405,7 @@ def coll_key(c):
     
 collection_ids = {}  # collection names -> IDs
 collection_depths = {}  # collection names -> depth
-c=[(x,0) for x in zot.collections_sub(toplevelfilter)]  # this will probably return a maximum of 25
+#c=[(x,0) for x in zot.collections_sub(toplevelfilter)]  # this will probably return a maximum of 25
 c=zot.collections_sub(toplevelfilter)
 
 collection_filter = {toplevelfilter:False}
