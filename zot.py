@@ -9,7 +9,7 @@
 # Bibliographic style can be chosen (APA) is default.
 
 
-# (C) 2014,2015 David Reitter, The Pennsylvania State University
+# (C) 2014,2015 ,2016 David Reitter, The Pennsylvania State University
 # Released under the GNU General Public License, V.3 or later.
 
 from __future__ import print_function
@@ -27,7 +27,7 @@ from __future__ import print_function
 # You may, alternatively, configure this in a file called "settings.py"
 
 library_id = '160464' # your group or user ID (e.g., six numeric digits)
-library_type ='group'  # or 'group' # group or userm
+library_type ='group'  # 'group' or 'user'
 api_key = 'xxxxxxxxxxxxxxxxx'  # secret key (from Zotero)
 
 toplevelfilter = 'MGID93AS'   # collection where to start retrieving
