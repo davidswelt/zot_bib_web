@@ -146,7 +146,9 @@ script_html = """<style type="text/css" id="zoterostylesheet" scoped>
   var pom = document.createElement('a');
   pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(ee.innerHTML));
   pom.setAttribute('download', filename);
+  document.body.appendChild(pom);
   pom.click();
+  document.body.removeChild(pom);
 }}}}
 function show(elem) {
   if (elem.parentNode) {
