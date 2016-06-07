@@ -437,9 +437,11 @@ if collection_depths.values().count(0)==1:  # only one top-level collection?
             del collection_ids[n]
             print("(Top-level collection will be ignored.)")
             break
-    
-print("%s collections: "%len(collection_ids.items()))
 
+print("%s collections: "%len(collection_ids.items()))
+if 0==len(collection_ids.items()) and catchallcollection != toplevelfilter:
+    print("Warning: Items in the top level collections are excluded.")
+    print("Move your items into subcollections or use the catchallcollection setting.")
 if limit:
     print("Output limited to %s per collection."%limit)
 
