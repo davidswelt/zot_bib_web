@@ -79,6 +79,7 @@ except ImportError:
 #############################################################################
 import sys
 import re
+import copy
 def warning(*objs):
     print("WARNING: ", *objs, file=sys.stderr)
 
@@ -518,7 +519,7 @@ for collection_name in sortedkeys:
     if collection_ids[collection_name] == catchallcollection:
         # now for "Other"
         # Other has everything that isn't mentioned above
-        c = compile_data(collection_ids[collection_name], strip(collection_name), exclude=item_ids, shorten=s)
+        c = compile_data(collection_ids[collection_name], strip(collection_name), exclude=copy.copy(item_ids), shorten=s)
     else:
         c = compile_data(collection_ids[collection_name], strip(collection_name), shorten=s)
 
