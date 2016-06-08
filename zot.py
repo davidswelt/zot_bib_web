@@ -145,8 +145,8 @@ script_html = """<style type="text/css" id="zoterostylesheet" scoped>
   var ee = elems[i]
   if (ee.childNodes[0]) { ee = ee.childNodes[0] } 
   var pom = document.createElement('a');
-  pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(ee.innerHTML));
-  pom.setAttribute('download', filename);
+  pom.href = window.URL.createObjectURL(new Blob([ee.innerHTML], {type: 'text/plain;charset=utf-8'}));
+  pom.download = filename;
   document.body.appendChild(pom);
   pom.click();
   document.body.removeChild(pom);
