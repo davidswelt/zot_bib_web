@@ -297,15 +297,11 @@ def cleanup_lines (string):
     return re.sub(r'\n\s*\n', '\n', string, flags=re.DOTALL)
 
 def tryreplacing (source, strings, repl):
-    new = None
     for s in strings:
-        repl2 = repl.replace("\\0", s)
-    	new = source.replace(s, repl2)
-	if not new == source:
-	   return new
-   
+        if s in source:
+            repl2 = repl.replace("\\0", s)
+            return source.replace(s, repl2)
     return source
-
     
 def make_html (bibitems, htmlitems, risitems, items, exclude={}, shorten=False):
 
