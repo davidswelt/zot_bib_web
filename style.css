@@ -29,6 +29,7 @@ div.bib {
     color:brown;
     padding-left:30px;
     padding-bottom:10px;
+    white-space: pre;
 }
 
 /* Text "bib" or "abstract" */
