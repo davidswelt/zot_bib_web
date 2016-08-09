@@ -38,6 +38,7 @@ limit=5   # None, or set a limit (integer<100) for each collection for debugging
 
 ###### Special settings
 
+titlestring = 'Bibliography'
 
 bib_style =  'apa'     # bibliography style format (e.g., 'apa' or 'mla') - Any valid CSL style in the Zotero style repository
 
@@ -182,10 +183,10 @@ if write_full_html_header:
     style_html = u''
     if stylesheet_url:
         style_html = u"<link rel=\"stylesheet\" type=\"text/css\" href=\"%s\">"%stylesheet_url
-    html_header += u'<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN"><html><head><meta charset="UTF-8"><title>Bibliography</title>'+style_html+u'</head><body>'
+    html_header += u'<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN"><html><head><meta charset="UTF-8"><title>'+titlestring+u'</title>'+style_html+u'</head><body>'
     html_header += u'<div class="bibliography">'+script_html
     html_footer += u'</div>'
-    html_header += '<h1 class="title">'+'Bibliography'+"</h1>\n";
+    html_header += '<h1 class="title">'+titlestring+"</h1>\n";
     html_footer += u'</body></html>'
 else:
     html_header += u'<div class="bibliography">'+script_html
