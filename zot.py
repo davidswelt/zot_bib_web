@@ -348,10 +348,11 @@ def make_html (bibitems, htmlitems, risitems, items, exclude={}, shorten=False):
                 elif item.has_key(u'url'):
                     u = item[u'url']
 
+                t2 = t.replace(u"'",u'’') # technically, we're going to have to do much more (or do a flexible match)
+                t_to_replace = ["<i>"+t+"</i>.","<i>"+t2+"</i>.","<i>"+t+"</i>","<i>"+t2+"</i>",t+".",t2+".",t,t2]
                 if u:
+                    new = tryreplacing(htmlitem, t_to_replace, u"<span class=\"doctitle\"><a class=\"doctitle\" href=\"%s\">%s</a></span>"%(u,"\\0"))
 
-                    new = tryreplacing(htmlitem, ["<i>"+t+"</i>.",t+".",t], u"<a class=\"doctitle\" href=\"%s\">%s</a>"%(u,"\\0"))
-                    
                     if new == htmlitem:
                         # replacement not successful
                         if not 'pdf' in show_items and not 'PDF' in show_items:
@@ -363,7 +364,7 @@ def make_html (bibitems, htmlitems, risitems, items, exclude={}, shorten=False):
                         # this is the new item
                         htmlitem = new
                 else:
-                    htmlitem = tryreplacing(htmlitem, ["<i>"+t+"</i>.",t+".",t], u"<span class=\"doctitle\">%s</span>"%("\\0"))
+                    htmlitem = tryreplacing(htmlitem, t_to_replace, u"<span class=\"doctitle\">%s</span>"%("\\0"))
 
                 if shorten:
                     y = ""

@@ -77,7 +77,7 @@ a.doctitle:link,a.doctitle:visited,a.doctitle,a.doctitle:hover,a.doctitle.active
 
 /* Display publication titles in their own lines.
 Remove to disable. */
-a.doctitle,span.doctitle {
+span.doctitle {
     display:block;
 }
 
