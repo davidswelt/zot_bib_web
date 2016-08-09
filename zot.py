@@ -304,10 +304,38 @@ def tryreplacing (source, strings, repl):
             return source.replace(s, repl2)
     return source
     
+def sortitems (data, sort_criteria):
+    if not sort_criteria:
+        return data
+    zipped = zip(data,[[None for _i in sort_criteria] for _x in data])
+    # the second item of each tuple in zipped
+    # contains the values to sort by.
+    for i,val in zipped:
+        for num,c in enumerate(sort_criteria):
+            # for each sort criterion, extract the value for the item
+            if i[-1].has_key(c):
+                # if available, write value into tuple
+                if c==u'author' and isinstance(i[-1][c],list) and i[-1][c][0].has_key(u'family') and i[-1][c][0].has_key(u'given'):
+                    val[num] = i[-1][c][0][u'family']+','+i[-1][c][0][u'given']
+                elif c==u'page':
+                    try:
+                        val[num] = i[-1][c].split('-')[0]
+                        val[num] = int(val[num])
+                    except:
+                        val[num] = i[-1][c]
+                else:
+                    val[num] = i[-1][c]
+    zipped = sorted(zipped, key=lambda x:x[1])
+    return [d for d,_sv in zipped]
+# [u'issued',u'author']  (by date, then author)
+# [u'page']  (just sort by page number)
+
 def make_html (bibitems, htmlitems, risitems, items, exclude={}, shorten=False):
 
+    sort_criteria = None   # [u'page']  # TODO - allow user to set this; document
+    
     string = ""
-    for bibitem,htmlitem,risitem,item in zip(bibitems,htmlitems,risitems,items):
+    for bibitem,htmlitem,risitem,item in sortitems(zip(bibitems,htmlitems,risitems,items),sort_criteria):
         if not exclude.has_key(item[u'id']):
             if item.has_key(u'title'):
 
