@@ -57,7 +57,7 @@ jquery_path = "jquery_min.js"  # path to jquery file on the server
 # jquery_path = "../wp-includes/js/jquery/jquery.js"  # wordpress location
 
 show_links = ['abstract', 'pdf', 'bib', 'ris']   # unconditionally show these items if they are available.
-
+smart_selections = True # Prevent viewers from selecting "bib", "pdf" etc for easier copy/paste of bibliography
 
 
 
@@ -129,9 +129,22 @@ if len(sys.argv)>3:
     if not sys.argv[3] == "None":
         outputfile =sys.argv[3]
 
+# smart selections prevents viewers from copying certain buttons
+# this way, a nice, clean bibliography can be copied right from a browser window
+# this is achieved by displaying the buttons dynamically.
+# caveat - are there accessibility implications?
+if smart_selections:
+    blinkitem_css = "".join(["a.%s::before {content:\"%s\"}\n"%(i,i) for i in show_links])
+    blinkitem_css += "a.shortened::before {content:\"\\229E\"}\n"  # hex(8862)
+else:
+    blinkitem_css = "".join(["a.%s::before {}\n"%(i) for i in show_links])
+    blinkitem_css += "a.shortened::before {}\n"
 
+# note - the final two styles in the style sheet are manipulated by changeCSS
+# these are selected (hack, hack) by index
 script_html = """<style type="text/css" id="zoterostylesheet" scoped>
 .bibshowhide {display:none;}
+""" + blinkitem_css + """
 .abstract {display:none;}
 .blink {margin:0;margin-right:15px;padding:0;display:none;}
 </style>
@@ -331,6 +344,18 @@ def sortitems (data, sort_criteria):
 # [u'page']  (just sort by page number)
 
 def make_html (bibitems, htmlitems, risitems, items, exclude={}, shorten=False):
+    def a_button (name,url=None,js=None,title=None,cls=None):
+        global smart_selections
+        if not js:
+            js = "show(this);"
+        if not url:
+            url = "javascript:"+js+";"
+        if not cls:
+            cls = name
+        title2 = ""
+        if title:
+            title2 = "title=\"%s\""%title
+        return u"<a class=\"%s\" %s href=\"%s\" onclick=\"%s\">%s</a>"%(cls,title2,url,js,("" if smart_selections else name))
 
     sort_criteria = None   # [u'page']  # TODO - allow user to set this; document
     
@@ -374,7 +399,8 @@ def make_html (bibitems, htmlitems, risitems, items, exclude={}, shorten=False):
                         i = item[u'issued']
                         if i.has_key(u'raw'):
                             y = "(%s)"%i[u'raw']  # to do: get year from more complex date?
-                    htmlitem = u"<a href=\"javascript:show(this);\" onclick=\"show(this);\">&#8862;</a> <span class=\"doctitle-short\">%s</span> %s"%(t,y) + "<div class=\"bibshowhide\" style=\"padding-left:20px;\">"+htmlitem+"</div>"
+                    htmlitem = a_button("&#8862;", cls="shortened")
+                    htmlitem += u" <span class=\"doctitle-short\">%s</span> %s"%(t,y) + "<div class=\"bibshowhide\" style=\"padding-left:20px;\">"+htmlitem+"</div>"
                     htmlitem = u"<div>" + htmlitem + "</div>" # to limit was is being expanded
                     
                 if bibitem:
@@ -383,16 +409,16 @@ def make_html (bibitems, htmlitems, risitems, items, exclude={}, shorten=False):
                     blinkitem = u""
                     # we print the original item name as label so that capitalization may be chosen via the items list
                     for item in show_items:
+
                         if 'abstract' == item.lower() and abstract:
-                            blinkitem += u"<div class=\"blink\"><a href=\"javascript:show(this);\" onclick=\"show(this);\">%s</a><div class=\"bibshowhide\"><div class=\"abstract\">%s</div></div></div>"%(item,abstract)
+                            blinkitem += u"<div class=\"blink\">"+a_button(item)+u"<div class=\"bibshowhide\"><div class=\"abstract\">%s</div></div></div>"%(abstract)
 
                         elif 'bib' == item.lower() and bibitem2:
-                            blinkitem += u"<div class=\"blink\"><a href=\"javascript:show(this);\" onclick=\"show(this);\">%s</a><div class=\"bibshowhide\"><div class=\"bib\">%s</div></div></div>"%(item,bibitem2)
+                            blinkitem += u"<div class=\"blink\">"+a_button(item)+u"<div class=\"bibshowhide\"><div class=\"bib\">%s</div></div></div>"%(bibitem2)
                         elif 'pdf' == item.lower() and u:
-                            blinkitem += u"<div class=\"blink\"><a href=\"%s\">%s</a></div>"%(u,item)
+                            blinkitem += u"<div class=\"blink\">"+a_button(item,url=u)+u"</div>"
                         elif 'ris' == item.lower() and risitem:
-                            # blinkitem += u"<div class=\"blink\"><a href=\"javascript:show(this);\" onclick=\"show(this);\">%s</a><div class=\"bibshowhide\"><div class=\"bib\">%s</div></div></div>"%(item,risitem)
-                            blinkitem += u"<div class=\"blink\"><a title=\"Download EndNote record\" href=\"javascript:downloadFile(this);\" onclick=\"downloadFile(this);\">%s</a><div class=\"bibshowhide\"><div class=\"ris\">%s</div></div></div>"%(item,risitem)
+                            blinkitem += u"<div class=\"blink\">"+a_button(item,title="Download EndNote record",js="downloadFile(this)")+u"<div class=\"bibshowhide\"><div class=\"ris\">%s</div></div></div>"%(risitem)
 
                     if shorten:
                         blinkitem = "<div style=\"padding-left:20px;\">" + blinkitem + "</div>"
