@@ -374,7 +374,7 @@ def make_html (bibitems, htmlitems, risitems, coinsitems, wikiitems, items, excl
     def a_button (name,url=None,js=None,title=None,cls=None):
         global smart_selections
         if not js:
-            js = "show(this);"
+            js = "show(this)"
         if not url:
             url = "javascript:"+js+";"
         if not cls:
