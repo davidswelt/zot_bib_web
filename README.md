@@ -36,6 +36,7 @@ Requirements
 - Pyzotero
 - Bibliographic entries in Zotero (as user or as group)
 
+- A unix-like operating system, such as macOS, GNU/Linux
 
 Setup
 -----------------------------------------
@@ -65,7 +66,7 @@ or in a separate file settings.py to make upgrading simple.
   zot.py to generate a complete HTML document, or just a portion of it.
   
 - Style your bibliography using CSS.  An example style
-  file is included.
+  file is included (see site/ directory).
 
 
 Bibliography

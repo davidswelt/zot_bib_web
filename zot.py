@@ -47,13 +47,13 @@ order_by = 'date'   # order in each category: e.g., 'dateAdded', 'dateModified',
 sort_order = 'desc'   # "desc" or "asc"
 
 write_full_html_header = True   # False to not output HTML headers.  In this case, expect a file in UTF-8 encoding.
-stylesheet_url = "style.css"  # If set and write_full_html_header is True, link to this style sheet (a URL)
+stylesheet_url = "site/style.css"  # If set and write_full_html_header is True, link to this style sheet (a URL)
 
 outputfile = 'zotero-bib.html'  # relative or absolute path name of output file
 category_outputfile_prefix = 'zotero'  # relative or absolute path prefix
 
 show_search_box = True  # show a Javascript/JQuery based search box to filter pubs by keyword.  Must define jquery_path.
-jquery_path = "jquery_min.js"  # path to jquery file on the server
+jquery_path = "site/jquery.min.js"  # path to jquery file on the server
 # jquery_path = "../wp-includes/js/jquery/jquery.js"  # wordpress location
 
 show_links = ['abstract', 'pdf', 'bib', 'ris']   # unconditionally show these items if they are available.
