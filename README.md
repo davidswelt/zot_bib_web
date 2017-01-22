@@ -10,15 +10,21 @@ interface or their desktop applications.
 
 
 Bibliographies
--  are grouped by collection
--  editable in Zotero by one or more users
--  are interactively searchable
--  linked to PDF documents or other URLs
--  have BibTeX records
--  and can be exported to HTML or pushed to a Wordpress database
+-  are grouped by collection,
+-  editable in Zotero by one or more users,
+-  are interactively searchable,
+-  linked to PDF documents or other URLs,
+-  have BibTeX records, and
+-  can be exported to HTML or pushed to a Wordpress database
+
+The following formats and info can be included:
+BibTex, RIS (for EndNote etc.), Wikipedia markup, abstract, PDF.
+
+A readable bibliographic entry (e.g., in APA style) is always shown.
+COINS is always included (invisible).
 
 The content generated is static.  This program is meant to 
-be run regularly. 
+be run periodically. 
 
 Zot/bib/web is available on Github.
 
@@ -110,7 +116,7 @@ Here's an example of a bibliography structure:
 		30 Theses
 		40 Talks (Without Paper)
 
-Set toplevelfilter and catchallcollection to MGID90AT in settings.py.
+To see this, set toplevelfilter and catchallcollection to MGID90AT in settings.py.
 
 
 
