@@ -3,16 +3,16 @@
 
 #### You must configure the following items
 
-library_id = '000000' # your group or user ID (e.g., six numeric digits)
+library_id = '160464' # your group or user ID (e.g., six numeric digits)
 library_type ='group'  # or 'group' # group or userm
 api_key = ''  # secret key (from Zotero)
 
-toplevelfilter = 'AAABBBB'   # top-collection that is going to be ignored (as a level)
-catchallcollection = 'BBBBCCC'  # include "Miscellaneous" category at end containing all items not mentioend anywhere else
+toplevelfilter = 'MGID93AS'   # top-collection that is going to be ignored (as a level), or None
+catchallcollection = '4KATF6MA'  # include "Miscellaneous" category at end containing all items not mentioend anywhere else, or None
 
 
 
-###### Special settings
+###### Special settings - configure if needed.
 
 limit=None   # None, or set a limit (integer<100) for each collection for debugging
 

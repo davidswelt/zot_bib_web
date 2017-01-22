@@ -23,20 +23,24 @@ from __future__ import print_function
 
 
 #### You must configure the following items
-# the values given here are mere examples
-# You may, alternatively, configure this in a file called "settings.py"
 
-library_id = '160464' # your group or user ID (e.g., six numeric digits)
+# For best results, configure this in a file called "settings.py".
+# The values given here are mere examples
+
+library_id = '160464' # your group or user ID (e.g., six numeric digits) - this is an example
 library_type ='group'  # 'group' or 'user'
-api_key = 'xxxxxxxxxxxxxxxxx'  # secret key (from Zotero)
+api_key = ''  # secret key (from Zotero)
 
-toplevelfilter = 'MGID93AS'   # collection where to start retrieving
-catchallcollection = '4KATF6MA'  # include "Miscellaneous" category at end containing all items not mentioend anywhere else
+toplevelfilter = None   #  collection where to start retrieving
+# toplevelfilter = 'MGID93AS'  # (Try this for an example)
+
+catchallcollection = None  # include "Miscellaneous" category for all remaining items
+# catchallcollection = '4KATF6MA'  # (Try this for an example)
 
 limit=5   # None, or set a limit (integer<100) for each collection for debugging
 
 
-###### Special settings
+###### Special settings - no need to change these
 
 titlestring = 'Bibliography'
 
@@ -67,7 +71,7 @@ show_links = ['abstract', 'pdf', 'bib', 'wikipedia', 'ris']   # unconditionally 
 
 #############################################################################
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 #############################################################################
 
@@ -84,7 +88,7 @@ import copy
 def warning(*objs):
     print("WARNING: ", *objs, file=sys.stderr)
 
-from pyzotero import zotero
+from pyzotero import zotero,zotero_errors
 
 try:
     v = float("%d.%02d%02d"%tuple(map(int,zotero.__version__.split(r'.'))))
@@ -446,10 +450,6 @@ def shortcollection(st):
 def strip(string):
     return string.lstrip("0123456789* ")
 
-
-    
-zot = zotero.Zotero(library_id, library_type, api_key)
-
 def coll_data(c):
     if not (u'key' in c and u'name' in c) and u'data' in c:
         c = c[u'data']
@@ -460,13 +460,35 @@ def coll_key(c):
         return c[u'key']
     return c[u'data'][u'key']
 
-    
-collection_ids = {}  # collection names -> IDs
-collection_depths = {}  # collection names -> depth
-#c=[(x,0) for x in zot.collections_sub(toplevelfilter)]  # this will probably return a maximum of 25
-c=zot.collections_sub(toplevelfilter)
 
-collection_filter = {toplevelfilter:False}
+collection_filter = {}  # top-level nodes
+
+try:
+    zot = zotero.Zotero(library_id, library_type, api_key)
+    
+    collection_ids = {}  # collection names -> IDs
+    collection_depths = {}  # collection names -> depth
+    #c=[(x,0) for x in zot.collections_sub(toplevelfilter)]  # this will probably return a maximum of 25
+    if toplevelfilter:
+        c = zot.collections_sub(toplevelfilter)
+        collection_filter[toplevelfilter] = False
+    else:
+        print("Fetching all collections:")
+        c = []
+        for col in zot.collections():
+            name=""
+            if col.has_key(u'data'):
+                name = col[u'data'].get(u'name',"")
+            print(col[u'key']+": "+name)
+            c += zot.collections_sub(col[u'key'])
+            collection_filter[col[u'key']] = False
+        
+        
+except zotero_errors.UserNotAuthorised:
+    print("UserNotAuthorised: Set Zotero API key in settings.py or zot.py.", file=sys.stderr)
+    raise SystemExit(1)
+
+
 for coll in c:  # for each collection
     # pyzotero or Zotero API has changed at some point, so...
     data = coll_data(coll)

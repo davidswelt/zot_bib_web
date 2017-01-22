@@ -46,13 +46,21 @@ Setup
 or:
   sudo easy_install pyzotero
 
+- ensure zot.py is executable (chmod ug+x zot.py)
+
+- Test:
+
+   ./zot.py
+
+   Then view zotero-bib.html in a browser.
+   If that looks good, move on to the next steps for configuration.
+
 - In a new file called settings.py, add configuration as documented.
-  See settings_example.py for an example. 
+  You may use settings_example.py as a start. 
   Go to zotero.org to get your API secret key.
 
-- Upload jquery.js to your server (or find it).
-
-- ensure zot.py is executable (chmod ug+x zot.py)
+- Upload the site folder or its contents to a public place on your web server.
+  By default, /site/... is the assumed URL.
 
 To generate HTML and include it in a website:
 
