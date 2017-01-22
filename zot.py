@@ -56,13 +56,13 @@ show_search_box = True  # show a Javascript/JQuery based search box to filter pu
 jquery_path = "site/jquery.min.js"  # path to jquery file on the server
 # jquery_path = "../wp-includes/js/jquery/jquery.js"  # wordpress location
 
-show_links = ['abstract', 'pdf', 'bib', 'ris']   # unconditionally show these items if they are available.
 smart_selections = True # Prevent viewers from selecting "bib", "pdf" etc for easier copy/paste of bibliography
 
 
 
 
 
+show_links = ['abstract', 'pdf', 'bib', 'wikipedia', 'ris']   # unconditionally show these items if they are available.
 
 
 #############################################################################
@@ -249,13 +249,25 @@ function searchFunction() {
         warning("show_search_box set, but jquery_path undefined.")
         
 
-def retrieve_bib (collection, content, style):
+def retrieve_x (collection,**args):
     global limit
     if limit:
-        items = zot.collection_items(collection, content=content, style=style, limit=limit, order=order_by, sort=sort_order, itemType='-attachment || note')
+        items = zot.collection_items(collection, limit=limit, order=order_by, sort=sort_order, itemType='-attachment || note', **args)
     else:
-        items = zot.everything(zot.collection_items(collection, content=content, style=style, order=order_by, sort=sort_order, itemType='-attachment || note'))
+        items = zot.everything(zot.collection_items(collection, order=order_by, sort=sort_order, itemType='-attachment || note', **args))
     return items
+
+def retrieve_bib (collection, content, style):
+    return retrieve_x(collection, content=content, style=style)
+
+def retrieve_atom (collection):
+    return retrieve_x(collection, content='csljson', format='atom')
+
+def retrieve_coins (collection):
+    return retrieve_x(collection, content='coins')
+
+def retrieve_wikipedia (collection):
+    return retrieve_x(collection, content='wikipedia')
 
 def write_bib (items, outfile):
         
@@ -265,16 +277,6 @@ def write_bib (items, outfile):
         file.write(item)
 
     file.close()
-
-
-def retrieve_atom (collection):
-    global limit
-    if limit:
-        items = zot.collection_items(collection, format='atom',content='csljson', limit=limit, order=order_by, sort=sort_order, itemType='-attachment || note')
-    else:
-        items = zot.everything(zot.collection_items(collection, format='atom',content='csljson', order=order_by, sort=sort_order, itemType='-attachment || note'))
-
-    return items
 
 
 def format_bib(bib):
@@ -343,7 +345,7 @@ def sortitems (data, sort_criteria):
 # [u'issued',u'author']  (by date, then author)
 # [u'page']  (just sort by page number)
 
-def make_html (bibitems, htmlitems, risitems, items, exclude={}, shorten=False):
+def make_html (bibitems, htmlitems, risitems, coinsitems, wikiitems, items, exclude={}, shorten=False):
     def a_button (name,url=None,js=None,title=None,cls=None):
         global smart_selections
         if not js:
@@ -360,7 +362,7 @@ def make_html (bibitems, htmlitems, risitems, items, exclude={}, shorten=False):
     sort_criteria = None   # [u'page']  # TODO - allow user to set this; document
     
     string = ""
-    for bibitem,htmlitem,risitem,item in sortitems(zip(bibitems,htmlitems,risitems,items),sort_criteria):
+    for bibitem,htmlitem,risitem,coinsitem,wikiitem,item in sortitems(zip(bibitems,htmlitems,risitems,coinsitems,wikiitems,items),sort_criteria):
         if not exclude.has_key(item[u'id']):
             if item.has_key(u'title'):
 
@@ -403,6 +405,8 @@ def make_html (bibitems, htmlitems, risitems, items, exclude={}, shorten=False):
                     htmlitem += u" <span class=\"doctitle-short\">%s</span> %s"%(t,y) + "<div class=\"bibshowhide\" style=\"padding-left:20px;\">"+htmlitem+"</div>"
                     htmlitem = u"<div>" + htmlitem + "</div>" # to limit was is being expanded
                     
+                htmlitem += str(coinsitem)
+                    
                 if bibitem:
 
                     abstract,bibitem2 = extract_abstract(bibitem)
@@ -412,7 +416,8 @@ def make_html (bibitems, htmlitems, risitems, items, exclude={}, shorten=False):
 
                         if 'abstract' == item.lower() and abstract:
                             blinkitem += u"<div class=\"blink\">"+a_button(item)+u"<div class=\"bibshowhide\"><div class=\"abstract\">%s</div></div></div>"%(abstract)
-
+                        elif 'wikipedia' == item.lower() and wikiitem:
+                            blinkitem += u"<div class=\"blink\">"+a_button(item)+u"<div class=\"bibshowhide\"><div class=\"bib\">%s</div></div></div>"%(wikiitem)
                         elif 'bib' == item.lower() and bibitem2:
                             blinkitem += u"<div class=\"blink\">"+a_button(item)+u"<div class=\"bibshowhide\"><div class=\"bib\">%s</div></div></div>"%(bibitem2)
                         elif 'pdf' == item.lower() and u:
@@ -524,7 +529,12 @@ def compile_data(collection_id, collection_name, exclude={}, shorten=False):
     else:
         r = [None for _x in h]
     a = retrieve_atom(collection_id)
-
+    c = retrieve_coins(collection_id)
+    if 'wikipedia' in show_links or 'WIKIPEDIA' in show_links or "Wikipedia" in show_links:
+        w = retrieve_wikipedia(collection_id)
+    else:
+        w = [None for _x in h]
+        
     counter = 0
     if not exclude:
         for i in a:
@@ -547,7 +557,7 @@ def compile_data(collection_id, collection_name, exclude={}, shorten=False):
             item_ids[key] = collection_name
             counter += 1
 
-    corehtml = make_html(b, h, r, a, exclude=exclude, shorten=shorten)
+    corehtml = make_html(b, h, r, c, w, a, exclude=exclude, shorten=shorten)
     
     if corehtml and len(corehtml)>0:  # was anything found in this category?
         # write_html([None] * len(h), h, a, 'out.html')
