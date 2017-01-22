@@ -169,12 +169,19 @@ script_html = """<style type="text/css" id="zoterostylesheet" scoped>
   document.body.removeChild(pom);
 }}}}
 function show(elem) {
-  if (elem.parentNode) {
-   var elems = elem.parentNode.getElementsByTagName('*'), i;
-    for (i in elems) {
+    if (elem.parentNode) {
+	var elems = elem.parentNode.parentNode.getElementsByTagName('*');
+	for (i in elems) {
         if((' ' + elems[i].className + ' ').indexOf(' ' + 'bibshowhide' + ' ') > -1) 
-           { if (elems[i].style.display == 'block') {elems[i].style.display = 'none';} else {elems[i].style.display = 'block';}}}}
-  return(void(0));}
+	    { if (elems[i].parentNode != elem.parentNode)
+		    elems[i].style.display = 'none';
+	    }}
+	elems = elem.parentNode.getElementsByTagName('*');
+	for (i in elems) {
+        if((' ' + elems[i].className + ' ').indexOf(' ' + 'bibshowhide' + ' ') > -1) 
+	    { elems[i].style.display = (elems[i].style.display == 'block') ? 'none' : 'block';
+	    }}}
+    return(void(0));}
 function changeCSS() {
 	if (!document.styleSheets) return;
 	var theRules = new Array();
