@@ -426,10 +426,10 @@ def make_html (bibitems, htmlitems, risitems, coinsitems, wikiitems, items, excl
                         i = item[u'issued']
                         if i.has_key(u'raw'):
                             y = "(%s)"%i[u'raw']  # to do: get year from more complex date?
-                    htmlitem = a_button("&#8862;", cls="shortened")
-                    htmlitem += u" <span class=\"doctitle-short\">%s</span> %s"%(t,y) + "<div class=\"bibshowhide\" style=\"padding-left:20px;\">"+htmlitem+"</div>"
+
+                    htmlitem = u"<a href=\"javascript:show(this);\" onclick=\"show(this);\">&#8862;</a> <span class=\"doctitle-short\">%s</span> %s"%(t,y) + "<div class=\"bibshowhide\" style=\"padding-left:20px;\">"+htmlitem+"</div>"
                     htmlitem = u"<div>" + htmlitem + "</div>" # to limit was is being expanded
-                    
+
                 htmlitem += str(coinsitem)
                     
                 if bibitem:
