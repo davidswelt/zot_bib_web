@@ -56,18 +56,17 @@ stylesheet_url = "site/style.css"  # If set and write_full_html_header is True, 
 outputfile = 'zotero-bib.html'  # relative or absolute path name of output file
 category_outputfile_prefix = 'zotero'  # relative or absolute path prefix
 
-show_search_box = True  # show a Javascript/JQuery based search box to filter pubs by keyword.  Must define jquery_path.
 jquery_path = "site/jquery.min.js"  # path to jquery file on the server
 # jquery_path = "../wp-includes/js/jquery/jquery.js"  # wordpress location
 
-smart_selections = True # Prevent viewers from selecting "bib", "pdf" etc for easier copy/paste of bibliography
-
-
-
-
+show_copy_button = True  # show clipbaord copy button.  Must define jquery_path.
+clipboard_js_path = "site/clipboard.min.js"
+copy_button_path = "site/clippy.svg"
+show_search_box = True  # show a Javascript/JQuery based search box to filter pubs by keyword.  Must define jquery_path.
 
 show_links = ['abstract', 'pdf', 'bib', 'wikipedia', 'ris']   # unconditionally show these items if they are available.
 
+smart_selections = True # Prevent viewers from selecting "bib", "pdf" etc for easier copy/paste of bibliography
 
 #############################################################################
 
@@ -194,7 +193,27 @@ function changeCSS() {
     }
 changeCSS();</script>"""
 
+
+if show_copy_button:
+    if jquery_path:
+        script_html += """
+    <script type="text/javascript" src="%s"></script>
+    <script type="text/javascript" src="%s"></script>
+    <script type="text/javascript">
+    jQuery(document).ready(function () {
+    jQuery( "div.bib" ).append('<button class="btn"><img src="%s" width=13 alt="Copy to clipboard"></button>');
+        new Clipboard('.btn',{
+text: function(trigger) {
+var prevCol = trigger.parentNode.style.color;
+trigger.parentNode.style.color="grey";
+setTimeout(function(){trigger.parentNode.style.color=prevCol;}, 200);
+return trigger.parentNode.childNodes[0].textContent;}});});</script>
+        """%(jquery_path,clipboard_js_path,copy_button_path)
+    else:
+        warning("show_search_box set, but jquery_path undefined.")
+
 credits_html = u'<div name="zbw_credits" style="text-align:right;">A <a href="https://github.com/davidswelt/zot_bib_web">zot_bib_web</a> bibliography.</div>'
+        
         
 html_header = u''
 html_footer = u''
