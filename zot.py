@@ -440,27 +440,27 @@ def make_html (bibitems, htmlitems, risitems, coinsitems, wikiitems, items, excl
                     for item in show_items:
 
                         if 'abstract' == item.lower() and abstract:
-                            blinkitem += u"<div class=\"blink\">"+a_button(item)+u"<div class=\"bibshowhide\"><div class=\"abstract\">%s</div></div></div>"%(abstract)
+                            blinkitem += u'<div class="blink">'+a_button(item)+u'<div class="bibshowhide"><div class="abstract">%s</div></div></div>'%(abstract)
                         elif 'wikipedia' == item.lower() and wikiitem:
-                            blinkitem += u"<div class=\"blink\">"+a_button(item)+u"<div class=\"bibshowhide\"><div class=\"bib\">%s</div></div></div>"%(wikiitem)
+                            blinkitem += u'<div class="blink">'+a_button(item)+u'<div class="bibshowhide"><div class="bib" style="white-space:pre-wrap;">%s</div></div></div>'%(wikiitem)
                         elif 'bib' == item.lower() and bibitem2:
-                            blinkitem += u"<div class=\"blink\">"+a_button(item)+u"<div class=\"bibshowhide\"><div class=\"bib\">%s</div></div></div>"%(bibitem2)
+                            blinkitem += u'<div class="blink">'+a_button(item)+u'<div class="bibshowhide"><div class="bib">%s</div></div></div>'%(bibitem2)
                         elif 'pdf' == item.lower() and u:
-                            blinkitem += u"<div class=\"blink\">"+a_button(item,url=u)+u"</div>"
+                            blinkitem += u'<div class="blink">'+a_button(item,url=u)+u'</div>'
                         elif 'ris' == item.lower() and risitem:
-                            blinkitem += u"<div class=\"blink\">"+a_button(item,title="Download EndNote record",js="downloadFile(this)")+u"<div class=\"bibshowhide\"><div class=\"ris\">%s</div></div></div>"%(risitem)
+                            blinkitem += u'<div class="blink">'+a_button(item,title="Download EndNote record",js="downloadFile(this)")+u'<div class="bibshowhide"><div class="ris">%s</div></div></div>'%(risitem)
 
                     if shorten:
-                        blinkitem = "<div style=\"padding-left:20px;\">" + blinkitem + "</div>"
+                        blinkitem = u'<div style="padding-left:20px;">' + blinkitem + u'</div>'
                         
                     htmlitem += blinkitem
 
-                string += "<div class=\"bib-item\">" + htmlitem + "</div>"
+                string += u'<div class="bib-item">' + htmlitem + u'</div>'
 
     if shorten:
-        string = "<div class=\"short-bib-section\">" + string + "</div>"
+        string = u'<div class="short-bib-section">' + string + u'</div>'
     else:
-        string = "<div class=\"full-bib-section\">" + string + "</div>"
+        string = u'<div class="full-bib-section">' + string + u'</div>'
 
     return cleanup_lines(string)
 
