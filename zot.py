@@ -194,6 +194,8 @@ function changeCSS() {
     }
 changeCSS();</script>"""
 
+credits_html = u'<div name="zbw_credits" style="text-align:right;">A <a href="https://github.com/davidswelt/zot_bib_web">zot_bib_web</a> bibliography.</div>'
+        
 html_header = u''
 html_footer = u''
 if write_full_html_header:
@@ -202,12 +204,12 @@ if write_full_html_header:
         style_html = u"<link rel=\"stylesheet\" type=\"text/css\" href=\"%s\">"%stylesheet_url
     html_header += u'<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN"><html><head><meta charset="UTF-8"><title>'+titlestring+u'</title>'+style_html+u'</head><body>'
     html_header += u'<div class="bibliography">'+script_html
-    html_footer += u'</div>'
+    html_footer += credits_html + u'</div>'
     html_header += '<h1 class="title">'+titlestring+"</h1>\n";
     html_footer += u'</body></html>'
 else:
     html_header += u'<div class="bibliography">'+script_html
-    html_footer += u'</div>'
+    html_footer += credits_html + u'</div>'
 
 search_box = ""
 if show_search_box:
