@@ -201,7 +201,7 @@ if show_copy_button:
     <script type="text/javascript" src="%s"></script>
     <script type="text/javascript">
     jQuery(document).ready(function () {
-    jQuery( "div.bib" ).append('<button class="btn"><img src="%s" width=13 alt="Copy to clipboard"></button>');
+    jQuery( "div.bib" ).append('\\n<button class="btn"><img src="%s" width=13 alt="Copy to clipboard"></button>');
         new Clipboard('.btn',{
 text: function(trigger) {
 var prevCol = trigger.parentNode.style.color;
