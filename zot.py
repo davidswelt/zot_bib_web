@@ -145,9 +145,11 @@ else:
 
 # note - the final two styles in the style sheet are manipulated by changeCSS
 # these are selected (hack, hack) by index
+# the .blink p style is a hack because Wordpress seems to insert <p> at times.
 script_html = """<style type="text/css" id="zoterostylesheet" scoped>
 .bibshowhide {display:none;}
 """ + blinkitem_css + """
+.blink p {display:inline;}
 .abstract {display:none;}
 .blink {margin:0;margin-right:15px;padding:0;display:none;}
 </style>
