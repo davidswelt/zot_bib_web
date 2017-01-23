@@ -26,6 +26,9 @@ COINS is always included (invisible).
 The content generated is static.  This program is meant to 
 be run periodically. 
 
+A tool to push the resulting bibliography to a Wordpress installation
+is also provided.
+
 Zot/bib/web is available on Github.
 
 
@@ -132,14 +135,23 @@ Follow these steps:
     Call zot.py --full to generate a complete zotero-bib.html file
     for debugging purposes.  Configure settings.py to not generate
     the full HTML code.
-2.  Create a WP page or a post for the bibliography. Insert
+2. Install the wpautop-control plugin (or a similar plugin) to make
+    sure that WP will not inserts paragraph breaks at various places
+    in the bibliography.  With this plugin, you will need to add a
+    "custom field" to the page created in the  next step (Choose
+    "Screen Options" at the top of the page view, enable custom
+    fields.  Then find custom fields at the very bottom of the page
+    and add a "wpautop" field with value "no".
+3.  Create a WP page or a post for the bibliography. Insert
     [zot_bib_web COLLECTION] where you'd like the bibliography
     inserted.  Replace COLLECTION with the ID of the collection.
 	(More options: see push.py)
-3.  Configure push.py (at the top).  You will need to know a few simple
+4.  Configure push.py (at the top).  You will need to know a few simple
     details about your WP installation.
-4.  Run push.py regularly or on demand.  It will call zot.py
+5.  Run push.py regularly or on demand.  It will call zot.py
     automatically and then update the page in WP.
+
+
 
 
 
