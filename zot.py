@@ -132,6 +132,15 @@ if len(sys.argv)>3:
     if not sys.argv[3] == "None":
         outputfile =sys.argv[3]
 
+
+###########
+
+def cleanup_lines (string):
+    "Remove double line feeds to protect from <P> insertion in Wordpress."
+    # Wordpress likes to insert <P>, which is not a good idea here.
+    return re.sub(r'\n\s*\n', '\n', string, flags=re.DOTALL)
+
+
 # smart selections prevents viewers from copying certain buttons
 # this way, a nice, clean bibliography can be copied right from a browser window
 # this is achieved by displaying the buttons dynamically.
@@ -147,8 +156,8 @@ else:
 # these are selected (hack, hack) by index
 # the .blink p style is a hack because Wordpress seems to insert <p> at times.
 script_html = """<style type="text/css" id="zoterostylesheet" scoped>
-.bibshowhide {display:none;}""" + blinkitem_css + """
-.blink p {display:inline;}
+.bibshowhide {display:none;}
+"""+ blinkitem_css + """.blink p {display:inline;}
 .abstract {display:none;}
 .blink {margin:0;margin-right:15px;padding:0;display:none;}
 </style>
@@ -219,7 +228,8 @@ return trigger.parentNode.childNodes[0].textContent;}});});</script>"""%(jquery_
         warning("show_search_box set, but jquery_path undefined.")
 
 credits_html = u'<div name="zbw_credits" style="text-align:right;">A <a href="https://github.com/davidswelt/zot_bib_web">zot_bib_web</a> bibliography.</div>'
-        
+
+script_html = cleanup_lines(script_html)
         
 html_header = u''
 html_footer = u''
@@ -336,11 +346,6 @@ def write_some_html (body, outfile, title=None):
     file.write(body)
     file.write(html_footer)
     file.close()
-
-def cleanup_lines (string):
-    "Remove double line feeds to protect from <P> insertion in Wordpress."
-    # Wordpress likes to insert <P>, which is not a good idea here.
-    return re.sub(r'\n\s*\n', '\n', string, flags=re.DOTALL)
 
 def tryreplacing (source, strings, repl):
     for s in strings:
