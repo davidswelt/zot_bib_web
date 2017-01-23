@@ -147,8 +147,7 @@ else:
 # these are selected (hack, hack) by index
 # the .blink p style is a hack because Wordpress seems to insert <p> at times.
 script_html = """<style type="text/css" id="zoterostylesheet" scoped>
-.bibshowhide {display:none;}
-""" + blinkitem_css + """
+.bibshowhide {display:none;}""" + blinkitem_css + """
 .blink p {display:inline;}
 .abstract {display:none;}
 .blink {margin:0;margin-right:15px;padding:0;display:none;}
@@ -205,8 +204,7 @@ changeCSS();</script>"""
 
 if show_copy_button:
     if jquery_path:
-        script_html += """
-    <script type="text/javascript" src="%s"></script>
+        script_html += """<script type="text/javascript" src="%s"></script>
     <script type="text/javascript" src="%s"></script>
     <script type="text/javascript">
     jQuery(document).ready(function () {
@@ -216,8 +214,7 @@ text: function(trigger) {
 var prevCol = trigger.parentNode.style.color;
 trigger.parentNode.style.color="grey";
 setTimeout(function(){trigger.parentNode.style.color=prevCol;}, 200);
-return trigger.parentNode.childNodes[0].textContent;}});});</script>
-        """%(jquery_path,clipboard_js_path,copy_button_path)
+return trigger.parentNode.childNodes[0].textContent;}});});</script>"""%(jquery_path,clipboard_js_path,copy_button_path)
     else:
         warning("show_search_box set, but jquery_path undefined.")
 
@@ -277,8 +274,7 @@ function searchFunction() {
             }, 250);
         };
     jQuery("#pubSearchInputBox").bind('keyup paste cut', checkForChange);
-});</script>
-"""
+});</script>"""
     else:
         warning("show_search_box set, but jquery_path undefined.")
         
@@ -439,7 +435,7 @@ def make_html (bibitems, htmlitems, risitems, coinsitems, wikiitems, items, excl
                     htmlitem = u"<a href=\"javascript:show(this);\" onclick=\"show(this);\">&#8862;</a> <span class=\"doctitle-short\">%s</span> %s"%(t,y) + "<div class=\"bibshowhide\" style=\"padding-left:20px;\">"+htmlitem+"</div>"
                     htmlitem = u"<div>" + htmlitem + "</div>" # to limit was is being expanded
 
-                htmlitem += str(coinsitem)
+                htmlitem += str(coinsitem).strip()
                     
                 if bibitem:
 
