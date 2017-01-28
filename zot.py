@@ -3,7 +3,7 @@
 
 # This will retrieve a set of collections and format an interactive bibliography in HTML5.
 # The bibliography contains BibTeX records and abstracts that can be revealed upon clicking.
-# The output is ready to be included in other websites (there are options), and it can be 
+# The output is ready to be included in other websites (there are options), and it can be
 # easily styles using CSS (see style.css).
 
 # Bibliographic style can be chosen (APA) is default.
@@ -100,7 +100,7 @@ except:
 import logging
 logging.basicConfig(filename='zot_warnings.log',level=logging.NOTSET)
 logging.captureWarnings(True)
-    
+
 import codecs
 from texconv import tex2unicode
 
@@ -114,7 +114,7 @@ if "--div" in sys.argv:
 if "--full" in sys.argv:
     write_full_html_header = True
     sys.argv.remove('--full')
-        
+
 if "-h" in sys.argv:
     sys.argv.remove('-h')
     print_usage()
@@ -167,7 +167,7 @@ script_html = """<style type="text/css" id="zoterostylesheet" scoped>
   if (elem.parentNode) {
     var elems = elem.parentNode.getElementsByTagName('*');
     for (i in elems) {
-        if((' ' + elems[i].className + ' ').indexOf(' ' + 'bibshowhide' + ' ') > -1) 
+        if((' ' + elems[i].className + ' ').indexOf(' ' + 'bibshowhide' + ' ') > -1)
            {
   var ee = elems[i]
   if (ee.childNodes[0]) { ee = ee.childNodes[0] }
@@ -180,31 +180,31 @@ script_html = """<style type="text/css" id="zoterostylesheet" scoped>
 }}}}
 function show(elem) {
     if (elem.parentNode) {
-	var elems = elem.parentNode.parentNode.getElementsByTagName('*');
-	for (i in elems) {
-        if((' ' + elems[i].className + ' ').indexOf(' ' + 'bibshowhide' + ' ') > -1) 
-	    { if (elems[i].parentNode != elem.parentNode)
-		    elems[i].style.display = 'none';
-	    }}
-	elems = elem.parentNode.getElementsByTagName('*');
-	for (i in elems) {
-        if((' ' + elems[i].className + ' ').indexOf(' ' + 'bibshowhide' + ' ') > -1) 
-	    { elems[i].style.display = (elems[i].style.display == 'block') ? 'none' : 'block';
-	    }}}
+    var elems = elem.parentNode.parentNode.getElementsByTagName('*');
+    for (i in elems) {
+        if((' ' + elems[i].className + ' ').indexOf(' ' + 'bibshowhide' + ' ') > -1)
+        { if (elems[i].parentNode != elem.parentNode)
+            elems[i].style.display = 'none';
+        }}
+    elems = elem.parentNode.getElementsByTagName('*');
+    for (i in elems) {
+        if((' ' + elems[i].className + ' ').indexOf(' ' + 'bibshowhide' + ' ') > -1)
+        { elems[i].style.display = (elems[i].style.display == 'block') ? 'none' : 'block';
+        }}}
     return(void(0));}
 function changeCSS() {
-	if (!document.styleSheets) return;
-	var theRules = new Array();
+    if (!document.styleSheets) return;
+    var theRules = new Array();
     //ss = document.styleSheets[document.styleSheets.length-1];
     var ss = document.getElementById('zoterostylesheet');
     if (ss) {
     ss = ss.sheet
-	if (ss.cssRules)
-		theRules = ss.cssRules
-	else if (ss.rules)
-		theRules = ss.rules
-	else return;
-	theRules[theRules.length-2].style.display = 'inline';
+    if (ss.cssRules)
+        theRules = ss.cssRules
+    else if (ss.rules)
+        theRules = ss.rules
+    else return;
+    theRules[theRules.length-2].style.display = 'inline';
     theRules[theRules.length-1].style.display = 'inline';
     }
     }
@@ -230,7 +230,7 @@ return trigger.parentNode.childNodes[0].textContent;}});});</script>"""%(jquery_
 credits_html = u'<div name="zbw_credits" style="text-align:right;">A <a href="https://github.com/davidswelt/zot_bib_web">zot_bib_web</a> bibliography.</div>'
 
 script_html = cleanup_lines(script_html)
-        
+
 html_header = u''
 html_footer = u''
 if write_full_html_header:
@@ -268,9 +268,9 @@ function searchFunction() {
   jQuery.each(searchTerms, function(i,x) {q = q + ":icontains('"+x+"')";});
   jQuery(q).css( "display", "block" );
 }
-  jQuery(function() {    // <== Doc ready  
+  jQuery(function() {    // <== Doc ready
   // stackoverflow q 3971524
-    var inputVal = jQuery("#pubSearchInputBox").val(), 
+    var inputVal = jQuery("#pubSearchInputBox").val(),
         timer,
         checkForChange = function() {
             var self = this; // or just use .bind(this)
@@ -287,7 +287,7 @@ function searchFunction() {
 });</script>"""
     else:
         warning("show_search_box set, but jquery_path undefined.")
-        
+
 
 def retrieve_x (collection,**args):
     global limit
@@ -310,7 +310,7 @@ def retrieve_wikipedia (collection):
     return retrieve_x(collection, content='wikipedia')
 
 def write_bib (items, outfile):
-        
+
     file = codecs.open(outfile, "w", "utf-8")
 
     for item in items:
@@ -353,7 +353,7 @@ def tryreplacing (source, strings, repl):
             repl2 = repl.replace("\\0", s)
             return source.replace(s, repl2)
     return source
-    
+
 def sortitems (data, sort_criteria):
     if not sort_criteria:
         return data
@@ -395,7 +395,7 @@ def make_html (bibitems, htmlitems, risitems, coinsitems, wikiitems, items, excl
         return u"<a class=\"%s\" %s href=\"%s\" onclick=\"%s\">%s</a>"%(cls,title2,url,js,("" if smart_selections else name))
 
     sort_criteria = None   # [u'page']  # TODO - allow user to set this; document
-    
+
     string = ""
     for bibitem,htmlitem,risitem,coinsitem,wikiitem,item in sortitems(zip(bibitems,htmlitems,risitems,coinsitems,wikiitems,items),sort_criteria):
         if not exclude.has_key(item[u'id']):
@@ -453,7 +453,7 @@ def make_html (bibitems, htmlitems, risitems, coinsitems, wikiitems, items, excl
 
                 if coinsitem:
                     htmlitem += str(coinsitem).strip()
-                    
+
                 if bibitem:
 
                     abstract,bibitem2 = extract_abstract(bibitem)
@@ -474,7 +474,7 @@ def make_html (bibitems, htmlitems, risitems, coinsitems, wikiitems, items, excl
 
                     if shorten:
                         blinkitem = u'<div style="padding-left:20px;">' + blinkitem + u'</div>'
-                        
+
                     htmlitem += blinkitem
 
                 string += u'<div class="bib-item">' + htmlitem + u'</div>'
@@ -511,7 +511,7 @@ collection_filter = {}  # top-level nodes
 
 try:
     zot = zotero.Zotero(library_id, library_type, api_key)
-    
+
     collection_ids = {}  # collection names -> IDs
     collection_depths = {}  # collection names -> depth
     #c=[(x,0) for x in zot.collections_sub(toplevelfilter)]  # this will probably return a maximum of 25
@@ -528,8 +528,8 @@ try:
             print(col[u'key']+": "+name)
             c += zot.collections_sub(col[u'key'])
             collection_filter[col[u'key']] = False
-        
-        
+
+
 except zotero_errors.UserNotAuthorised:
     print("UserNotAuthorised: Set Zotero API key in settings.py or zot.py.", file=sys.stderr)
     raise SystemExit(1)
@@ -589,7 +589,7 @@ def compile_data(collection_id, collection_name, exclude={}, shorten=False):
     global bib_style
 
     print(" "+" "*collection_depths.get(collection_id,0) + collection_name + "...")
-    
+
     b = retrieve_bib(collection_id,'bibtex', '')
     h = retrieve_bib(collection_id,'bib', bib_style)
     if 'ris' in show_links or "RIS" in show_links or "EndNote" in show_links:
@@ -602,7 +602,7 @@ def compile_data(collection_id, collection_name, exclude={}, shorten=False):
         w = retrieve_wikipedia(collection_id)
     else:
         w = [None for _x in h]
-        
+
     counter = 0
     if not exclude:
         for i in a:
@@ -619,14 +619,14 @@ def compile_data(collection_id, collection_name, exclude={}, shorten=False):
                 year = ""
                 if u'issued' in i and u'raw' in i[u'issued']:
                     year = i[u'issued'][u'raw']
-                    
+
                 ref = "%s (%s)"%(auth, year)
                 print("Warning: item %s also included in collection %s"%(ref, item_ids[key]))
             item_ids[key] = collection_name
             counter += 1
 
     corehtml = make_html(b, h, r, c, w, a, exclude=exclude, shorten=shorten)
-    
+
     if corehtml and len(corehtml)>0:  # was anything found in this category?
         # write_html([None] * len(h), h, a, 'out.html')
         #html = "dummy"
@@ -660,6 +660,5 @@ for collection_name in sortedkeys:
 headerhtml += "</ul>"
 headerhtml += search_box
 
-        
-write_some_html(headerhtml+fullhtml, outputfile)
 
+write_some_html(headerhtml+fullhtml, outputfile)

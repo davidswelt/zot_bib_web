@@ -3,10 +3,10 @@
 # This tool updates a given Page on your Wordpress site.
 
 # insert <!--zot_bib_web  COLLID1 COLLID2 --> into your page where you would like the
-# bibliography to be inserted.  
-# COLLID1 is the ID (hex, 8 digits) of the top-level collection. 
+# bibliography to be inserted.
+# COLLID1 is the ID (hex, 8 digits) of the top-level collection.
 #     All sub-collections to this will be rendered.
-# COLLID2 is the ID of a collection containing all records; 
+# COLLID2 is the ID of a collection containing all records;
 #     All records contained in COLLID2 minus the ones present
 #     under COLLID1 will be rendered under a "Miscellaneous" heading.
 
@@ -58,19 +58,19 @@ from subprocess import call
 
 def get_bibliography (coll, catchall):
     global infile
-    
+
     if coll:
         infile = 'zotero-bib.html'
         # to do: why call as a sub-process when we can just import it?
         call(["./zot.py", coll, catchall, infile, '--div'])
-        
+
     if infile:
         file = codecs.open(infile, "r", "utf-8")
         if file:
             return file.read()
     return ""
 
-# let's get the 
+# let's get the
 
 rawpost = server.wp.getPost(wp_blogid, wp_username, wp_password, post_id)
 
@@ -87,7 +87,7 @@ if m:
     contents = get_bibliography(coll, catchall)
     if contents:
         newpost += contents + "\n<!--zot_bib_end_of_bibliography-->"
-            
+
 
     m2 = re.match(r'.*<!--\s*zot_bib_end_of_bibliography\s*-->(.*)', m.group(5), re.DOTALL|re.IGNORECASE)
     if m2:
@@ -98,7 +98,7 @@ if m:
     if rawpost['post_content'].strip() == newpost.strip():
         print("Content unchanged")
     else:
-        
+
         data = { 'post_content' : newpost}
 
         post_id = server.wp.editPost(wp_blogid, wp_username, wp_password, post_id, data)

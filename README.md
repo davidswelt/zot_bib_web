@@ -23,8 +23,8 @@ BibTex, RIS (for EndNote etc.), Wikipedia markup, abstract, PDF.
 A readable bibliographic entry (e.g., in APA style) is always shown.
 COINS is always included (invisible).
 
-The content generated is static.  This program is meant to 
-be run periodically. 
+The content generated is static.  This program is meant to
+be run periodically.
 
 A tool to push the resulting bibliography to a Wordpress installation
 is also provided.
@@ -65,7 +65,7 @@ or:
    If that looks good, move on to the next steps for configuration.
 
 - In a new file called settings.py, add configuration as documented.
-  You may use settings_example.py as a start. 
+  You may use settings_example.py as a start.
   Go to zotero.org to get your API secret key.
 
 - Upload the site folder or its contents to a public place on your web server.
@@ -81,7 +81,7 @@ or in a separate file settings.py to make upgrading simple.
   your website as you see fit.  You may also include individual
   collection files, which are also generated.   You can configure
   zot.py to generate a complete HTML document, or just a portion of it.
-  
+
 - Style your bibliography using CSS.  An example style
   file is included (see site/ directory).
 
@@ -111,7 +111,7 @@ Bibliography
 
 Here's an example of a bibliography structure:
 
-    My Publications [MGID90AT]
+	My Publications [MGID90AT]
 		10* Selected Works
 		15 In Preparation / Under Review
 		20 Refereed Works by Topic
@@ -135,24 +135,24 @@ program "push.py" is included to do this.
 Follow these steps:
 
 1.  Set up zot.py to generate a bibliography you like.
-    Call zot.py --full to generate a complete zotero-bib.html file
-    for debugging purposes.  Configure settings.py to not generate
-    the full HTML code.
+	Call zot.py --full to generate a complete zotero-bib.html file
+	for debugging purposes.  Configure settings.py to not generate
+	the full HTML code.
 2. Install the wpautop-control plugin (or a similar plugin) to make
-    sure that WP will not inserts paragraph breaks at various places
-    in the bibliography.  With this plugin, you will need to add a
-    "custom field" to the page created in the  next step (Choose
-    "Screen Options" at the top of the page view, enable custom
-    fields.  Then find custom fields at the very bottom of the page
-    and add a "wpautop" field with value "no".
+	sure that WP will not inserts paragraph breaks at various places
+	in the bibliography.  With this plugin, you will need to add a
+	"custom field" to the page created in the  next step (Choose
+	"Screen Options" at the top of the page view, enable custom
+	fields.  Then find custom fields at the very bottom of the page
+	and add a "wpautop" field with value "no".
 3.  Create a WP page or a post for the bibliography. Insert
-    [zot_bib_web COLLECTION] where you'd like the bibliography
-    inserted.  Replace COLLECTION with the ID of the collection.
+	[zot_bib_web COLLECTION] where you'd like the bibliography
+	inserted.  Replace COLLECTION with the ID of the collection.
 	(More options: see push.py)
 4.  Configure push.py (at the top).  You will need to know a few simple
-    details about your WP installation.
+	details about your WP installation.
 5.  Run push.py regularly or on demand.  It will call zot.py
-    automatically and then update the page in WP.
+	automatically and then update the page in WP.
 
 
 
