@@ -605,7 +605,7 @@ def compile_data(collection_id, collection_name, exclude={}, shorten=False):
     
     def check_show(s):
         global show_links
-        sstr = s.lower()
+        s = s.lower()
         for x in show_links:
             if x==s:
                 return True
