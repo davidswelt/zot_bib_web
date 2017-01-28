@@ -64,9 +64,10 @@ or:
    Then view zotero-bib.html in a browser.
    If that looks good, move on to the next steps for configuration.
 
-- In a new file called settings.py, add configuration as documented.
-  You may use settings_example.py as a start.
-  Go to zotero.org to get your API secret key.
+- In a new file called settings.py, add configuration as documented in
+  the file settings.example.py.
+  Go to zotero.org to get your API secret key and your user or library
+  IDs.  It's easy: see the top of settings.example.py for details.
 
 - Upload the site folder or its contents to a public place on your web server.
   By default, /site/... is the assumed URL.

@@ -3,9 +3,23 @@
 
 #### You must configure the following items
 
+# You’ll need a Zotero account (or group) at zotero.org.
+# Log into your account, access the Settings page on the Zotero site and create an private API key (under "Settings -> Feeds/API").  For the key, check "Allow library access".  This key is used in the api_key setting.
+
+# You may also find your user ID for the library_id setting under "Settings -> Feeds/API".
+# In that, library_+type is 'user'.
+# For library_type of 'group', you will find your library_id by selecting the group
+# on the Zotero website, and then choosing "Group Settings".  The URL in your browser
+# window will then show you a six-digit number, e.g.,  .../groups/110233/settings
+
 library_id = '160464' # your group or user ID (e.g., six numeric digits)
-library_type ='group'  # or 'group' # group or userm
+library_type ='group'  # or 'group' # group or user
 api_key = ''  # secret key (from Zotero)
+
+# In your library, you may create a collection, for example, "website".
+# When you click on it on the Zotero website, your browser will show you an alphanumeric
+# key in the URL, e.g., items/collectionKey/FCQM2AY6.  The portion 'FCQM2AY6' is what you
+# would use in toplevelfilter.  Similarly, an additional "catch-all" collection may be given.
 
 toplevelfilter = 'MGID93AS'   # top-collection that is going to be ignored (as a level), or None
 catchallcollection = '4KATF6MA'  # include "Miscellaneous" category at end containing all items not mentioend anywhere else, or None
