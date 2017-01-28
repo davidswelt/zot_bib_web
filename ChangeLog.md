@@ -1,5 +1,7 @@
-Pyzotero 1.3.0
+Pyzotero 1.2.1
 -----------------------------------------
+- Fix bug that prevented RIS downloads from showing
+  (and potentially other elements included in show_links depending on capitalization)
 - Improved instructions in settings example file
 - Tested with Pyzotero 1.2.0 and Python 2.7
 
