@@ -3,30 +3,62 @@
 
 #### You must configure the following items
 
-# You’ll need a Zotero account (or group) at zotero.org.
-# Log into your account, access the Settings page on the Zotero site and create an private API key (under "Settings -> Feeds/API").  For the key, check "Allow library access".  This key is used in the api_key setting.
+# Group/User:  You may either display a library for a Zotero user, or for a group.
 
-# You may also find your user ID for the library_id setting under "Settings -> Feeds/API".
-# In that, library_+type is 'user'.
-# For library_type of 'group', you will find your library_id by selecting the group
-# on the Zotero website, and then choosing "Group Settings".  The URL in your browser
+# User:
+# You may find your user ID for the library_id setting under "Settings -> Feeds/API":
+#    https://www.zotero.org/settings/keys
+# library_type is 'user'.
+
+# Group:
+# Find your library_id by selecting the group on the Zotero website,
+# and then choose "Group Settings".  The URL in your browser
 # window will then show you a six-digit number, e.g.,  .../groups/110233/settings
+# library_type is 'group'.
 
 library_id = '160464' # your group or user ID (e.g., six numeric digits)
-library_type ='group'  # or 'group' # group or user
-api_key = ''  # secret key (from Zotero)
+library_type ='group'  # 'group' or 'user'
+
+
+# Data from private Zotero accounts:
+
+# If you want to retrieve non-public data from Zotero, you’ll need a
+# Zotero account (or group) at zotero.org.  Log into your account,
+# access the Settings page on the Zotero site and create an private
+# API key (under "Settings -> Feeds/API").  For the key, check "Allow
+# library access".  This key is used in the api_key setting.
+
+api_key = None  # secret key (from Zotero)
 
 # In your library, you may create a collection, for example, "website".
+# Within it, create titled sub-collections, like so:
+
+# toRead
+# thesis
+# website
+#    *10 Selected Works
+#    20 Journal Articles
+#    30 Conference Proceedings
+#    40 Theses
+
+# Now, find the IDs of the top-level collection called "website".
 # When you click on it on the Zotero website, your browser will show you an alphanumeric
 # key in the URL, e.g., items/collectionKey/FCQM2AY6.  The portion 'FCQM2AY6' is what you
-# would use in toplevelfilter.  Similarly, an additional "catch-all" collection may be given.
+# would use in toplevelfilter.
 
-toplevelfilter = 'MGID93AS'   # top-collection that is going to be ignored (as a level), or None
-catchallcollection = '4KATF6MA'  # include "Miscellaneous" category at end containing all items not mentioend anywhere else, or None
+# To display the whole library with all its collections,
+# leave toplevelfilter set to None.  You may use that to see a list of all collections
+# when zot_bib_web runs.
+
+# ID string of the top-collection that is going to be ignored (as a level), or None
+# If set, we will display the items available underneath this collection.
+# otherwise, all collections available will be displayed.
+toplevelfilter = None # e.g., 'MGID93AS'
 
 
 
-###### Special settings - configure if needed.
+###### Special settings - configure only if needed.
+
 
 limit=None   # None, or set a limit (integer<100) for each collection for debugging
 
@@ -38,6 +70,10 @@ sort_order = 'desc'   # "desc" or "asc"
 
 write_full_html_header = True   # False to not output HTML headers.  In this case, expect a file in UTF-8 encoding.
 stylesheet_url = "style.css"  # If set and write_full_html_header is True, link to this style sheet (a URL)
+
+# If set, include "Miscellaneous" category at end containing all items from this
+# collection that were not mentioend anywhere else.
+catchallcollection = None # e.g., '4KATF6MA'
 
 outputfile = 'zotero-bib.html'  # relative or absolute path name of output file
 category_outputfile_prefix = 'zotero'  # relative or absolute path prefix
@@ -58,7 +94,7 @@ copy_button_path = "site/clippy.svg" # path to file on server
 # (don't set for default)
 # smart_selections = True
 
-## 
+##
 
 
 wp_url = 'https://example.com/wp/xmlrpc.php'   # Wordpress XMLRPC URL
