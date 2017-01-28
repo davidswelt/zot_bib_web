@@ -1,3 +1,9 @@
+Pyzotero 1.3.0
+-----------------------------------------
+- Improved instructions in settings example file
+- Tested with Pyzotero 1.2.0 and Python 2.7
+
+
 Pyzotero 1.2.0
 -----------------------------------------
 
