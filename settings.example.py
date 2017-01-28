@@ -40,6 +40,10 @@ copy_button_path = "site/clippy.svg" # path to file on server
 # (don't set for default)
 # show_links = ['abstract', 'pdf', 'bib', 'wikipedia', 'ris', 'coins']
 
+# Prevent viewers from selecting "bib", "pdf" etc for easier copy/paste of bibliography
+# (don't set for default)
+# smart_selections = True
+
 ## 
 
 
