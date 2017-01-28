@@ -9,7 +9,7 @@
 # Bibliographic style can be chosen (APA) is default.
 
 
-# (C) 2014,2015 ,2016 David Reitter, The Pennsylvania State University
+# (C) 2014,2015,2016,2017 David Reitter, The Pennsylvania State University
 # Released under the GNU General Public License, V.3 or later.
 
 from __future__ import print_function
@@ -29,7 +29,7 @@ from __future__ import print_function
 
 library_id = '160464' # your group or user ID (e.g., six numeric digits) - this is an example
 library_type ='group'  # 'group' or 'user'
-api_key = ''  # secret key (from Zotero)
+api_key = None  # secret key (from Zotero)
 
 toplevelfilter = None   #  collection where to start retrieving
 # toplevelfilter = 'MGID93AS'  # (Try this for an example)
@@ -114,6 +114,11 @@ if "--div" in sys.argv:
 if "--full" in sys.argv:
     write_full_html_header = True
     sys.argv.remove('--full')
+if "-i" in sys.argv:
+    interactive_debugging = True
+    sys.argv.remove('-i')
+else:
+    interactive_debugging = False
 
 if "-h" in sys.argv:
     sys.argv.remove('-h')
@@ -506,88 +511,98 @@ def coll_key(c):
         return c[u'key']
     return c[u'data'][u'key']
 
+def init_db ():
+    global zot
 
-collection_filter = {}  # top-level nodes
+    try:
+        zot = zotero.Zotero(library_id, library_type, api_key)
+    except zotero_errors.UserNotAuthorised:
+        print("UserNotAuthorised: Set correct Zotero API key in settings.py.", file=sys.stderr)
+        raise SystemExit(1)
 
-try:
-    zot = zotero.Zotero(library_id, library_type, api_key)
-
-    collection_ids = {}  # collection names -> IDs
-    collection_depths = {}  # collection names -> depth
-    #c=[(x,0) for x in zot.collections_sub(toplevelfilter)]  # this will probably return a maximum of 25
-    if toplevelfilter:
-        c = zot.collections_sub(toplevelfilter)
-        collection_filter[toplevelfilter] = False
-    else:
-        print("Fetching all collections:")
-        c = []
-        for col in zot.collections():
-            name=""
-            if col.has_key(u'data'):
-                name = col[u'data'].get(u'name',"")
-            print(col[u'key']+": "+name)
-            c += zot.collections_sub(col[u'key'])
-            collection_filter[col[u'key']] = False
-
-
-except zotero_errors.UserNotAuthorised:
-    print("UserNotAuthorised: Set Zotero API key in settings.py or zot.py.", file=sys.stderr)
-    raise SystemExit(1)
-
-
-for coll in c:  # for each collection
-    # pyzotero or Zotero API has changed at some point, so...
-    data = coll_data(coll)
-    key = data[u'key']
-
-    if not collection_depths.has_key(key):
-        collection_depths[key] = 0
-    depth = collection_depths[key]
-
-    if (data.has_key(u'parentCollection') and data[u'parentCollection'] in collection_filter) or (data.has_key(u'parent') and data[u'parent'] in collection_filter):
-        collection_filter[key] = True  # allow children, include their items
-        for coll2 in zot.collections_sub(key):  # get children
-            key2 = coll_key(coll2)
-            if not key2 in c:
-                c += [coll2]  # add child to agenda for crawling
-                collection_depths[key2] = depth + 1
-
-    if key in collection_filter:
-        collection_ids[data[u'name']] = key  #[x[u'key']]
+def get_collections ():
+    global collection_ids
+    global collection_depths
+    global zot
+    collection_filter = {}  # top-level nodes
+    try:
+        collection_ids = {}  # collection names -> IDs
+        collection_depths = {}  # collection names -> depth
+        #c=[(x,0) for x in zot.collections_sub(toplevelfilter)]  # this will probably return a maximum of 25
+        if toplevelfilter:
+            c = zot.collections_sub(toplevelfilter)
+            collection_filter[toplevelfilter] = False
+        else:
+            print("Fetching all collections:")
+            c = []
+            for col in zot.collections():
+                name=""
+                if col.has_key(u'data'):
+                    name = col[u'data'].get(u'name',"")
+                print(col[u'key']+": "+name)
+                c += zot.collections_sub(col[u'key'])
+                collection_filter[col[u'key']] = False
 
 
-if collection_depths.values().count(0)==1:  # only one top-level collection?
-    # remove top level collection
-    for n,k in collection_ids.items():
-        if k == toplevelfilter:
-            del collection_ids[n]
-            print("(Top-level collection will be ignored.)")
-            break
-
-print("%s collections: "%len(collection_ids.items()))
-if 0==len(collection_ids.items()) and catchallcollection != toplevelfilter:
-    print("Warning: Items in the top level collections are excluded.")
-    print("Move your items into subcollections or use the catchallcollection setting.")
-if limit:
-    print("Output limited to %s per collection."%limit)
-
-sortedkeys = collection_ids.keys()
-sortedkeys.sort()
-
-# show at end
-if catchallcollection:
-    sortedkeys += ["Miscellaneous"]
-    collection_ids['Miscellaneous'] = catchallcollection
+    except zotero_errors.UserNotAuthorised:
+        print("UserNotAuthorised: Set correct Zotero API key in settings.py and allow access.", file=sys.stderr)
+        raise SystemExit(1)
 
 
-fullhtml = ""
-item_ids = {}
+    for coll in c:  # for each collection
+        # pyzotero or Zotero API has changed at some point, so...
+        data = coll_data(coll)
+        key = data[u'key']
+
+        if not collection_depths.has_key(key):
+            collection_depths[key] = 0
+        depth = collection_depths[key]
+
+        if (data.has_key(u'parentCollection') and data[u'parentCollection'] in collection_filter) or (data.has_key(u'parent') and data[u'parent'] in collection_filter):
+            collection_filter[key] = True  # allow children, include their items
+            for coll2 in zot.collections_sub(key):  # get children
+                key2 = coll_key(coll2)
+                if not key2 in c:
+                    c += [coll2]  # add child to agenda for crawling
+                    collection_depths[key2] = depth + 1
+
+        if key in collection_filter:
+            collection_ids[data[u'name']] = key  #[x[u'key']]
+
+
+    if collection_depths.values().count(0)==1:  # only one top-level collection?
+        # remove top level collection
+        for n,k in collection_ids.items():
+            if k == toplevelfilter:
+                del collection_ids[n]
+                print("(Top-level collection will be ignored.)")
+                break
+
+    print("%s collections: "%len(collection_ids.items()))
+    if 0==len(collection_ids.items()) and catchallcollection != toplevelfilter:
+        print("Warning: Items in the top level collections are excluded.")
+        print("Move your items into subcollections or use the catchallcollection setting.")
+    if limit:
+        print("Output limited to %s per collection."%limit)
+
+    sortedkeys = collection_ids.keys()
+    sortedkeys.sort()
+
+    # show at end
+    if catchallcollection:
+        sortedkeys += ["Miscellaneous"]
+        collection_ids['Miscellaneous'] = catchallcollection
+
+
+ 
+    return sortedkeys
 
 def compile_data(collection_id, collection_name, exclude={}, shorten=False):
     global fullhtml
     global item_ids
     global bib_style
 
+    
     def check_show(s):
         global show_links
         sstr = s.lower()
@@ -651,25 +666,42 @@ def compile_data(collection_id, collection_name, exclude={}, shorten=False):
     return counter # number of items included
 
 
-# start with links to subsections
-headerhtml = '<ul class="bib-cat">'
+def main():
 
-for collection_name in sortedkeys:
-    c = 0
-    s=shortcollection(collection_name)
-    if collection_ids[collection_name] == catchallcollection:
-        # now for "Other"
-        # Other has everything that isn't mentioned above
-        c = compile_data(collection_ids[collection_name], strip(collection_name), exclude=copy.copy(item_ids), shorten=s)
-    else:
-        c = compile_data(collection_ids[collection_name], strip(collection_name), shorten=s)
+    global item_ids
+    global fullhtml
 
-    if c>0:
-        anchor = collection_ids[collection_name]
-        headerhtml += "   <li class='link'><a style='white-space: nowrap;' href='#%s'>%s</a></li>\n"%(anchor,strip(collection_name))
+    sortedkeys = get_collections()
+    
+    # start with links to subsections
+    headerhtml = '<ul class="bib-cat">'
+    item_ids = {}
+    fullhtml = ""
 
-headerhtml += "</ul>"
-headerhtml += search_box
+    for collection_name in sortedkeys:
+        c = 0
+        s=shortcollection(collection_name)
+        if collection_ids[collection_name] == catchallcollection:
+            # now for "Other"
+            # Other has everything that isn't mentioned above
+            c = compile_data(collection_ids[collection_name], strip(collection_name), exclude=copy.copy(item_ids), shorten=s)
+        else:
+            c = compile_data(collection_ids[collection_name], strip(collection_name), shorten=s)
+
+        if c>0:
+            anchor = collection_ids[collection_name]
+            headerhtml += "   <li class='link'><a style='white-space: nowrap;' href='#%s'>%s</a></li>\n"%(anchor,strip(collection_name))
+
+    headerhtml += "</ul>"
+    headerhtml += search_box
 
 
-write_some_html(headerhtml+fullhtml, outputfile)
+    write_some_html(headerhtml+fullhtml, outputfile)
+
+init_db()
+
+if interactive_debugging:
+    import code
+    code.interact(local=locals())
+else:
+    main()
