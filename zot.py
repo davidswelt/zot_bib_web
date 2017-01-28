@@ -64,7 +64,7 @@ clipboard_js_path = "site/clipboard.min.js"
 copy_button_path = "site/clippy.svg"
 show_search_box = True  # show a Javascript/JQuery based search box to filter pubs by keyword.  Must define jquery_path.
 
-show_links = ['abstract', 'pdf', 'bib', 'wikipedia', 'ris']   # unconditionally show these items if they are available.
+show_links = ['abstract', 'pdf', 'bib', 'wikipedia', 'ris', 'coins']   # unconditionally show these items if they are available.
 
 smart_selections = True # Prevent viewers from selecting "bib", "pdf" etc for easier copy/paste of bibliography
 
@@ -451,8 +451,6 @@ def make_html (bibitems, htmlitems, risitems, coinsitems, wikiitems, items, excl
                     htmlitem = u"<a href=\"javascript:show(this);\" onclick=\"show(this);\">&#8862;</a> <span class=\"doctitle-short\">%s</span> <span class=\"containertitle\">%s</span> %s"%(t,ct,y) + "<div class=\"bibshowhide\" style=\"padding-left:20px;\">"+htmlitem+"</div>"
                     htmlitem = u"<div>" + htmlitem + "</div>" # to limit was is being expanded
 
-                if coinsitem:
-                    htmlitem += str(coinsitem).strip()
 
                 if bibitem:
 
@@ -471,6 +469,8 @@ def make_html (bibitems, htmlitems, risitems, coinsitems, wikiitems, items, excl
                             blinkitem += u'<div class="blink">'+a_button(item,url=u)+u'</div>'
                         elif 'ris' == item.lower() and risitem:
                             blinkitem += u'<div class="blink">'+a_button(item,title="Download EndNote record",js="downloadFile(this)")+u'<div class="bibshowhide"><div class="ris">%s</div></div></div>'%(risitem)
+                        elif 'coins' == item.lower() and coinsitem:
+                            blinkitem += str(coinsitem).strip()
 
                     if shorten:
                         blinkitem = u'<div style="padding-left:20px;">' + blinkitem + u'</div>'
@@ -588,17 +588,28 @@ def compile_data(collection_id, collection_name, exclude={}, shorten=False):
     global item_ids
     global bib_style
 
+    def check_show(s):
+        global show_links
+        sstr = s.lower()
+        for x in show_links:
+            if x==s:
+                return True
+        return False
+
     print(" "+" "*collection_depths.get(collection_id,0) + collection_name + "...")
 
+    a = retrieve_atom(collection_id)
     b = retrieve_bib(collection_id,'bibtex', '')
     h = retrieve_bib(collection_id,'bib', bib_style)
-    if 'ris' in show_links or "RIS" in show_links or "EndNote" in show_links:
+    if check_show('EndNote') or check_show('RIS'):
         r = retrieve_bib(collection_id,'ris', '')
     else:
         r = [None for _x in h]
-    a = retrieve_atom(collection_id)
-    c = retrieve_coins(collection_id)
-    if 'wikipedia' in show_links or 'WIKIPEDIA' in show_links or "Wikipedia" in show_links:
+    if check_show('coins'):
+        c = retrieve_coins(collection_id)
+    else:
+        c = [None for _x in h]
+    if check_show('wikipedia'):
         w = retrieve_wikipedia(collection_id)
     else:
         w = [None for _x in h]

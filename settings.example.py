@@ -36,8 +36,9 @@ show_copy_button = True  # show clipbaord copy button.  Must define jquery_path.
 clipboard_js_path = "site/clipboard.min.js"  # path to file on server
 copy_button_path = "site/clippy.svg" # path to file on server
 
-
-
+# unconditionally show these items if they are available for the item
+# (don't set for default)
+# show_links = ['abstract', 'pdf', 'bib', 'wikipedia', 'ris', 'coins']
 
 ## 
 
