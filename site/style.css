@@ -22,7 +22,10 @@ div.full-bib-section div.bib-item {
 div.short-bib-section div.bib-item {
     margin-bottom:5px;
 }
-
+/* the abbreviated conference or journal title in the short format section */
+div.short-bib-section .containertitle {
+    font-style:italic;
+}
 /* The actual BibTeX record (when visible) */
 div.bib {
     font-family:Menlo,Courier,monospaced;

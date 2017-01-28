@@ -101,8 +101,11 @@ Bibliography
 
 - To cause zot_bib_web to format a sub-collection in "short" mode, add
   a * at the beginning of the collection name: "05* Selected Works".
-  This sub-collection will be shown using titles and years only, which
-  can then be expanded.
+  This sub-collection will be shown using titles, journal and years only, which
+  can then be expanded.  Journal or conference titles can be kept short.  Specify the
+  "journal abbr or "conference title" fields, or a short "note" if
+  necessary.
+
   You may want to copy bibliographic items from other parts of the
   bibliography into this sub-collection.
 

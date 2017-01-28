@@ -429,6 +429,17 @@ def make_html (bibitems, htmlitems, risitems, coinsitems, wikiitems, items, excl
                     htmlitem = tryreplacing(htmlitem, t_to_replace, u"<span class=\"doctitle\">%s</span>"%("\\0"))
 
                 if shorten:
+                    ct = None
+                    if item.has_key(u'container-title'):
+                        ct = item[u'container-title']
+                    if item.has_key(u'event'):
+                        ct = item[u'event']
+                    if item.has_key(u'journalAbbreviation'):
+                        ct = item[u'journalAbbreviation']
+                    if item.has_key(u'note'):
+                        if len(item[u'note']) < len(ct):
+                            ct = item[u'note']
+
                     y = ""
                     if item.has_key(u'date'):
                         y = "(%s)"%item[u'date']
@@ -437,7 +448,7 @@ def make_html (bibitems, htmlitems, risitems, coinsitems, wikiitems, items, excl
                         if i.has_key(u'raw'):
                             y = "(%s)"%i[u'raw']  # to do: get year from more complex date?
 
-                    htmlitem = u"<a href=\"javascript:show(this);\" onclick=\"show(this);\">&#8862;</a> <span class=\"doctitle-short\">%s</span> %s"%(t,y) + "<div class=\"bibshowhide\" style=\"padding-left:20px;\">"+htmlitem+"</div>"
+                    htmlitem = u"<a href=\"javascript:show(this);\" onclick=\"show(this);\">&#8862;</a> <span class=\"doctitle-short\">%s</span> <span class=\"containertitle\">%s</span> %s"%(t,ct,y) + "<div class=\"bibshowhide\" style=\"padding-left:20px;\">"+htmlitem+"</div>"
                     htmlitem = u"<div>" + htmlitem + "</div>" # to limit was is being expanded
 
                 if coinsitem:
