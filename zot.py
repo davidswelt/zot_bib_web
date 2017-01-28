@@ -170,7 +170,7 @@ script_html = """<style type="text/css" id="zoterostylesheet" scoped>
         if((' ' + elems[i].className + ' ').indexOf(' ' + 'bibshowhide' + ' ') > -1) 
            {
   var ee = elems[i]
-  if (ee.childNodes[0]) { ee = ee.childNodes[0] } 
+  if (ee.childNodes[0]) { ee = ee.childNodes[0] }
   var pom = document.createElement('a');
   pom.href = window.URL.createObjectURL(new Blob([ee.innerHTML], {type: 'text/plain;charset=utf-8'}));
   pom.download = filename;
@@ -440,7 +440,8 @@ def make_html (bibitems, htmlitems, risitems, coinsitems, wikiitems, items, excl
                     htmlitem = u"<a href=\"javascript:show(this);\" onclick=\"show(this);\">&#8862;</a> <span class=\"doctitle-short\">%s</span> %s"%(t,y) + "<div class=\"bibshowhide\" style=\"padding-left:20px;\">"+htmlitem+"</div>"
                     htmlitem = u"<div>" + htmlitem + "</div>" # to limit was is being expanded
 
-                htmlitem += str(coinsitem).strip()
+                if coinsitem:
+                    htmlitem += str(coinsitem).strip()
                     
                 if bibitem:
 
@@ -466,6 +467,9 @@ def make_html (bibitems, htmlitems, risitems, coinsitems, wikiitems, items, excl
                     htmlitem += blinkitem
 
                 string += u'<div class="bib-item">' + htmlitem + u'</div>'
+
+    if len(string)==0:
+        return ""  # avoid adding title for section later on
 
     if shorten:
         string = u'<div class="short-bib-section">' + string + u'</div>'
