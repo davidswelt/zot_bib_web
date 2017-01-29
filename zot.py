@@ -176,8 +176,8 @@ function dwnD(data) {
   pom.download = filename;
   document.body.appendChild(pom);
   pom.click();
-  setTimeout(function(){
-  document.body.removeChild(pom);}, 100); }
+  setTimeout(function(){document.body.removeChild(pom);}, 100); 
+  return(void(0));}
 function show(elem) {
     if (elem.parentNode) {
     var elems = elem.parentNode.parentNode.getElementsByTagName('*');
@@ -249,7 +249,7 @@ else:
 search_box = ""
 if show_search_box:
     if jquery_path:
-        search_box= '<form id="pubSearchBox" name="pubSearchBox"><input id="pubSearchInputBox" type="text" name="keyword" />&nbsp;<input id="pubSearchButton" type="button" value="Search" onClick="searchFunction()" /></form><script type="text/javascript" src="'+jquery_path+""""></script><script type="text/javascript">
+        search_box= '<form id="pubSearchBox" name="pubSearchBox"><input id="pubSearchInputBox" type="text" name="keyword">&nbsp;<input id="pubSearchButton" type="button" value="Search" onClick="searchFunction()"></form><script type="text/javascript" src="'+jquery_path+""""></script><script type="text/javascript">
   function getURLParameter(name) {
     return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null;
   }
@@ -392,7 +392,7 @@ def make_html (bibitems, htmlitems, risitems, coinsitems, wikiitems, items, excl
         if not js:
             js = "show(this)"
         if not url:
-            url = "javascript:"+js+";"
+            url = "#"
         if not cls:
             cls = name
         title2 = ""
@@ -457,7 +457,7 @@ def make_html (bibitems, htmlitems, risitems, coinsitems, wikiitems, items, excl
                         if u'raw' in i:
                             y = "(%s)"%i[u'raw']  # to do: get year from more complex date?
 
-                    htmlitem = u"<a href=\"javascript:show(this);\" onclick=\"show(this);\">&#8862;</a> <span class=\"doctitle-short\">%s</span> <span class=\"containertitle\">%s</span> %s"%(t,ct,y) + "<div class=\"bibshowhide\" style=\"padding-left:20px;\">"+htmlitem+"</div>"
+                    htmlitem = u"<a href=\"#\" onclick=\"show(this);\">&#8862;</a> <span class=\"doctitle-short\">%s</span> <span class=\"containertitle\">%s</span> %s"%(t,ct,y) + "<div class=\"bibshowhide\" style=\"padding-left:20px;\">"+htmlitem+"</div>"
                     htmlitem = u"<div>" + htmlitem + "</div>" # to limit was is being expanded
 
 
@@ -477,7 +477,7 @@ def make_html (bibitems, htmlitems, risitems, coinsitems, wikiitems, items, excl
                         elif 'pdf' == item.lower() and u:
                             blinkitem += u'<div class="blink">'+a_button(item,url=u)+u'</div>'
                         elif ('ris' == item.lower() or 'endnote' == item.lower()) and risitem:
-                            blinkitem += u'<div class="blink">'+'<a class="%s" title="Download EndNote record" href="javascript:dwnD(\'%s\');"></a></div>'%(item,base64.b64encode(risitem.encode('utf-8')))
+                            blinkitem += u'<div class="blink">'+'<a class="%s" title="Download EndNote record" href="#" onclick="dwnD(\'%s\');return false;"></a></div>'%(item,base64.b64encode(risitem.encode('utf-8')))
                         elif 'coins' == item.lower() and coinsitem:
                             blinkitem += str(coinsitem).strip()
 

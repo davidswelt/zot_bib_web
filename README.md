@@ -82,13 +82,14 @@ or in a separate file settings.py to make upgrading simple.
 - include the resulting file zotero-bib.html (or as configured) in
   your website as you see fit.  You may also include individual
   collection files, which are also generated.   You can configure
-  zot.py to generate a complete HTML document, or just a portion of it.
+  zot.py to generate a complete HTML document, or just a portion of
+  it.  Zot_bib_web generates HTML5 content.
 
 - Style your bibliography using CSS.  An example style
   file is included (see site/ directory).
 
 
-Bibliography
+Bibliography in Zotero
 -----------------------------------------
 
 - With Zotero, create a bibliography and note its ID (e.g., from the
