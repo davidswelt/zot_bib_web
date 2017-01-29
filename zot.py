@@ -114,7 +114,9 @@ if "-i" in sys.argv:
     sys.argv.remove('-i')
 else:
     interactive_debugging = False
-
+if "--limit" in sys.argv:
+    limit=5
+    sys.argv.remove('--limit')
 if "-h" in sys.argv:
     sys.argv.remove('-h')
     print_usage()
