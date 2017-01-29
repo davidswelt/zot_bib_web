@@ -399,13 +399,13 @@ def make_html (bibitems, htmlitems, risitems, coinsitems, wikiitems, items, excl
 
     sort_criteria = None   # [u'page']  # TODO - allow user to set this; document
 
+    count = 0
     string = ""
     for bibitem,htmlitem,risitem,coinsitem,wikiitem,item in sortitems(zip(bibitems,htmlitems,risitems,coinsitems,wikiitems,items),sort_criteria):
         if not exclude.has_key(item[u'id']):
             if item.has_key(u'title'):
 
-                global entry_count
-                entry_count += 1
+                count += 1
 
                 global show_links
                 show_items = show_links
@@ -486,14 +486,17 @@ def make_html (bibitems, htmlitems, risitems, coinsitems, wikiitems, items, excl
                 string += u'<div class="bib-item">' + htmlitem + u'</div>'
 
     if len(string)==0:
-        return ""  # avoid adding title for section later on
+        return "",0  # avoid adding title for section later on
 
     if shorten:
         string = u'<div class="short-bib-section">' + string + u'</div>'
     else:
         string = u'<div class="full-bib-section">' + string + u'</div>'
 
-    return cleanup_lines(string)
+    global entry_count
+    entry_count += count
+
+    return cleanup_lines(string),count
 
 
 def is_shortcollection(st):
@@ -512,6 +515,9 @@ def coll_key(c):
         return c[u'key']
     return c[u'data'][u'key']
 
+def coll_name(c):
+    return coll_data(c)[u'name']
+
 def init_db ():
     global zot
 
@@ -522,83 +528,41 @@ def init_db ():
         raise SystemExit(1)
 
 def get_collections ():
-    global collection_ids
-    global collection_depths
     global zot
-    collection_filter = {}  # top-level nodes
+    global catchallcollection
     try:
-        collection_ids = {}  # collection names -> IDs
-        collection_depths = {}  # collection names -> depth
-        #c=[(x,0) for x in zot.collections_sub(toplevelfilter)]  # this will probably return a maximum of 25
         if toplevelfilter:
-            c = zot.collections_sub(toplevelfilter)
-            collection_filter[toplevelfilter] = False
+            items= traverse (zot.collections_sub(toplevelfilter))
         else:
             print("Fetching all collections:")
-            c = []
-            for col in zot.collections():
-                name=""
-                if col.has_key(u'data'):
-                    name = col[u'data'].get(u'name',"")
-                print(col[u'key']+": "+name)
-                c += zot.collections_sub(col[u'key'])
-                collection_filter[col[u'key']] = False
+            items= traverse (zot.collections())
+
+        if catchallcollection:
+            # move catchallcollection to the end
+            at_end = [e for e in items if e[0]==catchallcollection]
+            if len(at_end)==0:
+                at_end += [(catchallcollection, 0, catchall_title)]
+            items = [e for e in items if e[0]!=catchallcollection] + at_end
+
+        return items
 
 
     except zotero_errors.UserNotAuthorised:
         print("UserNotAuthorised: Set correct Zotero API key in settings.py and allow access.", file=sys.stderr)
         raise SystemExit(1)
 
-
-    for coll in c:  # for each collection
-        # pyzotero or Zotero API has changed at some point, so...
-        data = coll_data(coll)
-        key = data[u'key']
-
-        if not collection_depths.has_key(key):
-            collection_depths[key] = 0
-        depth = collection_depths[key]
-
-        if (data.has_key(u'parentCollection') and data[u'parentCollection'] in collection_filter) or (data.has_key(u'parent') and data[u'parent'] in collection_filter):
-            collection_filter[key] = True  # allow children, include their items
-            for coll2 in zot.collections_sub(key):  # get children
-                key2 = coll_key(coll2)
-                if not key2 in c:
-                    c += [coll2]  # add child to agenda for crawling
-                    collection_depths[key2] = depth + 1
-
-        if key in collection_filter:
-            collection_ids[data[u'name']] = key  #[x[u'key']]
+def traverse(agenda, depth=0):
+    global zot
+    result = []
+    # sort agenda by name
+    for item in sorted(agenda, key=coll_name):
+        c = zot.collections_sub(coll_key(item))
+        result += [(coll_key(item), depth, coll_data(item)[u'name'])]
+        result += traverse(c, depth+1)
+    return result
 
 
-    if collection_depths.values().count(0)==1:  # only one top-level collection?
-        # remove top level collection
-        for n,k in collection_ids.items():
-            if k == toplevelfilter:
-                del collection_ids[n]
-                print("(Top-level collection will be ignored.)")
-                break
-
-    print("%s collections: "%len(collection_ids.items()))
-    if 0==len(collection_ids.items()) and catchallcollection != toplevelfilter:
-        warning("Items in the top level collections are excluded.")
-        warn("Move your items into subcollections or use the catchallcollection setting.")
-    if limit:
-        print("Output limited to %s per collection."%limit)
-
-    sortedkeys = collection_ids.keys()
-    sortedkeys.sort()
-
-    # show at end
-    if catchallcollection:
-        sortedkeys += ["Miscellaneous"]
-        collection_ids['Miscellaneous'] = catchallcollection
-
-
-
-    return sortedkeys
-
-def compile_data(collection_id, collection_name, exclude={}, shorten=False):
+def compile_data(collection_id, collection_name, depth=0, exclude={}, shorten=False):
     global fullhtml
     global item_ids
     global bib_style
@@ -612,7 +576,7 @@ def compile_data(collection_id, collection_name, exclude={}, shorten=False):
                 return True
         return False
 
-    print(" "+" "*collection_depths.get(collection_id,0) + collection_name + "...")
+    print(" "+" "*depth + collection_name + "...", end='')
 
     a = retrieve_atom(collection_id)
     b = retrieve_bib(collection_id,'bibtex', '')
@@ -630,6 +594,7 @@ def compile_data(collection_id, collection_name, exclude={}, shorten=False):
     else:
         w = [None for _x in h]
 
+
     counter = 0
     if not exclude:
         for i in a:
@@ -642,15 +607,17 @@ def compile_data(collection_id, collection_name, exclude={}, shorten=False):
 
             counter += 1
 
-    corehtml = make_html(b, h, r, c, w, a, exclude=exclude, shorten=shorten)
+    corehtml,count = make_html(b, h, r, c, w, a, exclude=exclude, shorten=shorten)
+    print(count) # number of items
 
-    if corehtml and len(corehtml)>0:  # was anything found in this category?
+    if collection_id != catchallcollection or (corehtml and len(corehtml)>0):
+
         # write_html([None] * len(h), h, a, 'out.html')
         #html = "dummy"
         html = "<a id='%s' style='{display: block; position: relative; top: -150px; visibility: hidden;}'></a>"%collection_id
-        d = 2+collection_depths.get(collection_id,0)
-        html += "<h%s class=\"collectiontitle\">%s</h3>\n"%(d,collection_name)
-        html += corehtml
+        d = 2+depth
+        html += '<div class="collection"><h%s class="collectiontitle">%s</h3>\n'%(d,collection_name)
+        html += corehtml + '</div>'
         write_some_html(html, category_outputfile_prefix+"-%s.html"%collection_id)
         fullhtml += html
 
@@ -694,27 +661,31 @@ def main():
 
     global item_ids
     global fullhtml
+    global catchallcollection
 
     sortedkeys = get_collections()
-
     # start with links to subsections
     headerhtml = '<ul class="bib-cat">'
     item_ids = {}
     fullhtml = ""
 
-    for collection_name in sortedkeys:
+    if limit:
+        print("Output limited to %s per collection."%limit)
+
+    for key,depth,name in sortedkeys:
         c = 0
-        s=is_shortcollection(collection_name)
-        if collection_ids[collection_name] == catchallcollection:
+        s=is_shortcollection(name)
+        if key == catchallcollection:
             # now for "Other"
             # Other has everything that isn't mentioned above
-            c = compile_data(collection_ids[collection_name], strip(collection_name), exclude=copy.copy(item_ids), shorten=s)
+            # this key is guaranteed to be at the end of the list
+            c = compile_data(key, strip(name), depth=depth, exclude=copy.copy(item_ids), shorten=s)
         else:
-            c = compile_data(collection_ids[collection_name], strip(collection_name), shorten=s)
+            c = compile_data(key, strip(name), depth=depth, shorten=s)
 
         if c>0:
-            anchor = collection_ids[collection_name]
-            headerhtml += "   <li class='link'><a style='white-space: nowrap;' href='#%s'>%s</a></li>\n"%(anchor,strip(collection_name))
+            anchor = key
+            headerhtml += "   <li class='link'><a style='white-space: nowrap;' href='#%s'>%s</a></li>\n"%(anchor,strip(name))
     show_double_warnings()
     print("%s items included."%entry_count)
 
