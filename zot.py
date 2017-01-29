@@ -231,7 +231,7 @@ return trigger.parentNode.childNodes[0].textContent;}});});</script>"""%(jquery_
     else:
         warning("show_search_box set, but jquery_path undefined.")
 
-credits_html = u'<div name="zbw_credits" style="text-align:right;">A <a href="https://github.com/davidswelt/zot_bib_web">zot_bib_web</a> bibliography.</div>'
+credits_html = u'<div id="zbw_credits" style="text-align:right;">A <a href="https://github.com/davidswelt/zot_bib_web">zot_bib_web</a> bibliography.</div>'
 
 script_html = cleanup_lines(script_html)
 
@@ -241,7 +241,7 @@ if write_full_html_header:
     style_html = u''
     if stylesheet_url:
         style_html = u"<link rel=\"stylesheet\" type=\"text/css\" href=\"%s\">"%stylesheet_url
-    html_header += u'<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN"><html><head><meta charset="UTF-8"><title>'+titlestring+u'</title>'+style_html+u'</head><body>'
+    html_header += u'<!DOCTYPE HTML><html><head><meta charset="UTF-8"><title>'+titlestring+u'</title>'+style_html+u'</head><body>'
     html_header += u'<div class="bibliography">'+script_html
     html_footer += credits_html + u'</div>'
     html_header += '<h1 class="title">'+titlestring+"</h1>\n";
@@ -618,7 +618,7 @@ def compile_data(collection_id, collection_name, depth=0, exclude={}, shorten=Fa
         #html = "dummy"
         html = "<a id='%s' style='{display: block; position: relative; top: -150px; visibility: hidden;}'></a>"%collection_id
         d = 2+depth
-        html += '<div class="collection"><h%s class="collectiontitle">%s</h3>\n'%(d,collection_name)
+        html += '<div class="collection"><h%s class="collectiontitle">%s</h%s>\n'%(d,collection_name,d)
         html += corehtml + '</div>'
         write_some_html(html, category_outputfile_prefix+"-%s.html"%collection_id)
         fullhtml += html
