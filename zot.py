@@ -495,7 +495,7 @@ def make_html (bibitems, htmlitems, risitems, coinsitems, wikiitems, items, excl
     return cleanup_lines(string)
 
 
-def shortcollection(st):
+def is_shortcollection(st):
     return "*" in st.partition(' ')[0]
 
 def strip(string):
@@ -594,7 +594,7 @@ def get_collections ():
         collection_ids['Miscellaneous'] = catchallcollection
 
 
- 
+
     return sortedkeys
 
 def compile_data(collection_id, collection_name, exclude={}, shorten=False):
@@ -602,7 +602,7 @@ def compile_data(collection_id, collection_name, exclude={}, shorten=False):
     global item_ids
     global bib_style
 
-    
+
     def check_show(s):
         global show_links
         s = s.lower()
@@ -633,22 +633,12 @@ def compile_data(collection_id, collection_name, exclude={}, shorten=False):
     if not exclude:
         for i in a:
             key = i[u'id']
-            if item_ids.has_key(key):
-                auth = ""
-                # if u'author' in i:
-                #     a += ",".join(i[u'author'].values())
-                # elif u'editor' in i:
-                #     a +=  ",".join(i[u'editor'])
-                if u'title' in i:
-                    auth = i[u'title'][:14]
+            if not item_ids.has_key(key):
+                item_ids[key] = i,[]
+            if not shorten:
+                itemobj,cns = item_ids[key]
+                item_ids[key] = itemobj, cns+[collection_name]
 
-                year = ""
-                if u'issued' in i and u'raw' in i[u'issued']:
-                    year = i[u'issued'][u'raw']
-
-                ref = "%s (%s)"%(auth, year)
-                print("Warning: item %s also included in collection %s"%(ref, item_ids[key]))
-            item_ids[key] = collection_name
             counter += 1
 
     corehtml = make_html(b, h, r, c, w, a, exclude=exclude, shorten=shorten)
@@ -666,13 +656,40 @@ def compile_data(collection_id, collection_name, exclude={}, shorten=False):
     return counter # number of items included
 
 
+# to do: what about double entries where key is not the same?
+# maybe check title?
+def show_double_warnings ():
+    global item_ids
+    for key,v in item_ids.items():
+        i, colls = v
+        if len(colls)>1:
+            auth = ""
+            # if u'author' in i:
+            #     a += ",".join(i[u'author'].values())
+            # elif u'editor' in i:
+            #     a +=  ",".join(i[u'editor'])
+            if u'title' in i:
+                auth = i[u'title'][:20]
+
+            year = ""
+            if u'issued' in i and u'raw' in i[u'issued']:
+                year = i[u'issued'][u'raw']
+
+            ref = "%s (%s)"%(auth, year)
+            print("Warning: Item %s included in %s collections:\n %s"%(ref, len(colls), "\n ".join(colls)))
+
+# to do - maybe give option to automatically exclude double entries?
+# would have to be done in compile_data, via exclude mechanism
+
+
+
 def main():
 
     global item_ids
     global fullhtml
 
     sortedkeys = get_collections()
-    
+
     # start with links to subsections
     headerhtml = '<ul class="bib-cat">'
     item_ids = {}
@@ -680,7 +697,7 @@ def main():
 
     for collection_name in sortedkeys:
         c = 0
-        s=shortcollection(collection_name)
+        s=is_shortcollection(collection_name)
         if collection_ids[collection_name] == catchallcollection:
             # now for "Other"
             # Other has everything that isn't mentioned above
@@ -691,6 +708,7 @@ def main():
         if c>0:
             anchor = collection_ids[collection_name]
             headerhtml += "   <li class='link'><a style='white-space: nowrap;' href='#%s'>%s</a></li>\n"%(anchor,strip(collection_name))
+    show_double_warnings()
 
     headerhtml += "</ul>"
     headerhtml += search_box
