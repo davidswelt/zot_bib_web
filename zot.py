@@ -1,9 +1,10 @@
 #!/usr/bin/env python2.7
 # coding: utf-8
 
-# This will retrieve a set of collections and format an interactive bibliography in HTML5.
-# The bibliography contains BibTeX records and abstracts that can be revealed upon clicking.
-# The output is ready to be included in other websites (there are options), and it can be
+# This will retrieve a set of collections and format an interactive
+# bibliography in HTML5.  The bibliography contains BibTeX records and
+# abstracts that can be revealed upon clicking.  The output is ready
+# to be included in other websites (there are options), and it can be
 # easily styles using CSS (see style.css).
 
 # Bibliographic style can be chosen (APA) is default.
@@ -21,56 +22,48 @@ from __future__ import print_function
 # zot.py TOPLEVELFILTER CATCHALLCOLLECTION
 # zot.py TOPLEVELFILTER CATCHALLCOLLECTION OUTPUTFILE
 
+#############################################################################
 
-#### You must configure the following items
+## See settings.example.py for configuration information
+## Create settings.py to supply your configuration.
 
-# For best results, configure this in a file called "settings.py".
-# The values given here are mere examples
+#############################################################################
+#############################################################################
+#############################################################################
+#############################################################################
+#############################################################################
+#############################################################################
+#############################################################################
 
-library_id = '160464' # your group or user ID (e.g., six numeric digits) - this is an example
-library_type ='group'  # 'group' or 'user'
-api_key = None  # secret key (from Zotero)
+## The following items are defaults.
 
-toplevelfilter = None   #  collection where to start retrieving
-# toplevelfilter = 'MGID93AS'  # (Try this for an example)
-
-catchallcollection = None  # include "Miscellaneous" category for all remaining items
-# catchallcollection = '4KATF6MA'  # (Try this for an example)
-
-limit=5   # None, or set a limit (integer<100) for each collection for debugging
-
-
-###### Special settings - no need to change these
-
+library_id = '160464'
+library_type ='group'
+api_key = None
+toplevelfilter = None
+limit=None   # None, or set a limit (integer<100) for each collection for debugging
+catchallcollection = None
 titlestring = 'Bibliography'
-
-bib_style =  'apa'     # bibliography style format (e.g., 'apa' or 'mla') - Any valid CSL style in the Zotero style repository
-
-order_by = 'date'   # order in each category: e.g., 'dateAdded', 'dateModified', 'title', 'creator', 'type', 'date', 'publisher', 'publication', 'journalAbbreviation', 'language', 'accessDate', 'libraryCatalog', 'callNumber', 'rights', 'addedBy', 'numItems'
-
-sort_order = 'desc'   # "desc" or "asc"
-
-write_full_html_header = True   # False to not output HTML headers.  In this case, expect a file in UTF-8 encoding.
-stylesheet_url = "site/style.css"  # If set and write_full_html_header is True, link to this style sheet (a URL)
-
-outputfile = 'zotero-bib.html'  # relative or absolute path name of output file
-category_outputfile_prefix = 'zotero'  # relative or absolute path prefix
-
-jquery_path = "site/jquery.min.js"  # path to jquery file on the server
+catchall_title = 'Miscellanous'
+bib_style =  'apa'
+order_by = 'date'
+sort_order = 'desc'
+write_full_html_header = True
+stylesheet_url = "site/style.css"
+outputfile = 'zotero-bib.html'
+category_outputfile_prefix = 'zotero'
+jquery_path = "site/jquery.min.js"
 # jquery_path = "../wp-includes/js/jquery/jquery.js"  # wordpress location
-
-show_copy_button = True  # show clipbaord copy button.  Must define jquery_path.
+show_copy_button = True
 clipboard_js_path = "site/clipboard.min.js"
 copy_button_path = "site/clippy.svg"
-show_search_box = True  # show a Javascript/JQuery based search box to filter pubs by keyword.  Must define jquery_path.
-
-show_links = ['abstract', 'PDF', 'BIB', 'Wikipedia', 'EndNote', 'COINS']   # unconditionally show these items if they are available.
-
-smart_selections = True # Prevent viewers from selecting "bib", "pdf" etc for easier copy/paste of bibliography
+show_search_box = True
+show_links = ['abstract', 'PDF', 'BIB', 'Wikipedia', 'EndNote', 'COINS']
+smart_selections = True
 
 #############################################################################
 
-__version__ = "1.2.0"
+__version__ = "2.0.0"
 
 #############################################################################
 
@@ -108,7 +101,7 @@ from texconv import tex2unicode
 
 
 def print_usage ():
-    print("Usage:  zot.py [--div|--full] TOPLEVEL_COLLECTION_ID [CATCHALL_COLLECTION_ID [OUTPUTFILE]]")
+    print("Usage:  zot.py [--div|--full||--limit|-i] TOPLEVEL_COLLECTION_ID [CATCHALL_COLLECTION_ID [OUTPUTFILE]]")
 
 if "--div" in sys.argv:
     write_full_html_header = False

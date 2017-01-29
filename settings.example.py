@@ -1,24 +1,27 @@
-#dr-settings.py
+## settings.example.py
 
+## You must configure the authentication settings and one collection key.
 
-#### You must configure the following items
+#### AUTHENTICATION ############################################################
 
-# Group/User:  You may either display a library for a Zotero user, or for a group.
+# Group/User:  You may either display a library for a Zotero user,
+# or for a group.
 
 # User:
-# You may find your user ID for the library_id setting under "Settings -> Feeds/API":
+# You may find your user ID for the library_id setting under
+# "Settings -> Feeds/API":
 #    https://www.zotero.org/settings/keys
 # library_type is 'user'.
 
 # Group:
 # Find your library_id by selecting the group on the Zotero website,
 # and then choose "Group Settings".  The URL in your browser
-# window will then show you a six-digit number, e.g.,  .../groups/110233/settings
+# window will then show you a six-digit number,
+# e.g.,  .../groups/110233/settings
 # library_type is 'group'.
 
 library_id = '160464' # your group or user ID (e.g., six numeric digits)
 library_type ='group'  # 'group' or 'user'
-
 
 # Data from private Zotero accounts:
 
@@ -29,6 +32,8 @@ library_type ='group'  # 'group' or 'user'
 # library access".  This key is used in the api_key setting.
 
 api_key = None  # secret key (from Zotero)
+
+#### COLLECTIONS TO BE RENDERED ################################################
 
 # In your library, you may create a collection, for example, "website".
 # Within it, create titled sub-collections, like so:
@@ -56,17 +61,30 @@ api_key = None  # secret key (from Zotero)
 toplevelfilter = None # e.g., 'MGID93AS'
 
 
+#### SPECIAL OPTIONS: STYLE ####################################################
+# Special settings - configure only if needed.
 
-###### Special settings - configure only if needed.
+# bibliography title
+titlestring = 'Bibliography'
 
 
-limit=None   # None, or set a limit (integer<100) for each collection for debugging
+# bibliography style format (e.g., 'apa' or 'mla') - Any valid CSL style in the Zotero style repository
+bib_style =  'apa'
 
-bib_style =  'apa'     # bibliography style format (e.g., 'apa' or 'mla') - Any valid CSL style in the Zotero style repository
+# order within each category
+# e.g., 'dateAdded', 'dateModified', 'title', 'creator', 'type', 'date', 'publisher', 'publication', 'journalAbbreviation', 'language', 'accessDate', 'libraryCatalog', 'callNumber', 'rights', 'addedBy', 'numItems'
+order_by = 'date'
 
-order_by = 'date'   # order in each category: e.g., 'dateAdded', 'dateModified', 'title', 'creator', 'type', 'date', 'publisher', 'publication', 'journalAbbreviation', 'language', 'accessDate', 'libraryCatalog', 'callNumber', 'rights', 'addedBy', 'numItems'
-
+# sorting direction
 sort_order = 'desc'   # "desc" or "asc"
+
+# Limit - for fast testing and debugging
+# None, or set a limit (integer<100) for each collection for debugging
+# You may also give the --limit argument to zot.py
+limit=None
+
+#### SPECIAL OPTIONS: HTML AND FILE CONFIGURATION ##############################
+# Special settings - configure only if needed.
 
 write_full_html_header = True   # False to not output HTML headers.  In this case, expect a file in UTF-8 encoding.
 stylesheet_url = "style.css"  # If set and write_full_html_header is True, link to this style sheet (a URL)
@@ -74,6 +92,8 @@ stylesheet_url = "style.css"  # If set and write_full_html_header is True, link 
 # If set, include "Miscellaneous" category at end containing all items from this
 # collection that were not mentioend anywhere else.
 catchallcollection = None # e.g., '4KATF6MA'
+# Title for the catch-all collection (shown at end)
+catchall_title = 'Miscellanous'
 
 outputfile = 'zotero-bib.html'  # relative or absolute path name of output file
 category_outputfile_prefix = 'zotero'  # relative or absolute path prefix
@@ -94,8 +114,11 @@ copy_button_path = "site/clippy.svg" # path to file on server
 # (don't set for default)
 # smart_selections = True
 
-##
 
+
+#### SPECIAL OPTIONS: WORDPRESS ##############################
+# Special settings - configure only if needed.
+# These settings are used by push.py
 
 wp_url = 'https://example.com/wp/xmlrpc.php'   # Wordpress XMLRPC URL
 wp_username = 'pubpusherusername'
@@ -105,9 +128,3 @@ wp_blogid = "0"
 post_id = 225
 
 infile = "zotero-bib.html"
-
-
-
-
-
-
