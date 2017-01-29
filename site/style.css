@@ -12,6 +12,11 @@ div.bibliography h1, div.bibliography h2, div.bibliography h3, div.bibliography 
        color:DarkSlateGray ;
    }
 
+/* Collections */
+
+div.bibliography div.collection { }
+div.bibliography div.collection div.collection { /* nested collection */ }
+
 /* The entire bibliographic item */
 div.bib-item {
 }

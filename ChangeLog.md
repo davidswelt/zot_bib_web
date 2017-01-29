@@ -5,6 +5,8 @@ zot_bib_web 2.0.0
 - Improved warning messages for double entries
 - More flexibility with the "catch-all collection", which can now be
 under the top-level collection
+- Nested collections can be indented or otherwise styled using CSS
+  (new div.collection tags)
 - Tested with Pyzotero 0.10.1 and Pyzotero 1.2.0
 - Now compatible with Python 2.7 or Python 3.
 
