@@ -1,4 +1,4 @@
-Zot/Bib/Web
+zot_bib_web
 A program to export Zotero bibliographies to interactive HTML
 ===========
 
@@ -14,7 +14,7 @@ Bibliographies
 -  editable in Zotero by one or more users,
 -  are interactively searchable,
 -  linked to PDF documents or other URLs,
--  have BibTeX records, and
+-  have records for BibTex, EndNote and Wikipedia, and
 -  can be exported to HTML or pushed to a Wordpress database
 
 The following formats and info can be included:
@@ -29,13 +29,14 @@ be run periodically.
 A tool to push the resulting bibliography to a Wordpress installation
 is also provided.
 
-Zot/bib/web is available on Github.
+zot_bib_web is available on Github.
 
 
 Example Installations
 ----------------------------------------
 
 http://acs.ist.psu.edu/wp/pub/
+
 http://david-reitter.com/pub/
 
 

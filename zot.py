@@ -1,6 +1,8 @@
 #!/usr/bin/env python2.7
 # coding: utf-8
 
+# zot_bib_web
+
 # This will retrieve a set of collections and format an interactive
 # bibliography in HTML5.  The bibliography contains BibTeX records and
 # abstracts that can be revealed upon clicking.  The output is ready

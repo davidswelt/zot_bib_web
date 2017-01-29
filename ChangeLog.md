@@ -1,13 +1,14 @@
-Zot/Bib/Web 2.0.0
+zot_bib_web 2.0.0
 -----------------------------------------
 - Items in top-level collection are no longer excluded
 - Fix problem with nested collections that did not show in the correct location
 - Improved warning messages for double entries
 - More flexibility with the "catch-all collection", which can now be
-  under the top-level collection
+under the top-level collection
+- Tested with Pyzotero 0.10.1 and Pyzotero 1.2.0
 
 
-Zot/Bib/Web 1.2.2
+zot_bib_web 1.2.2
 -----------------------------------------
 - Fix bug that prevented RIS downloads from showing
   (and potentially other elements included in show_links depending on capitalization)
@@ -15,7 +16,7 @@ Zot/Bib/Web 1.2.2
 - Tested with Pyzotero 1.2.0 and Python 2.7
 
 
-Zot/Bib/Web 1.2.0
+zot_bib_web 1.2.0
 -----------------------------------------
 
 - A "show to clipboard" button is shown for bib and wikipedia code (configure with show_copy_button entry)
