@@ -1,4 +1,4 @@
-Pyzotero 1.2.1
+Pyzotero 1.2.2
 -----------------------------------------
 - Fix bug that prevented RIS downloads from showing
   (and potentially other elements included in show_links depending on capitalization)

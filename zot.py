@@ -64,7 +64,7 @@ clipboard_js_path = "site/clipboard.min.js"
 copy_button_path = "site/clippy.svg"
 show_search_box = True  # show a Javascript/JQuery based search box to filter pubs by keyword.  Must define jquery_path.
 
-show_links = ['abstract', 'pdf', 'bib', 'wikipedia', 'ris', 'coins']   # unconditionally show these items if they are available.
+show_links = ['abstract', 'PDF', 'BIB', 'Wikipedia', 'EndNote', 'COINS']   # unconditionally show these items if they are available.
 
 smart_selections = True # Prevent viewers from selecting "bib", "pdf" etc for easier copy/paste of bibliography
 
@@ -472,7 +472,7 @@ def make_html (bibitems, htmlitems, risitems, coinsitems, wikiitems, items, excl
                             blinkitem += u'<div class="blink">'+a_button(item)+u'<div class="bibshowhide"><div class="bib">%s</div></div></div>'%(bibitem2)
                         elif 'pdf' == item.lower() and u:
                             blinkitem += u'<div class="blink">'+a_button(item,url=u)+u'</div>'
-                        elif 'ris' == item.lower() and risitem:
+                        elif ('ris' == item.lower() or 'endnote' == item.lower()) and risitem:
                             blinkitem += u'<div class="blink">'+a_button(item,title="Download EndNote record",js="downloadFile(this)")+u'<div class="bibshowhide"><div class="ris">%s</div></div></div>'%(risitem)
                         elif 'coins' == item.lower() and coinsitem:
                             blinkitem += str(coinsitem).strip()
@@ -607,7 +607,7 @@ def compile_data(collection_id, collection_name, exclude={}, shorten=False):
         global show_links
         s = s.lower()
         for x in show_links:
-            if x==s:
+            if x.lower()==s:
                 return True
         return False
 
