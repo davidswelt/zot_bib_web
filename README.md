@@ -42,7 +42,7 @@ http://david-reitter.com/pub/
 
 Requirements
 ----------------------------------------
-- Python 2.7 installation (Python 3 not yet supported by Pyzotero)
+- Python 2.7 or 3 installation
 - Pyzotero
 - Bibliographic entries in Zotero (as user or as group)
 

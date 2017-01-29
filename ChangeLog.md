@@ -6,6 +6,7 @@ zot_bib_web 2.0.0
 - More flexibility with the "catch-all collection", which can now be
 under the top-level collection
 - Tested with Pyzotero 0.10.1 and Pyzotero 1.2.0
+- Now compatible with Python 2.7 or Python 3.
 
 
 zot_bib_web 1.2.2

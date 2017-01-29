@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 # coding: utf-8
 
 # zot_bib_web
@@ -367,9 +367,9 @@ def sortitems (data, sort_criteria):
     for i,val in zipped:
         for num,c in enumerate(sort_criteria):
             # for each sort criterion, extract the value for the item
-            if i[-1].has_key(c):
+            if c in i[-1]:
                 # if available, write value into tuple
-                if c==u'author' and isinstance(i[-1][c],list) and i[-1][c][0].has_key(u'family') and i[-1][c][0].has_key(u'given'):
+                if c==u'author' and isinstance(i[-1][c],list) and u'family' in i[-1][c][0] and u'given' in i[-1][c][0]:
                     val[num] = i[-1][c][0][u'family']+','+i[-1][c][0][u'given']
                 elif c==u'page':
                     try:
@@ -404,8 +404,8 @@ def make_html (bibitems, htmlitems, risitems, coinsitems, wikiitems, items, excl
     count = 0
     string = ""
     for bibitem,htmlitem,risitem,coinsitem,wikiitem,item in sortitems(zip(bibitems,htmlitems,risitems,coinsitems,wikiitems,items),sort_criteria):
-        if not exclude.has_key(item[u'id']):
-            if item.has_key(u'title'):
+        if item[u'id'] not in exclude:
+            if u'title' in item:
 
                 count += 1
 
@@ -413,9 +413,9 @@ def make_html (bibitems, htmlitems, risitems, coinsitems, wikiitems, items, excl
                 show_items = show_links
                 t =  item[u'title']
                 u = None
-                if item.has_key(u'URL'):
+                if u'URL' in item:
                     u = item[u'URL']
-                elif item.has_key(u'url'):
+                elif u'url' in item:
                     u = item[u'url']
 
                 t2 = t.replace(u"'",u'’') # technically, we're going to have to do much more (or do a flexible match)
@@ -438,22 +438,22 @@ def make_html (bibitems, htmlitems, risitems, coinsitems, wikiitems, items, excl
 
                 if shorten:
                     ct = None
-                    if item.has_key(u'container-title'):
+                    if u'container-title' in item:
                         ct = item[u'container-title']
-                    if item.has_key(u'event'):
+                    if u'event' in item:
                         ct = item[u'event']
-                    if item.has_key(u'journalAbbreviation'):
+                    if u'journalAbbreviation' in item:
                         ct = item[u'journalAbbreviation']
-                    if item.has_key(u'note'):
+                    if u'note' in item:
                         if len(item[u'note']) < len(ct):
                             ct = item[u'note']
 
                     y = ""
-                    if item.has_key(u'date'):
+                    if u'date' in item:
                         y = "(%s)"%item[u'date']
-                    elif item.has_key(u'issued'):
+                    elif u'issued' in item:
                         i = item[u'issued']
-                        if i.has_key(u'raw'):
+                        if u'raw' in i:
                             y = "(%s)"%i[u'raw']  # to do: get year from more complex date?
 
                     htmlitem = u"<a href=\"javascript:show(this);\" onclick=\"show(this);\">&#8862;</a> <span class=\"doctitle-short\">%s</span> <span class=\"containertitle\">%s</span> %s"%(t,ct,y) + "<div class=\"bibshowhide\" style=\"padding-left:20px;\">"+htmlitem+"</div>"
@@ -602,7 +602,7 @@ def compile_data(collection_id, collection_name, depth=0, exclude={}, shorten=Fa
         for i in a:
             # we store by key (ID) and also by title hash
             for key in [i[u'id'], hash(i[u'title'.lower()])]:
-                if not item_ids.has_key(key):
+                if key not in item_ids:
                     item_ids[key] = []
                 if not shorten:
                     item_ids[key] += [(i, collection_name)]

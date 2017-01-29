@@ -146,8 +146,6 @@ mathModeLaTeX = [
 def addDollar(list):
     return [u"$%s$"%x for x in list]
 
-from string import maketrans   # Required to call maketrans function.
-
 latexAccentsDict = dict(latexAccents)
 latexAccentsDictR = dict (zip(latexAccentsDict.values(),latexAccentsDict.keys()))
 
