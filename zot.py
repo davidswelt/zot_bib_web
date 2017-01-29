@@ -100,6 +100,7 @@ logging.captureWarnings(True)
 
 import codecs
 from texconv import tex2unicode
+import base64
 
 
 def print_usage ():
@@ -166,22 +167,17 @@ script_html = """<style type="text/css" id="zoterostylesheet" scoped>
 .blink {margin:0;margin-right:15px;padding:0;display:none;}
 </style>
 <script type="text/javascript">
- function downloadFile(elem) {
+function dwnD(data) {
   filename = "article.ris"
-  if (elem.parentNode) {
-    var elems = elem.parentNode.getElementsByTagName('*');
-    for (i in elems) {
-        if((' ' + elems[i].className + ' ').indexOf(' ' + 'bibshowhide' + ' ') > -1)
-           {
-  var ee = elems[i]
-  if (ee.childNodes[0]) { ee = ee.childNodes[0] }
   var pom = document.createElement('a');
-  pom.href = window.URL.createObjectURL(new Blob([ee.innerHTML], {type: 'text/plain;charset=utf-8'}));
+  var isSafari = navigator.vendor && navigator.vendor.indexOf('Apple') > -1 && navigator.userAgent && !navigator.userAgent.match('CriOS');
+  var mime = (isSafari?"text/plain":"application/x-research-info-systems");
+  pom.href = window.URL.createObjectURL(new Blob([atob(data)], {type: mime+";charset=utf-8"}));
   pom.download = filename;
   document.body.appendChild(pom);
   pom.click();
-  document.body.removeChild(pom);
-}}}}
+  setTimeout(function(){
+  document.body.removeChild(pom);}, 100); }
 function show(elem) {
     if (elem.parentNode) {
     var elems = elem.parentNode.parentNode.getElementsByTagName('*');
@@ -481,7 +477,7 @@ def make_html (bibitems, htmlitems, risitems, coinsitems, wikiitems, items, excl
                         elif 'pdf' == item.lower() and u:
                             blinkitem += u'<div class="blink">'+a_button(item,url=u)+u'</div>'
                         elif ('ris' == item.lower() or 'endnote' == item.lower()) and risitem:
-                            blinkitem += u'<div class="blink">'+a_button(item,title="Download EndNote record",js="downloadFile(this)")+u'<div class="bibshowhide"><div class="ris">%s</div></div></div>'%(risitem)
+                            blinkitem += u'<div class="blink">'+'<a class="%s" title="Download EndNote record" href="javascript:dwnD(\'%s\');"></a></div>'%(item,base64.b64encode(risitem.encode('utf-8')))
                         elif 'coins' == item.lower() and coinsitem:
                             blinkitem += str(coinsitem).strip()
 
