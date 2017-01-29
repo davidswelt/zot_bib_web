@@ -1,3 +1,8 @@
+Pyzotero 1.2.3
+-----------------------------------------
+- Improved warning messages for double entries
+
+
 Pyzotero 1.2.2
 -----------------------------------------
 - Fix bug that prevented RIS downloads from showing

@@ -85,7 +85,9 @@ import sys
 import re
 import copy
 def warning(*objs):
-    print("WARNING: ", *objs, file=sys.stderr)
+    print("Warning: ", *objs, file=sys.stderr)
+def warn(*objs):
+    print(*objs, file=sys.stderr)
 
 from pyzotero import zotero,zotero_errors
 
@@ -385,6 +387,7 @@ def sortitems (data, sort_criteria):
 # [u'issued',u'author']  (by date, then author)
 # [u'page']  (just sort by page number)
 
+entry_count=0
 def make_html (bibitems, htmlitems, risitems, coinsitems, wikiitems, items, exclude={}, shorten=False):
     def a_button (name,url=None,js=None,title=None,cls=None):
         global smart_selections
@@ -405,6 +408,9 @@ def make_html (bibitems, htmlitems, risitems, coinsitems, wikiitems, items, excl
     for bibitem,htmlitem,risitem,coinsitem,wikiitem,item in sortitems(zip(bibitems,htmlitems,risitems,coinsitems,wikiitems,items),sort_criteria):
         if not exclude.has_key(item[u'id']):
             if item.has_key(u'title'):
+
+                global entry_count
+                entry_count += 1
 
                 global show_links
                 show_items = show_links
@@ -580,8 +586,8 @@ def get_collections ():
 
     print("%s collections: "%len(collection_ids.items()))
     if 0==len(collection_ids.items()) and catchallcollection != toplevelfilter:
-        print("Warning: Items in the top level collections are excluded.")
-        print("Move your items into subcollections or use the catchallcollection setting.")
+        warning("Items in the top level collections are excluded.")
+        warn("Move your items into subcollections or use the catchallcollection setting.")
     if limit:
         print("Output limited to %s per collection."%limit)
 
@@ -632,12 +638,12 @@ def compile_data(collection_id, collection_name, exclude={}, shorten=False):
     counter = 0
     if not exclude:
         for i in a:
-            key = i[u'id']
-            if not item_ids.has_key(key):
-                item_ids[key] = i,[]
-            if not shorten:
-                itemobj,cns = item_ids[key]
-                item_ids[key] = itemobj, cns+[collection_name]
+            # we store by key (ID) and also by title hash
+            for key in [i[u'id'], hash(i[u'title'.lower()])]:
+                if not item_ids.has_key(key):
+                    item_ids[key] = []
+                if not shorten:
+                    item_ids[key] += [(i, collection_name)]
 
             counter += 1
 
@@ -656,31 +662,37 @@ def compile_data(collection_id, collection_name, exclude={}, shorten=False):
     return counter # number of items included
 
 
-# to do: what about double entries where key is not the same?
-# maybe check title?
 def show_double_warnings ():
     global item_ids
-    for key,v in item_ids.items():
-        i, colls = v
-        if len(colls)>1:
-            auth = ""
-            # if u'author' in i:
-            #     a += ",".join(i[u'author'].values())
-            # elif u'editor' in i:
-            #     a +=  ",".join(i[u'editor'])
-            if u'title' in i:
-                auth = i[u'title'][:20]
 
-            year = ""
-            if u'issued' in i and u'raw' in i[u'issued']:
-                year = i[u'issued'][u'raw']
+    def itemref(i):
+        auth = ""
+        if u'title' in i:
+            auth = i[u'title'][:30]
+        year = ""
+        if u'issued' in i and u'raw' in i[u'issued']:
+            year = i[u'issued'][u'raw']
+        ref = "%s (%s)"%(auth, year)
+        return ref
 
-            ref = "%s (%s)"%(auth, year)
-            print("Warning: Item %s included in %s collections:\n %s"%(ref, len(colls), "\n ".join(colls)))
+    for key,itemcolls in item_ids.items():
+        if len(itemcolls)>1:
+            uniqueitems = set([i[u'id'] for i,_c in itemcolls])
+            if len(uniqueitems)>1:
+                # This only applies to different items with the same title
+                warning("%s items sharing the same title included:"%len(itemcolls))
+                for i,c in itemcolls:
+                    warn(" %s [%s] (collection: %s)"%(itemref(i), i[u'id'], c))
+            else:
+                # if item is the same, it may still be included in several collections:
+                uniquecolls = set([c for _i,c in itemcolls])
+                if len(uniquecolls)>1:
+                    # we know that every item here has the same ID (because of the previous check)
+                    # itemcolls is a list
+                    warning('Item "%s" included in %s collections:\n %s'%(itemref(itemcolls[0][0]), len(uniquecolls), "\n ".join(uniquecolls)))
 
 # to do - maybe give option to automatically exclude double entries?
 # would have to be done in compile_data, via exclude mechanism
-
 
 
 def main():
@@ -709,6 +721,7 @@ def main():
             anchor = collection_ids[collection_name]
             headerhtml += "   <li class='link'><a style='white-space: nowrap;' href='#%s'>%s</a></li>\n"%(anchor,strip(collection_name))
     show_double_warnings()
+    print("%s items included."%entry_count)
 
     headerhtml += "</ul>"
     headerhtml += search_box
