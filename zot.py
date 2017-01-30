@@ -157,13 +157,11 @@ else:
     blinkitem_css = "".join(["a.%s::before {}\n"%(i) for i in show_links])
     blinkitem_css += "a.shortened::before {}\n"
 
-# note - the final two styles in the style sheet are manipulated by changeCSS
-# these are selected (hack, hack) by index
-# the .blink p style is a hack because Wordpress seems to insert <p> at times.
+# note - the final style in the style sheet is manipulated by changeCSS
+# this is selected (hack, hack) by index
 script_html = """<style type="text/css" id="zoterostylesheet" scoped>
 .bibshowhide {display:none;}
-"""+ blinkitem_css + """.blink p {display:inline;}
-.abstract {display:none;}
+"""+ blinkitem_css + """
 .blink {margin:0;margin-right:15px;padding:0;display:none;}
 </style>
 <script type="text/javascript">
@@ -204,7 +202,6 @@ function changeCSS() {
     else if (ss.rules)
         theRules = ss.rules
     else return;
-    theRules[theRules.length-2].style.display = 'inline';
     theRules[theRules.length-1].style.display = 'inline';
     }
     }
