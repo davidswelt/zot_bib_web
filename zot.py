@@ -393,13 +393,15 @@ def make_html (bibitems, htmlitems, risitems, coinsitems, wikiitems, items, excl
         if not js:
             js = "show(this)"
         if not url:
-            url = "#"
+            url = ""
+        else:
+            url = 'href=\"%s\"'%url
         if not cls:
             cls = name
         title2 = ""
         if title:
             title2 = "title=\"%s\""%title
-        return u"<a class=\"%s\" %s href=\"%s\" onclick=\"%s\">%s</a>"%(cls,title2,url,js,("" if smart_selections else name))
+        return u"<a class=\"%s\" %s %s onclick=\"%s\">%s</a>"%(cls,title2,url,js,("" if smart_selections else name))
 
     sort_criteria = None   # [u'page']  # TODO - allow user to set this; document
 
@@ -478,7 +480,7 @@ def make_html (bibitems, htmlitems, risitems, coinsitems, wikiitems, items, excl
                         elif 'pdf' == item.lower() and u:
                             blinkitem += u'<div class="blink">'+a_button(item,url=u)+u'</div>'
                         elif ('ris' == item.lower() or 'endnote' == item.lower()) and risitem:
-                            blinkitem += u'<div class="blink">'+'<a class="%s" title="Download EndNote record" href="#" onclick="dwnD(\'%s\');return false;"></a></div>'%(item,base64.b64encode(risitem.encode('utf-8')))
+                            blinkitem += u'<div class="blink">'+'<a class="%s" title="Download EndNote record" onclick="dwnD(\'%s\');return false;"></a></div>'%(item,base64.b64encode(risitem.encode('utf-8')))
                         elif 'coins' == item.lower() and coinsitem:
                             blinkitem += str(coinsitem).strip()
 
