@@ -1,7 +1,7 @@
 /* The bibliography */
 div.bibliography 
    {
-       font-family:Palatino,serif;
+       font-family:Verdana, Geneva, sans-serif;
    }
 
 /* Collection titles */
@@ -36,20 +36,28 @@ div.bib {
     font-family:Menlo,Courier,monospaced;
     color:brown;
     padding-left:30px;
-    padding-bottom:10px;
     white-space: pre;
+    margin:20px 60px 60px 10px;
 }
 
 /* Text "bib" or "abstract" */
 
 /* Text "bib" or "abstract" */
 .blink a {
-    font-family:Arial,sans-serif;
     font-variant: small-caps;
+    font-family:Arial,sans-serif;
+    font-size:80%;
+    text-decoration: none;
     clear: both;
     padding:0;
     margin:0;
 }
+
+/* the .blink p style is a hack because Wordpress seems to insert <p> at times. */
+.blink p {
+    display:inline;
+}
+
 div.full-bib-section .blink a {
     margin-bottom:-30px;
 }
@@ -63,19 +71,20 @@ div.short-bib-section .blink {
 /* The actual abstract (when visible) */
 div.abstract {
     color:black;
-    padding-left:30px;
-    padding-bottom:10px;
+    margin:20px 60px 60px 10px;
+    padding:10px;
+    border:1px solid black;
 }
 
 /* Document titles */
 .doctitle {
-    font-weight:700;
+    font-weight:200;
 }
 
 /* Document titles linking to a PDF or somewhere else */
 a.doctitle:link,a.doctitle:visited,a.doctitle,a.doctitle:hover,a.doctitle.active {
     color:blue;
-    font-weight:700;
+    font-weight:200;
     text-decoration:none; /* do not underline */ 
 }
 

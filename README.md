@@ -63,9 +63,9 @@ or:
 
 - ensure zot.py is executable (chmod ug+x zot.py)
 
-- Test:
+- Try it out:
 
-   ./zot.py
+   ./zot.py --group 160464 DTDTV2EP
 
    Then view zotero-bib.html in a browser.
    If that looks good, move on to the next steps for configuration.
@@ -74,6 +74,14 @@ or:
   the file settings.example.py.
   Go to zotero.org to get your API secret key and your user or library
   IDs.  It's easy: see the top of settings.example.py for details.
+  If settings.py is set up, you can call zot.py without arguments.
+
+  Alternatively, you can use give the primary settings in arguments to
+  the program.
+
+
+Deployment to a web site
+-----------------------------------------
 
 - Upload the site folder or its contents to a public place on your web server.
   By default, /site/... is the assumed URL.
