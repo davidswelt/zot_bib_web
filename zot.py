@@ -336,9 +336,9 @@ def extract_abstract(bib):
         a = a.replace("&", "&amp;")
         a = a.replace("<","&lt;")
         a = a.replace(">","&gt;")
-        a = a.replace("\textless","&lt;")
-        a = a.replace("\textgreater","&gt;")
-        a = a.replace("\textbar","|")
+        a = a.replace("\\textless","&lt;")
+        a = a.replace("\\textgreater","&gt;")
+        a = a.replace("\\textbar","|")
         return tex2unicode(a),b
     return None,bib
 
