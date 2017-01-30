@@ -3,14 +3,13 @@
 
 # zot_bib_web
 
-# This will retrieve a set of collections and format an interactive
+# The simple way to add a fast, interactive Zotero bibiography in your website.
+
+# This tool will retrieve a set of collections and format an interactive
 # bibliography in HTML5.  The bibliography contains BibTeX records and
 # abstracts that can be revealed upon clicking.  The output is ready
 # to be included in other websites (there are options), and it can be
 # easily styles using CSS (see style.css).
-
-# Bibliographic style can be chosen (APA) is default.
-
 
 # (C) 2014,2015,2016,2017 David Reitter, The Pennsylvania State University
 # Released under the GNU General Public License, V.3 or later.
@@ -39,7 +38,7 @@ from __future__ import print_function
 
 ## The following items are defaults.
 
-library_id = '160464'
+library_id = None
 library_type ='group'
 api_key = None
 toplevelfilter = None
@@ -72,6 +71,7 @@ __version__ = "2.0.0"
 
 try:
     from settings import *
+    print("Loaded settings from settings.py.")
 except ImportError:
     pass
 
@@ -104,7 +104,23 @@ import base64
 
 
 def print_usage ():
-    print("Usage:  zot.py [--div|--full||--limit|-i] TOPLEVEL_COLLECTION_ID [CATCHALL_COLLECTION_ID [OUTPUTFILE]]")
+    print("""Usage:   zot.py {--div|--full|--limit|--group GID|--user UID} [TOPLEVEL_COLLECTION_ID] [CATCHALL_COLLECTION_ID [OUTPUTFILE]]
+Example: ./zot.py --group 160464 DTDTV2EP
+
+--group GID   set a group library              [library_id; library_type='group']
+--user UID    set a user library               [library_id; library_type='user']
+--limit       sets limit to 5 for fast testing [limit=5]
+--div         output an HTML fragment          [write_full_html_header=False]
+--full        output full html                 [write_full_html_header=True]
+--apikey KEY  set Zotero API key               [api_key]
+
+These and additional settings can be loaded from settings.py.
+""")
+
+print_usage_and_exit = False
+
+if len(sys.argv)<=1 and not library_id:  # if no settings file loaded and no args given
+    print_usage_and_exit = True
 
 if "--div" in sys.argv:
     write_full_html_header = False
@@ -127,6 +143,34 @@ if "--help" in sys.argv:
     sys.argv.remove('--help')
     print_usage()
 
+def fetch_tag (tag, default=None):
+    result = default
+    if tag in sys.argv:
+        i = sys.argv.index(tag)
+        if len(sys.argv)>i+1:
+            result = sys.argv[i+1]
+            sys.argv=sys.argv[:i]+sys.argv[i+2:]
+        else:
+            warn("%s needs a value."%tag)
+    return result
+
+x = fetch_tag ("--user")
+if x:
+    library_id = x
+    library_type = 'user'
+    # When a different user library is set, we expect new collections
+    toplevelcollection=None
+    catchallcollection=None
+
+x = fetch_tag ("--group")
+if x:
+    library_id = x
+    library_type = 'group'
+    toplevelcollection=None
+    catchallcollection=None
+
+api_key = fetch_tag ("--apikey", api_key)
+
 if len(sys.argv)>1:
     if not sys.argv[1] == "None":
         toplevelfilter = sys.argv[1]
@@ -136,6 +180,14 @@ if len(sys.argv)>2:
 if len(sys.argv)>3:
     if not sys.argv[3] == "None":
         outputfile =sys.argv[3]
+
+if not library_id:
+    warn("You must give --user or --group, or set library_id and library_type in settings.py.")
+    print_usage_and_exit = True
+
+if print_usage_and_exit:
+    print_usage()
+    sys.exit(1)
 
 
 ###########
@@ -174,7 +226,7 @@ function dwnD(data) {
   pom.download = filename;
   document.body.appendChild(pom);
   pom.click();
-  setTimeout(function(){document.body.removeChild(pom);}, 100); 
+  setTimeout(function(){document.body.removeChild(pom);}, 100);
   return(void(0));}
 function show(elem) {
     if (elem.parentNode) {
@@ -349,6 +401,7 @@ def write_some_html (body, outfile, title=None):
     file.write(body)
     file.write(html_footer)
     file.close()
+    print("Output written to %s."%outfile)
 
 def tryreplacing (source, strings, repl):
     for s in strings:
@@ -621,7 +674,7 @@ def compile_data(collection_id, collection_name, depth=0, exclude={}, shorten=Fa
         d = 2+depth
         html += '<div class="collection"><h%s class="collectiontitle">%s</h%s>\n'%(d,collection_name,d)
         html += corehtml + '</div>'
-        write_some_html(html, category_outputfile_prefix+"-%s.html"%collection_id)
+        # write_some_html(html, category_outputfile_prefix+"-%s.html"%collection_id)
         fullhtml += html
 
     return counter # number of items included

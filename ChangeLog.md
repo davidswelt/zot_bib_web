@@ -1,5 +1,6 @@
 zot_bib_web 2.0.0
 -----------------------------------------
+- Much simplified installation and setup.  Improved documentation.
 - Items in top-level collection are no longer excluded
 - Fix problem with nested collections that did not show in the correct location
 - Improved warning messages for double entries

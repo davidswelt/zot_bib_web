@@ -1,6 +1,6 @@
 zot_bib_web
 A program to export Zotero bibliographies to interactive HTML
-===========
+============================================
 
 This tool generates interactive web bibliographies based on one or
 more collections in a Zotero repository.
@@ -8,6 +8,11 @@ more collections in a Zotero repository.
 Collections can be maintained by groups of people, using Zotero's web
 interface or their desktop applications.
 
+Zot_bib_web does not depend on any third-party web server.  The
+generated bibliographies load quickly because they are stored as static
+files along with the rest of your website. 
+
+Setup is very easy.  Just call zot.py with the key of a public Zotero collection.
 
 Bibliographies
 -  are grouped by collection,
