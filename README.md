@@ -4,9 +4,9 @@ zot_bib_web: Interactive web bibliographies with Zotero
 Example Installations
 ----------------------------------------
 
-http://acs.ist.psu.edu/wp/pub/
+[Lab website at Penn State](http://acs.ist.psu.edu/wp/pub/)
 
-http://david-reitter.com/pub/
+[Personal website](http://david-reitter.com/pub/)
 
 
 Features
@@ -50,25 +50,28 @@ zot_bib_web is available on Github.
 
 Requirements
 ----------------------------------------
-- Python 2.7 or 3 installation
-- Pyzotero
-- Bibliographic entries in Zotero (as user or as group)
+- Python 2.7 or 3
+- Pyzotero.  
+To install Pyzotero, a library for python:
 
-- A unix-like operating system, such as macOS, GNU/Linux
+		sudo pip install pyzotero
+
+	or:
+
+		sudo easy_install pyzotero
+
+- A Zotero collection with your bibliography (as user or as group)
+
 
 Setup
 -----------------------------------------
 
-- Install Pyzotero, a library for python:
-  sudo pip install pyzotero
-or:
-  sudo easy_install pyzotero
 
 - ensure zot.py is executable (chmod ug+x zot.py)
 
-- Try it out:
+- Try it out.  From a unix-like command-line, do this:
 
-   ./zot.py --group 160464 DTDTV2EP
+		./zot.py --group 160464 DTDTV2EP
 
    Then view zotero-bib.html in a browser.
    If that looks good, move on to the next steps for configuration.
@@ -109,7 +112,7 @@ Bibliography in Zotero
 -----------------------------------------
 
 - With Zotero, create a bibliography and note its ID (e.g., from the
-  URL in the Zotero web interface).  Example: "MGID90AT".
+  URL in the Zotero web interface).  Example: `MGID90AT`.
   This ID is what you need for the "toplevelfilter" variable in
   settings.py.
 
@@ -158,7 +161,7 @@ Follow these steps:
 	for debugging purposes.  Configure settings.py to not generate
 	the full HTML code.
 2. Install the wpautop-control plugin (or a similar plugin) to make
-	sure that WP will not inserts paragraph breaks at various places
+	sure that WP will not insert paragraph breaks at various places
 	in the bibliography.  With this plugin, you will need to add a
 	"custom field" to the page created in the  next step (Choose
 	"Screen Options" at the top of the page view, enable custom
