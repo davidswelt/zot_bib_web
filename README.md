@@ -1,6 +1,16 @@
-zot_bib_web
-A program to export Zotero bibliographies to interactive HTML
+zot_bib_web: Interactive web bibliographies with Zotero
 ============================================
+
+Example Installations
+----------------------------------------
+
+http://acs.ist.psu.edu/wp/pub/
+
+http://david-reitter.com/pub/
+
+
+Features
+----------------------------------------
 
 This tool generates interactive web bibliographies based on one or
 more collections in a Zotero repository.
@@ -36,13 +46,6 @@ is also provided.
 
 zot_bib_web is available on Github.
 
-
-Example Installations
-----------------------------------------
-
-http://acs.ist.psu.edu/wp/pub/
-
-http://david-reitter.com/pub/
 
 
 Requirements
