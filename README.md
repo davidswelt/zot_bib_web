@@ -171,9 +171,16 @@ Follow these steps:
 	[zot_bib_web COLLECTION] where you'd like the bibliography
 	inserted.  Replace COLLECTION with the ID of the collection.
 	(More options: see push.py)
-4.  Configure push.py (at the top).  You will need to know a few simple
+4. Copy the style sheet contents (in site/) to your Wordpress theme
+	(select "editor", or "Additional CSS").
+5. Configure settings.py so that jquery and other files are available
+	on the web server.  Typically, this would be
+		jquery_path = "../wp-includes/js/jquery/jquery.js"
+	clipboard.js and clippy.svg: You may refer to a public URL or serve
+	the files yourself.
+6.  Configure push.py (at the top).  You will need to know a few simple
 	details about your WP installation.
-5.  Run push.py regularly or on demand.  It will call zot.py
+7.  Run push.py regularly or on demand.  It will call zot.py
 	automatically and then update the page in WP.
 
 
