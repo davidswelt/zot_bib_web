@@ -644,7 +644,7 @@ def make_html (all_items, exclude={}, shorten=False):
                         elif 'pdf' == item.lower() and u:
                             blinkitem += u'<div class="blink">'+a_button(item,url=u)+u'</div>'
                         elif ('ris' == item.lower() or 'endnote' == item.lower()) and risitem:
-                            blinkitem += u'<div class="blink">'+'<a class="%s" title="Download EndNote record" onclick="dwnD(\'%s\');return false;"></a></div>'%(item,base64.b64encode(risitem.encode('utf-8')))
+                            blinkitem += u'<div class="blink">'+'<a class="%s" title="Download EndNote record" onclick="dwnD(\'%s\');return false;"></a></div>'%(item,base64.b64encode(risitem.encode('utf-8')).decode('utf-8'))
                         elif 'coins' == item.lower() and coinsitem:
                             blinkitem += str(coinsitem).strip()
 
