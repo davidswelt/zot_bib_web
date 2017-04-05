@@ -261,6 +261,7 @@ function show(elem) {
     for (i in elems) {
         if((' ' + elems[i].className + ' ').indexOf(' ' + 'bibshowhide' + ' ') > -1)
         { elems[i].style.display = (elems[i].style.display == 'block') ? 'none' : 'block';
+          return(void(0));
         }}}
   return(void(0));}
 function changeCSS() {
@@ -607,8 +608,9 @@ def make_html (all_items, exclude={}, shorten=False):
 
                 if u'section_keyword' in item:
                     htmlitem += "<span style='display:none;'>%s</span>"%item[u'section_keyword']
+
                 if shorten:
-                    ct = None
+                    ct = u""
                     if u'container-title' in item:
                         ct = item[u'container-title']
                     if u'event' in item:
@@ -616,7 +618,7 @@ def make_html (all_items, exclude={}, shorten=False):
                     if u'journalAbbreviation' in item:
                         ct = item[u'journalAbbreviation']
                     if u'note' in item:
-                        if len(item[u'note']) < len(ct):
+                        if len(item[u'note']) < len(ct) or ct==u"":
                             ct = item[u'note']
 
                     y = ""
@@ -627,12 +629,7 @@ def make_html (all_items, exclude={}, shorten=False):
                         if u'raw' in i:
                             y = "(%s)"%i[u'raw']  # to do: get year from more complex date?
 
-                    htmlitem = u"<a href=\"#\" onclick=\"show(this);\">&#8862;</a> <span class=\"doctitle-short\">%s</span> <span class=\"containertitle\">%s</span> %s"%(t,ct,y) + "<div class=\"bibshowhide\" style=\"padding-left:20px;\">"+htmlitem+"</div>"
-                    htmlitem = u"<div>" + htmlitem + "</div>" # to limit was is being expanded
-
-
                 if bibitem:
-
                     abstract,bibitem2 = extract_abstract(bibitem)
                     blinkitem = u""
                     # we print the original item name as label so that capitalization may be chosen via the items list
@@ -655,6 +652,10 @@ def make_html (all_items, exclude={}, shorten=False):
                         blinkitem = u'<div style="padding-left:20px;">' + blinkitem + u'</div>'
 
                     htmlitem += blinkitem
+
+                if shorten:
+                    htmlitem = u"<a href=\"#\" onclick=\"show(this);\">&#8862;</a> <span class=\"doctitle-short\">%s</span> <span class=\"containertitle\">%s</span> %s"%(t,ct,y) + "<div class=\"bibshowhide\" style=\"padding-left:20px;\">"+htmlitem+"</div>"
+                    htmlitem = u"<div>" + htmlitem + "</div>" # to limit was is being expanded
 
                 string += u'<div class="bib-item">' + htmlitem + u'</div>'
 
@@ -864,7 +865,7 @@ def retrieve_items(sortedkeys):
 
         # if sort_criteria[0] != 'collection':
         for atuple in i2:
-            atuple[-1][u'section_keyword'] = key # will be added HTML so the entry can be found
+            atuple[-1][u'section_keyword'] = " ".join(collection_parents + [key]) # will be added HTML so the entry can be found
 
         if len(i2)>0:
             all_items += i2
@@ -944,12 +945,27 @@ def show_double_warnings ():
                     warning('Item "%s" included in %s collections:\n %s'%(itemref(itemcolls[0][0]), len(uniquecolls), "\n ".join(uniquecolls)))
 
 
-
+from collections import defaultdict
 def pull_up_featured_remove_hidden_items (all_items):
     # split up into featured and other sections
     visible_items = list(filter(lambda it: not is_hidden_collection(it[-1][u'collection']), all_items))
     featured_items = filter(lambda it: is_featured_collection(it[-1][u'collection']), visible_items)
     other_items = filter(lambda it: not is_featured_collection(it[-1][u'collection']), visible_items)
+
+    # if a hidden item is available elsewhere, transfer its category so that it
+    # can be searched for using the category shortcuts.
+    # E.g., "selected works" might not be shown at the top of the bibliography,
+    # but you still might filter for it.
+
+    hidden_item_categories = defaultdict(str)
+    for it in all_items:
+        if is_hidden_collection(it[-1][u'collection']):
+            hidden_item_categories[it[-1][u'id']] += it[-1][u'section_keyword'] + " "
+    for it in visible_items:
+        id = it[-1][u'id']
+        if id in hidden_item_categories:
+            it[-1][u'section_keyword'] += " " + hidden_item_categories[id]
+
     return featured_items, other_items
 
 def sort_items(all_items, sort_criteria, sort_reverse):
