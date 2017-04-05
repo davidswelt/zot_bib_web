@@ -57,6 +57,7 @@ show_copy_button = True
 clipboard_js_path = "site/clipboard.min.js"
 copy_button_path = "site/clippy.svg"
 show_search_box = True
+show_shortcuts = True
 show_links = ['abstract', 'PDF', 'BIB', 'Wikipedia', 'EndNote', 'COINS']
 smart_selections = True
 
@@ -281,7 +282,7 @@ changeCSS();</script>"""
 
 
 if show_copy_button:
-    if jquery_path:
+    if jquery_path and clipboard_js_path and copy_button_path:
         script_html += """<script type="text/javascript" src="%s"></script>
     <script type="text/javascript" src="%s"></script>
     <script type="text/javascript">
@@ -294,7 +295,7 @@ trigger.parentNode.style.color="grey";
 setTimeout(function(){trigger.parentNode.style.color=prevCol;}, 200);
 return trigger.parentNode.childNodes[0].textContent;}});});</script>"""%(jquery_path,clipboard_js_path,copy_button_path)
     else:
-        warning("show_search_box set, but jquery_path undefined.")
+        warning("show_search_box set, but jquery_path, clipboard_js_path or copy_button_path undefined.")
 
 credits_html = u'<div id="zbw_credits" style="text-align:right;">A <a href="https://github.com/davidswelt/zot_bib_web">zot_bib_web</a> bibliography.</div>'
 
@@ -316,28 +317,37 @@ else:
     html_footer += credits_html + u'</div>'
 
 search_box = ""
-if show_search_box:
+if show_search_box or show_shortcuts or show_copy_button:
+    search_box += '<script type="text/javascript" src="'+jquery_path+'</script>'
+    
+if show_search_box or show_shortcuts:
     if jquery_path:
-        search_box= '<form id="pubSearchBox" name="pubSearchBox"><input id="pubSearchInputBox" type="text" name="keyword">&nbsp;<input id="pubSearchButton" type="button" value="Search" onClick="searchFunction()"></form><h2 id="searchTermSectionTitle" class="collectiontitle"></h2><script type="text/javascript" src="'+jquery_path+""""></script><script type="text/javascript">
+        search_box = ''
+        if show_search_box:
+            search_box += '<form id="pubSearchBox" name="pubSearchBox"><input id="pubSearchInputBox" type="text" name="keyword">&nbsp;<input id="pubSearchButton" type="button" value="Search" onClick="searchFunction()"></form><h2 id="searchTermSectionTitle" class="collectiontitle"></h2>'
+
+        if show_search_box or show_shortcuts:
+            search_box += """<script type="text/javascript">
   function getURLParameter(name) {
     return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null;
   }
   jQuery( document ).ready(function() {
     jQuery('#pubSearchInputBox').val(getURLParameter("keyword"));
-    searchFunction(getURLParameter("keyword"));
+    searchFunction([getURLParameter("keyword")]);
   });
   jQuery.expr[":"].icontains = jQuery.expr.createPseudo(function(arg) {
     return function( elem ) {
         return jQuery(elem).text().toUpperCase().indexOf(arg.toUpperCase()) >= 0;
     };});
-function searchFunction(searchTerms) {
+function searchFunction(searchTerms, shown) {
   var i=document.pubSearchBox.keyword.value;
   searchTerms = searchTerms || (i!=""&&i.split(" "));
+  shown = shown || searchTerms;
   jQuery( ".bib-item").css( "display", "none" );
   var q = ".bib-item";
   jQuery.each(searchTerms, function(i,x) {q = q + ":icontains('"+x+"')";});
   jQuery(q).css("display", "block");
-  jQuery("#searchTermSectionTitle").html(searchTerms.length>0?"<a href='#' onclick='searchFunction([]);'>&#x2715;</a> "+searchTerms:"");
+  jQuery("#searchTermSectionTitle").html(searchTerms.length>0?"<a href='#' onclick='searchFunction([]);'>&#x2715;</a> "+shown:"");
 }
   jQuery(function() {    // <== Doc ready
   // stackoverflow q 3971524
@@ -357,7 +367,7 @@ function searchFunction(searchTerms) {
     jQuery("#pubSearchInputBox").bind('keyup paste cut', checkForChange);
 });</script>"""
     else:
-        warning("show_search_box set, but jquery_path undefined.")
+        warning("show_search_box or show_shortcut are True, but jquery_path undefined.")
 
 def import_legacy_configuration():
     global order_by
@@ -468,6 +478,7 @@ def access(atom_item, key, default=""):
 
     return default  # default
     # raise RuntimeError("access: field %s not found."%key)
+
 
 def format_bib(bib):
     return bib.replace("},","},\n")
@@ -850,7 +861,7 @@ def retrieve_items(sortedkeys):
 
         # if sort_criteria[0] != 'collection':
         for atuple in i2:
-            atuple[-1][u'section_keyword'] = strip(collection_name) # will be added HTML so the entry can be found
+            atuple[-1][u'section_keyword'] = key # will be added HTML so the entry can be found
 
         if len(i2)>0:
             all_items += i2
@@ -1048,10 +1059,10 @@ def main():
     all_items = retrieve_items(sortedkeys)
 
 
-    for _key,_depth,collection_name,_collection_parents in sortedkeys:
-        if show_search_box:  # search box is necessary for this to work
+    for key,_depth,collection_name,_collection_parents in sortedkeys:
+        if show_shortcuts:  # search box is necessary for this to work
         # Keyword filter
-            headerhtml += "   <li class='link'><a style='white-space: nowrap;' href='#' onclick='searchFunction([\"%s\"]);return false;'>%s</a></li>\n"%(strip(collection_name),strip(collection_name))
+            headerhtml += "   <li class='link'><a style='white-space: nowrap;' href='#' onclick='searchFunction([\"%s\"],\"%s\");return false;'>%s</a></li>\n"%(key, strip(collection_name),strip(collection_name))
 
     if 'collection' in sort_criteria:
         show_double_warnings()

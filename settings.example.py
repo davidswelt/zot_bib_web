@@ -112,6 +112,8 @@ show_search_box = True  # show a Javascript/JQuery based search box to filter pu
 jquery_path = "site/jquery.min.js"  # path to jquery file on the server
 # jquery_path = "../wp-includes/js/jquery/jquery.js"  # wordpress location
 
+show_shortcuts = True # Show categories at the top of the bibliography for quick filtering
+
 show_copy_button = True  # show clipbaord copy button.  Must define jquery_path.
 clipboard_js_path = "site/clipboard.min.js"  # path to file on server
 copy_button_path = "site/clippy.svg" # path to file on server
