@@ -9,8 +9,13 @@ div.bibliography h1, div.bibliography h2, div.bibliography h3, div.bibliography 
    {
        font-family:Optima,sans-serif;
        font-weight:1000;
-       color:DarkSlateGray ;
+       color:DarkSlateGray;
    }
+
+/* Search term highlighted */
+#searchTermSectionTitle, #searchTermSectionTitle a {
+    color:Red;
+}
 
 /* Collections */
 

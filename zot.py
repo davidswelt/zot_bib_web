@@ -47,8 +47,6 @@ catchallcollection = None
 titlestring = 'Bibliography'
 catchall_title = 'Miscellanous'
 bib_style =  'apa'
-order_by = 'date'
-sort_order = 'desc'
 write_full_html_header = True
 stylesheet_url = "site/style.css"
 outputfile = 'zotero-bib.html'
@@ -62,9 +60,31 @@ show_search_box = True
 show_links = ['abstract', 'PDF', 'BIB', 'Wikipedia', 'EndNote', 'COINS']
 smart_selections = True
 
+
+
+sort_criteria = ['collection', '-year', 'type']
+show_top_section_headings = 1
+
+sortkeyname_order = {}
+# Define label for article types and their ordering
+sortkeyname_order['type'] = {'article-journal':(0,'Journal Articles'),
+                           'paper-conference':(2, 'Conference and Workshop Papers'),
+                           'book':(5,'Books and Collections'),
+                           'chapter':(7,'Book Chapters'),
+                           'thesis':(10,'Theses'),
+                           'speech':(15,'Talks')}
+
+
+##### legacy settings
+order_by = None   # order in each category: e.g., 'dateAdded', 'dateModified', 'title', 'creator', 'type', 'date', 'publisher', 'publication', 'journalAbbreviation', 'language', 'accessDate', 'libraryCatalog', 'callNumber', 'rights', 'addedBy', 'numItems'
+# Note: this does not seem to work with current the Zotero API.
+# If set, overrides sort_criteria
+sort_order = 'desc'   # "desc" or "asc"
+
+
 #############################################################################
 
-__version__ = "2.0.0"
+__version__ = "3.0.0"
 
 #############################################################################
 
@@ -80,7 +100,7 @@ import sys
 import re
 import copy
 def warning(*objs):
-    print("Warning: ", *objs, file=sys.stderr)
+    print("WARNING: ", *objs, file=sys.stderr)
 def warn(*objs):
     print(*objs, file=sys.stderr)
 
@@ -229,7 +249,7 @@ function dwnD(data) {
   setTimeout(function(){document.body.removeChild(pom);}, 100);
   return(void(0));}
 function show(elem) {
-    if (elem.parentNode) {
+  if (elem.parentNode) {
     var elems = elem.parentNode.parentNode.getElementsByTagName('*');
     for (i in elems) {
         if((' ' + elems[i].className + ' ').indexOf(' ' + 'bibshowhide' + ' ') > -1)
@@ -241,7 +261,7 @@ function show(elem) {
         if((' ' + elems[i].className + ' ').indexOf(' ' + 'bibshowhide' + ' ') > -1)
         { elems[i].style.display = (elems[i].style.display == 'block') ? 'none' : 'block';
         }}}
-    return(void(0));}
+  return(void(0));}
 function changeCSS() {
     if (!document.styleSheets) return;
     var theRules = new Array();
@@ -298,24 +318,26 @@ else:
 search_box = ""
 if show_search_box:
     if jquery_path:
-        search_box= '<form id="pubSearchBox" name="pubSearchBox"><input id="pubSearchInputBox" type="text" name="keyword">&nbsp;<input id="pubSearchButton" type="button" value="Search" onClick="searchFunction()"></form><script type="text/javascript" src="'+jquery_path+""""></script><script type="text/javascript">
+        search_box= '<form id="pubSearchBox" name="pubSearchBox"><input id="pubSearchInputBox" type="text" name="keyword">&nbsp;<input id="pubSearchButton" type="button" value="Search" onClick="searchFunction()"></form><h2 id="searchTermSectionTitle" class="collectiontitle"></h2><script type="text/javascript" src="'+jquery_path+""""></script><script type="text/javascript">
   function getURLParameter(name) {
     return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null;
   }
   jQuery( document ).ready(function() {
     jQuery('#pubSearchInputBox').val(getURLParameter("keyword"));
-    searchFunction();
+    searchFunction(getURLParameter("keyword"));
   });
   jQuery.expr[":"].icontains = jQuery.expr.createPseudo(function(arg) {
     return function( elem ) {
         return jQuery(elem).text().toUpperCase().indexOf(arg.toUpperCase()) >= 0;
     };});
-function searchFunction() {
-  var searchTerms = document.pubSearchBox.keyword.value.split(" ");
+function searchFunction(searchTerms) {
+  var i=document.pubSearchBox.keyword.value;
+  searchTerms = searchTerms || (i!=""&&i.split(" "));
   jQuery( ".bib-item").css( "display", "none" );
   var q = ".bib-item";
   jQuery.each(searchTerms, function(i,x) {q = q + ":icontains('"+x+"')";});
-  jQuery(q).css( "display", "block" );
+  jQuery(q).css("display", "block");
+  jQuery("#searchTermSectionTitle").html(searchTerms.length>0?"<a href='#' onclick='searchFunction([]);'>&#x2715;</a> "+searchTerms:"");
 }
   jQuery(function() {    // <== Doc ready
   // stackoverflow q 3971524
@@ -336,6 +358,25 @@ function searchFunction() {
 });</script>"""
     else:
         warning("show_search_box set, but jquery_path undefined.")
+
+def import_legacy_configuration():
+    global order_by
+    global sort_criteria
+    global sort_reverse
+    if order_by:  # set by user (legacy setting)
+        sort_critera = ['collection', order_by]
+    else:
+        order_by = 'date'
+
+    # find sort order for each criterion
+    sort_reverse = []
+    for i, c in enumerate(sort_criteria):
+        if c[0] == '-':
+            sort_criteria[i] = c[1:]
+            sort_reverse += [True]
+        else:
+            sort_reverse += [False]
+
 
 
 def retrieve_x (collection,**args):
@@ -358,6 +399,45 @@ def retrieve_coins (collection):
 def retrieve_wikipedia (collection):
     return retrieve_x(collection, content='wikipedia')
 
+def retrieve_data(collection_id, exclude=None):
+
+    global item_ids
+
+    def check_show(s):
+        global show_links
+        s = s.lower()
+        for x in show_links:
+            if x.lower()==s:
+                return True
+        return False
+
+    a = retrieve_atom(collection_id)
+    b = retrieve_bib(collection_id,'bibtex', '')
+    h = retrieve_bib(collection_id,'bib', bib_style)
+    if check_show('EndNote') or check_show('RIS'):
+        r = retrieve_bib(collection_id,'ris', '')
+    else:
+        r = [None for _x in h]
+    if check_show('coins'):
+        c = retrieve_coins(collection_id)
+    else:
+        c = [None for _x in h]
+    if check_show('wikipedia'):
+        w = retrieve_wikipedia(collection_id)
+    else:
+        w = [None for _x in h]
+
+    for i in a:
+        # we store by key (ID) and also by title hash
+        for key in [i[u'id'], hash(i[u'title'.lower()])]:
+            if key not in item_ids:
+                item_ids[key] = []
+            # if not shorten:
+            item_ids[key] += [(i, collection_id)]
+
+    return zip(b,h,r,c,w,a)
+
+
 def write_bib (items, outfile):
 
     file = codecs.open(outfile, "w", "utf-8")
@@ -367,6 +447,27 @@ def write_bib (items, outfile):
 
     file.close()
 
+#  Atom bib entry:
+# {u'publisher': u'Routledge Psychology Press', u'author': [{u'given': u'David', u'family': u'Reitter'}], u'collection-title': u'Frontiers of Cognitive Psychology', u'issued': {u'raw': u'January 2017'}, u'title': u'Alignment in Web-based Dialogue: Who Aligns, and how Automatic is it? Studies in Big-Data Computational Psycholinguistics', u'editor': [{u'given': u'Michael N.', u'family': u'Jones'}], u'container-title': u'Big Data in Cognitive Science', u'type': u'chapter', u'id': u'1217393/IVR7H8TD'}
+
+
+
+def access(atom_item, key, default=""):
+    key = u"%s"%key
+    if key in atom_item:
+        return atom_item[key]
+    if key=='year' and u'issued' in atom_item:
+        fulldate = atom_item[u'issued'][u'raw']
+        m = re.search('[0-9][0-9][0-9][0-9]', fulldate)
+        if m:
+            return m.group(0)
+        return fulldate  # fallback
+
+    if key=='date' and u'issued' in atom_item:
+        return atom_item[u'issued'][u'raw']
+
+    return default  # default
+    # raise RuntimeError("access: field %s not found."%key)
 
 def format_bib(bib):
     return bib.replace("},","},\n")
@@ -410,34 +511,34 @@ def tryreplacing (source, strings, repl):
             return source.replace(s, repl2)
     return source
 
-def sortitems (data, sort_criteria):
-    if not sort_criteria:
-        return data
-    zipped = zip(data,[[None for _i in sort_criteria] for _x in data])
-    # the second item of each tuple in zipped
-    # contains the values to sort by.
-    for i,val in zipped:
-        for num,c in enumerate(sort_criteria):
-            # for each sort criterion, extract the value for the item
-            if c in i[-1]:
-                # if available, write value into tuple
-                if c==u'author' and isinstance(i[-1][c],list) and u'family' in i[-1][c][0] and u'given' in i[-1][c][0]:
-                    val[num] = i[-1][c][0][u'family']+','+i[-1][c][0][u'given']
-                elif c==u'page':
-                    try:
-                        val[num] = i[-1][c].split('-')[0]
-                        val[num] = int(val[num])
-                    except:
-                        val[num] = i[-1][c]
-                else:
-                    val[num] = i[-1][c]
-    zipped = sorted(zipped, key=lambda x:x[1])
-    return [d for d,_sv in zipped]
+# def sortitems (data, sort_criteria):
+#     if not sort_criteria:
+#         return data
+#     zipped = zip(data,[[None for _i in sort_criteria] for _x in data])
+#     # the second item of each tuple in zipped
+#     # contains the values to sort by.
+#     for i,val in zipped:
+#         for num,c in enumerate(sort_criteria):
+#             # for each sort criterion, extract the value for the item
+#             if c in i[-1]:
+#                 # if available, write value into tuple
+#                 if c==u'author' and isinstance(i[-1][c],list) and u'family' in i[-1][c][0] and u'given' in i[-1][c][0]:
+#                     val[num] = i[-1][c][0][u'family']+','+i[-1][c][0][u'given']
+#                 elif c==u'page':
+#                     try:
+#                         val[num] = i[-1][c].split('-')[0]
+#                         val[num] = int(val[num])
+#                     except:
+#                         val[num] = i[-1][c]
+#                 else:
+#                     val[num] = i[-1][c]
+#     zipped = sorted(zipped, key=lambda x:x[1])
+#     return [d for d,_sv in zipped]
 # [u'issued',u'author']  (by date, then author)
 # [u'page']  (just sort by page number)
 
 entry_count=0
-def make_html (bibitems, htmlitems, risitems, coinsitems, wikiitems, items, exclude={}, shorten=False):
+def make_html (all_items, exclude={}, shorten=False):
     def a_button (name,url=None,js=None,title=None,cls=None):
         global smart_selections
         if not js:
@@ -457,7 +558,7 @@ def make_html (bibitems, htmlitems, risitems, coinsitems, wikiitems, items, excl
 
     count = 0
     string = ""
-    for bibitem,htmlitem,risitem,coinsitem,wikiitem,item in sortitems(zip(bibitems,htmlitems,risitems,coinsitems,wikiitems,items),sort_criteria):
+    for bibitem,htmlitem,risitem,coinsitem,wikiitem,item in all_items:
         if item[u'id'] not in exclude:
             if u'title' in item:
 
@@ -490,6 +591,8 @@ def make_html (bibitems, htmlitems, risitems, coinsitems, wikiitems, items, excl
                 else:
                     htmlitem = tryreplacing(htmlitem, t_to_replace, u"<span class=\"doctitle\">%s</span>"%("\\0"))
 
+                if u'section_keyword' in item:
+                    htmlitem += "<span style='display:none;'>%s</span>"%item[u'section_keyword']
                 if shorten:
                     ct = None
                     if u'container-title' in item:
@@ -554,12 +657,10 @@ def make_html (bibitems, htmlitems, risitems, coinsitems, wikiitems, items, excl
 
     return cleanup_lines(string),count
 
+from six import string_types
+def is_string (s):
+    return isinstance(s, string_types)
 
-def is_shortcollection(st):
-    return "*" in st.partition(' ')[0]
-
-def strip(string):
-    return string.lstrip("0123456789* ")
 
 def coll_data(c):
     if not (u'key' in c and u'name' in c) and u'data' in c:
@@ -573,6 +674,69 @@ def coll_key(c):
 
 def coll_name(c):
     return coll_data(c)[u'name']
+
+
+def is_short_collection(section_code):
+    "Show abbreviated entries for items in this collection"
+    return is_special_collection(section_code, "*")
+# def is_exclusive_collection(section_code):
+#     "Show item in this collection, and do not show them in regular collections"
+#     return is_special_collection(section_code, "-")
+def is_featured_collection(section_code):
+    """Regardless of sort_criteria, show this collection
+at the top of the bibliography"""
+    return is_special_collection(section_code, "!")
+def is_hidden_collection(section_code):
+    "Hide items in this collection."
+    return is_special_collection(section_code, "-")
+
+def is_special_collection(section_code, special):
+    if not is_string(section_code):
+        return any([is_special_collection(x, special) for x in section_code])
+    if section_code in collection_names:  # it's a collection key
+        name = collection_names[section_code] # value is an ID
+        return special in name.partition(' ')[0]
+    # if it's not a section key, then it doesn't indicate a short section
+    return False
+
+def get_featured_collections(section_code):
+    return filter(lambda x: is_featured_collection(x), section_code)
+
+
+def strip(string):
+    stripped = string.lstrip("0123456789*!- ")
+    if stripped == "":
+        return string
+    return stripped
+
+
+def sortkeyname(field, value):
+    global sortkeyname_order
+    # field may be a single field, or a list of fields
+    # value corresponds to field
+    if not is_string(value):
+        # it's a path of something
+        # sorting by all the numbers (if available).
+        # e.g., 10.13, and displaying the last entry
+        if 'collection'==field:
+            return ".".join([str(sortkeyname(field, value2)[0]) for value2 in value]), sortkeyname(field, value[-1])[1]
+        else:
+            return ".".join([str(sortkeyname(field2, value2)[0]) for field2,value2 in zip(field,value)]), sortkeyname(field[-1], value[-1])[1]
+    if field in sortkeyname_order:
+        if value in sortkeyname_order[field]:
+            return sortkeyname_order[field][value]
+        return 100,value  # sort at the end
+    if field == "collection":
+        name = collection_names[value] # value is an ID
+        m = re.match(r'([0-9]+)[\s*\-!]*\s(.*)', name)
+        if m:
+            return m.group(1), m.group(2)  # like "strip"
+    return value,value  # sort by value
+
+def last(string_or_list):
+    if not is_string(string_or_list):
+        return string_or_list[-1]
+    return string_or_list
 
 def init_db ():
     global zot
@@ -597,7 +761,7 @@ def get_collections ():
             # move catchallcollection to the end
             at_end = [e for e in items if e[0]==catchallcollection]
             if len(at_end)==0:
-                at_end += [(catchallcollection, 0, catchall_title)]
+                at_end += [(catchallcollection, 0, catchall_title, [])]
             items = [e for e in items if e[0]!=catchallcollection] + at_end
 
         return items
@@ -607,78 +771,134 @@ def get_collections ():
         print("UserNotAuthorised: Set correct Zotero API key in settings.py and allow access.", file=sys.stderr)
         raise SystemExit(1)
 
-def traverse(agenda, depth=0):
+def traverse(agenda, depth=0, parents=[]):
     global zot
     result = []
     # sort agenda by name
     for item in sorted(agenda, key=coll_name):
         c = zot.collections_sub(coll_key(item))
-        result += [(coll_key(item), depth, coll_data(item)[u'name'])]
-        result += traverse(c, depth+1)
+        result += [(coll_key(item), depth, coll_data(item)[u'name'], parents)]
+        result += traverse(c, depth+1, parents+[coll_key(item)])
     return result
 
 
-def compile_data(collection_id, collection_name, depth=0, exclude={}, shorten=False):
+
+def filter_items(quaditems, exclude):
+    def fil(it):
+        a = it[-1]
+        # print(a)
+        return not (a[u'id'] in item_ids)
+    return filter(fil, quaditems)
+
+def merge_doubles(items):
+    iids = {}
+    def rd(it):
+        a = it[-1]
+        key = a[u'id']
+        if key in iids:
+            # depending on sort criteria, even the short collection ones
+            # can show up elsewhere.
+            #  and not (u'collection' in iids[key] and is_short_collection(iids[key][u'collection']))
+            # print("Merging ", a[u'title'])
+
+            # merge "section keywords"
+            if u'section_keyword' in a:
+                if not u'section_keyword' in iids[key]:
+                    iids[key][u'section_keyword'] = ""
+                iids[key][u'section_keyword'] += " "+a[u'section_keyword']
+            return False
+        else:
+            iids[key] = a
+            return True
+
+    return filter(rd, items)
+
+from datetime import datetime
+import pickle
+def retrieve_items(sortedkeys):
+
+    global toplevelfilter, limit
+    try:
+        sklen, date, tlc, l, items = pickle.load(open("retrieve.cache", 'rb'))
+        if date > datetime.datetime.now()-datetime.timedelta(days=1):
+            if sklen == len(sortedkeys) and tlc==toplevelfilter and l==limit:
+                return items
+    except:
+        pass
+
+
+    all_items = []
+    for key,depth,collection_name,collection_parents in sortedkeys:
+        c = 0
+        print(" "+" "*len(collection_parents) + collection_name + "...")
+
+        i2 = retrieve_data(key)
+        if key == catchallcollection:  # Miscellaneous
+            # This has everything that isn't mentioned above
+            # so we'll filter what's in item_ids
+            i2 = filter_items(i2, item_ids)
+
+        i2 = list(i2)
+        # add IDs to the list with the collection name
+        #### collect_ids(i2, collection_name, item_ids)
+
+        print("%s Items."%len(list(i2)))
+
+        parent_path = tuple(collection_parents + [key])
+        for atuple in i2:  # for sorting by collection
+            atuple[-1][u'collection'] = parent_path
+
+        # if sort_criteria[0] != 'collection':
+        for atuple in i2:
+            atuple[-1][u'section_keyword'] = strip(collection_name) # will be added HTML so the entry can be found
+
+        if len(i2)>0:
+            all_items += i2
+
+
+    pickle.dump((len(sortedkeys), datetime.now(), toplevelfilter, limit, all_items), open("retrieve.cache", 'wb'))
+
+    return all_items
+
+def compile_data(all_items, section_code, crits, exclude={}, shorten=False):
     global fullhtml
     global item_ids
     global bib_style
+    global show_top_section_headings
 
 
-    def check_show(s):
-        global show_links
-        s = s.lower()
-        for x in show_links:
-            if x.lower()==s:
-                return True
-        return False
+    corehtml,count = make_html(all_items, exclude=exclude, shorten=shorten)
 
-    print(" "+" "*depth + collection_name + "...", end='')
+    # empty categories shouldn't actually be passed to compile_data
 
-    a = retrieve_atom(collection_id)
-    b = retrieve_bib(collection_id,'bibtex', '')
-    h = retrieve_bib(collection_id,'bib', bib_style)
-    if check_show('EndNote') or check_show('RIS'):
-        r = retrieve_bib(collection_id,'ris', '')
+    #if collection_id != catchallcollection or (corehtml and len(corehtml)>0):
+    html = ""
+    if section_code:
+        section_print_title = sortkeyname(crits, section_code)[1]
+        collection_id=last(section_code)  # if collection, get its ID
     else:
-        r = [None for _x in h]
-    if check_show('coins'):
-        c = retrieve_coins(collection_id)
-    else:
-        c = [None for _x in h]
-    if check_show('wikipedia'):
-        w = retrieve_wikipedia(collection_id)
-    else:
-        w = [None for _x in h]
+        section_print_title = "Empty"
+        collection_id = None
+        section_code=['A']
+        print(all_items)
+        raise RuntimeException("compile_data called with empty section_code")
 
 
-    counter = 0
-    if not exclude:
-        for i in a:
-            # we store by key (ID) and also by title hash
-            for key in [i[u'id'], hash(i[u'title'.lower()])]:
-                if key not in item_ids:
-                    item_ids[key] = []
-                if not shorten:
-                    item_ids[key] += [(i, collection_name)]
+    if collection_id:
 
-            counter += 1
+        html += "<a id='%s' style='{display: block; position: relative; top: -150px; visibility: hidden;}'></a>"%collection_id
+        if section_code and show_top_section_headings:
+            depth=0
+            if not is_string(section_code):
+                depth = len(section_code)-1 # it's a path
+            # do not show headings deeper than this
+            # if depth<=show_top_section_headings:
+            html += "<h%s class=\"collectiontitle\">%s</h3>\n"%(2+depth,section_print_title)
+    html += corehtml
+    # write_some_html(html, category_outputfile_prefix+"-%s.html"%collection_id)
+    fullhtml += html
 
-    corehtml,count = make_html(b, h, r, c, w, a, exclude=exclude, shorten=shorten)
-    print(count) # number of items
-
-    if collection_id != catchallcollection or (corehtml and len(corehtml)>0):
-
-        # write_html([None] * len(h), h, a, 'out.html')
-        #html = "dummy"
-        html = "<a id='%s' style='{display: block; position: relative; top: -150px; visibility: hidden;}'></a>"%collection_id
-        d = 2+depth
-        html += '<div class="collection"><h%s class="collectiontitle">%s</h%s>\n'%(d,collection_name,d)
-        html += corehtml + '</div>'
-        # write_some_html(html, category_outputfile_prefix+"-%s.html"%collection_id)
-        fullhtml += html
-
-    return counter # number of items included
-
+    return None
 
 def show_double_warnings ():
     global item_ids
@@ -709,8 +929,98 @@ def show_double_warnings ():
                     # itemcolls is a list
                     warning('Item "%s" included in %s collections:\n %s'%(itemref(itemcolls[0][0]), len(uniquecolls), "\n ".join(uniquecolls)))
 
-# to do - maybe give option to automatically exclude double entries?
-# would have to be done in compile_data, via exclude mechanism
+
+
+def pull_up_featured_remove_hidden_items (all_items):
+    # split up into featured and other sections
+    visible_items = list(filter(lambda it: not is_hidden_collection(it[-1][u'collection']), all_items))
+    featured_items = filter(lambda it: is_featured_collection(it[-1][u'collection']), visible_items)
+    other_items = filter(lambda it: not is_featured_collection(it[-1][u'collection']), visible_items)
+    return featured_items, other_items
+
+def sort_items(all_items, sort_criteria, sort_reverse):
+    # sort the items (in place)
+    if sort_criteria:
+        all_items = list(all_items)
+        # sort is stable, so we will sort several times,
+        # from the last to the first criterion
+        for crit,rev in reversed(list(zip(sort_criteria, sort_reverse))):
+            # print("Sorting by",crit, rev)
+            # all_items contains 4-tuples, the last one is the atom representation
+            all_items.sort(key=lambda x: sortkeyname(crit, access(x[-1],crit))[0], reverse=rev)
+
+        # prioritize featured collections
+        # all_items.sort(key=lambda x: is_featured_collection(x[-1][u'collection']))
+    return all_items
+
+
+from itertools import islice,chain
+try:
+    from itertools import zip_longest
+except ImportError:
+    # Python 2
+    from itertools import izip_longest as zip_longest
+
+
+def section_generator (all_items, crits):
+    "Iterate over all items, return them section by section"
+
+    collect = []
+    prev_section = ""
+    #crit = crits[0]  ## TO DO:  section headings for all sort criteria
+    crits_sec = []
+    section = []
+    def changed_section_headings(prev_section, section):
+        cum_new_section = []
+        do_rem = False
+        for p,n in zip_longest(prev_section, section, fillvalue=None):
+            cum_new_section = cum_new_section + [n]  # make copy to preserve previous entries
+            if n and (p != n or do_rem):  # level is different
+                yield cum_new_section
+                do_rem = True
+
+
+    for item_tuple in all_items:
+        item = item_tuple[-1]
+        # construct section path identifier
+        # also, make matching criterion identifier
+
+        section = []
+        crits_sec = []
+
+        if is_featured_collection(item[u'collection']):
+            section=list(get_featured_collections(item[u'collection']))
+            crits_sec += ['collection'] * len(section)
+        else:
+            # Then, everything is organized according to the sort criteria
+            for crit in crits[:show_top_section_headings]:
+                val = access(item, crit)
+                if is_string(val):  # basic fields
+                    section += [val]
+                    crits_sec += [crit]
+                else: # collection paths (val is a list)
+                    section += val # flat concat
+                    crits_sec += [crit] * len(val)
+
+        #section = access(item, crit)
+        if section != prev_section:
+            changed_sections = list(changed_section_headings(prev_section, section))
+            if changed_sections:
+                if len(collect)>0:
+                    yield prev_section, prev_crits_sec, collect
+                # new section, show a section header.  add as separate item.
+                # add a header for every level that has changed
+                # except for the last one - that'll come with the next set of items
+                for s in changed_sections: #[:-1]:
+                    if not s == section:  # because that would be the heading for the next set of items.
+                        yield s, crits_sec[:len(s)], []
+
+                collect = []
+            prev_section, prev_crits_sec = section, crits_sec
+
+        collect += [item_tuple]
+    if collect:
+        yield prev_section, prev_crits_sec, collect
 
 
 def main():
@@ -718,38 +1028,61 @@ def main():
     global item_ids
     global fullhtml
     global catchallcollection
+    global collection_names
+
+    import_legacy_configuration()
 
     sortedkeys = get_collections()
     # start with links to subsections
     headerhtml = '<ul class="bib-cat">'
     item_ids = {}
+    collection_names = {key:name for key,_,name,_ in sortedkeys}
     fullhtml = ""
 
     if limit:
         print("Output limited to %s per collection."%limit)
 
-    for key,depth,name in sortedkeys:
-        c = 0
-        s=is_shortcollection(name)
-        if key == catchallcollection:
-            # now for "Other"
-            # Other has everything that isn't mentioned above
-            # this key is guaranteed to be at the end of the list
-            c = compile_data(key, strip(name), depth=depth, exclude=copy.copy(item_ids), shorten=s)
-        else:
-            c = compile_data(key, strip(name), depth=depth, shorten=s)
+    all_items = []
+    section_items = []
 
-        if c>0:
-            anchor = key
-            headerhtml += "   <li class='link'><a style='white-space: nowrap;' href='#%s'>%s</a></li>\n"%(anchor,strip(name))
-    show_double_warnings()
-    print("%s items included."%entry_count)
+    all_items = retrieve_items(sortedkeys)
+
+
+    for _key,_depth,collection_name,_collection_parents in sortedkeys:
+        if show_search_box:  # search box is necessary for this to work
+        # Keyword filter
+            headerhtml += "   <li class='link'><a style='white-space: nowrap;' href='#' onclick='searchFunction([\"%s\"]);return false;'>%s</a></li>\n"%(strip(collection_name),strip(collection_name))
+
+    if 'collection' in sort_criteria:
+        show_double_warnings()
+        # If collection doesn't feature in sort criteria,
+        # double entries are likely to get filtered out anyway,
+        # or they are desired (e.g., Selected Works)
+
+    featured_items, regular_items = pull_up_featured_remove_hidden_items(all_items)
+    featured_items = sort_items(featured_items, ['collection'], [False])
+    regular_items = sort_items(regular_items, sort_criteria, sort_reverse)
+
+    all_items = chain(featured_items, regular_items)
+    # all_items = list(featured_items) + list(regular_items)
+
+    for section_code, crits, items in list(section_generator(all_items, sort_criteria)):
+        # print (section_code, crits, len(items), "items")
+
+        # remove double entries within one section
+        items = list(merge_doubles(items))
+        # if len(items)>0:
+            # print(items[0][-1][u'title'])
+        compile_data(items, section_code, crits, shorten=is_short_collection(section_code))
+
+
 
     headerhtml += "</ul>"
     headerhtml += search_box
 
 
     write_some_html(headerhtml+fullhtml, outputfile)
+
 
 init_db()
 

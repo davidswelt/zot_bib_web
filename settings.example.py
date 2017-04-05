@@ -64,19 +64,28 @@ toplevelfilter = None # e.g., 'MGID93AS'
 #### SPECIAL OPTIONS: STYLE ####################################################
 # Special settings - configure only if needed.
 
+# The sort_criteria determine the structure of the bibliography.
+# Allowable values: 'type' (category of publication, e.g., journal article),
+# 'date' (full date)
+# 'year' (year of publication)
+# 'collection' (the subcollection the article is placed in).
+# Collection works best at the beginning of the list.
+# add - in front of the field name to sort in descending order (e.g., -date will show the newest entries first).
+
+# sort_criteria = ['collection','-date']   # First by collection, then type, then by date, latest first.
+sort_criteria = ['type','-date']   # we have date and type: First by date ("issued"), then by type.
+#sort_criteria = ['-year','type']   # Ordered by year.
+
+
+
 # bibliography title
 titlestring = 'Bibliography'
 
+# show section headings for the primary search criterion
+show_top_section_headings = True
 
 # bibliography style format (e.g., 'apa' or 'mla') - Any valid CSL style in the Zotero style repository
 bib_style =  'apa'
-
-# order within each category
-# e.g., 'dateAdded', 'dateModified', 'title', 'creator', 'type', 'date', 'publisher', 'publication', 'journalAbbreviation', 'language', 'accessDate', 'libraryCatalog', 'callNumber', 'rights', 'addedBy', 'numItems'
-order_by = 'date'
-
-# sorting direction
-sort_order = 'desc'   # "desc" or "asc"
 
 # Limit - for fast testing and debugging
 # None, or set a limit (integer<100) for each collection for debugging
@@ -91,7 +100,8 @@ stylesheet_url = "style.css"  # If set and write_full_html_header is True, link 
 
 # If set, include "Miscellaneous" category at end containing all items from this
 # collection that were not mentioend anywhere else.
-catchallcollection = None # e.g., '4KATF6MA'
+# You can use the toplevel collection here
+catchallcollection = None # e.g., '4KATF6MA', or simply toplevelcollection
 # Title for the catch-all collection (shown at end)
 catchall_title = 'Miscellanous'
 

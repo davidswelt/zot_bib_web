@@ -25,12 +25,13 @@ files along with the rest of your website.
 Setup is very easy.  Just call zot.py with the key of a public Zotero collection.
 
 Bibliographies
--  are grouped by collection,
--  editable in Zotero by one or more users,
+-  can be ordered by collection, by publication year, or by
+   publication type (e.g., journal articles first),
+-  are editable in Zotero by one or more users,
 -  are interactively searchable,
--  linked to PDF documents or other URLs,
+-  can be linked to PDF documents or other URLs,
 -  have records for BibTex, EndNote and Wikipedia, and
--  can be exported to HTML or pushed to a Wordpress database
+-  can be exported to HTML or pushed to a Wordpress database.
 
 The following formats and info can be included:
 BibTex, RIS (for EndNote etc.), Wikipedia markup, abstract, PDF.
@@ -86,6 +87,69 @@ Setup
   the program.
 
 
+
+Bibliography in Zotero
+-----------------------------------------
+
+- With Zotero, create a bibliography and note its ID (e.g., from the
+  URL in the Zotero web interface).  Example: `MGID90AT`.
+  This ID is what you need for the "toplevelfilter" variable in
+  settings.py.
+
+- You can add sub-collections to your bibliography.
+
+- To define an order for the sub-collections, name them starting with
+  a number: "10 Social Psychology".
+
+- To cause zot_bib_web to format a sub-collection in special ways, you
+may add some qualifiers to the beginning of the collection name.
+
+"-"  Hide this sub-collection.
+"*"  Short mode.  This sub-collection will be shown using titles, journal and years only, which
+  can then be expanded.  Journal or conference titles can be kept short.  Specify the
+  "journal abbr or "conference title" fields, or a short "note" if
+  necessary.   You may want to copy bibliographic items from other parts of the
+  bibliography into this sub-collection.
+"!"  Extract this sub-collection and show at the beginning of the
+bibliography, regardless of whether the rest of the bibliography is
+sorted by, e.g., year, and ignores the collections otherwise. In the
+collection shown below, it prevents "in review" articles to show up
+as regular journal articles (which might give the impression you're
+taking credit for not-yet-reviewed/published material!)
+
+Here's an example of a bibliography structure:
+
+	My Publications [MGID90AT]
+		10*! Selected Works
+		15! In Preparation / Under Review
+		20 Refereed Works by Topic
+			Semantics
+			Parsing
+			Dialogue
+			Machine Learning
+		30 Theses
+		40 Talks (Without Paper)
+
+To see this, set toplevelfilter and catchallcollection to MGID90AT in settings.py.
+
+
+
+Configuration options
+-----------------------------------------
+
+- You can order our bibliography by sub-collection, by year, or by
+  publication type (e.g., journal articles first, then conference
+  papers). Even within the higher-level categories you can sort your
+  bibliographic entries as you wish.  Use the "sort_criteria" and
+  "show_top_section_headings" settings.
+
+- You can choose a different formatting convention.  Default is APA format.
+
+- Several more options.  See settings.example.py.
+
+
+
+
 Deployment to a web site
 -----------------------------------------
 
@@ -106,45 +170,6 @@ or in a separate file settings.py to make upgrading simple.
 
 - Style your bibliography using CSS.  An example style
   file is included (see site/ directory).
-
-
-Bibliography in Zotero
------------------------------------------
-
-- With Zotero, create a bibliography and note its ID (e.g., from the
-  URL in the Zotero web interface).  Example: `MGID90AT`.
-  This ID is what you need for the "toplevelfilter" variable in
-  settings.py.
-
-- You can and should add sub-collections to your bibliography.
-
-- To define an order for the sub-collections, name them starting with
-  a number: "10 Journal Articles".
-
-- To cause zot_bib_web to format a sub-collection in "short" mode, add
-  a * at the beginning of the collection name: "05* Selected Works".
-  This sub-collection will be shown using titles, journal and years only, which
-  can then be expanded.  Journal or conference titles can be kept short.  Specify the
-  "journal abbr or "conference title" fields, or a short "note" if
-  necessary.
-
-  You may want to copy bibliographic items from other parts of the
-  bibliography into this sub-collection.
-
-Here's an example of a bibliography structure:
-
-	My Publications [MGID90AT]
-		10* Selected Works
-		15 In Preparation / Under Review
-		20 Refereed Works by Topic
-			Semantics
-			Parsing
-			Dialogue
-			Machine Learning
-		30 Theses
-		40 Talks (Without Paper)
-
-To see this, set toplevelfilter and catchallcollection to MGID90AT in settings.py.
 
 
 
