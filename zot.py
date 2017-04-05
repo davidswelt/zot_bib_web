@@ -332,8 +332,11 @@ if show_search_box or show_shortcuts:
     return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null;
   }
   jQuery( document ).ready(function() {
-    jQuery('#pubSearchInputBox').val(getURLParameter("keyword"));
-    searchFunction([getURLParameter("keyword")]);
+    var kw = getURLParameter("keyword");
+    if (kw) {
+        jQuery('#pubSearchInputBox').val(kw);
+        searchFunction([kw]);
+    }
   });
   jQuery.expr[":"].icontains = jQuery.expr.createPseudo(function(arg) {
     return function( elem ) {
