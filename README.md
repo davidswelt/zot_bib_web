@@ -51,7 +51,7 @@ zot_bib_web is available on Github.
 News
 ----------------------------------------
 - Version 2.0.0: Rewrite and re-factoring.  Copy-to-clipboard function
-  and other conveniences.  Python 3 compatibility.
+  and other conveniences.
 - Version 3.0.0: New interface to allow sorting of the bibliographic
   items not just by collection as in the Zotero library, but also by
   year or by publication type (e.g., journal article, conference
@@ -79,7 +79,7 @@ To install Pyzotero, a library for python:
 
 Setup
 -----------------------------------------
-- Ensure zot.py is executable (chmod ug+x zot.py)
+- ensure zot.py is executable (chmod ug+x zot.py)
 
 - Try it out.  From a unix-like command-line, do this:
 
