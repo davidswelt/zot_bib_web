@@ -60,8 +60,7 @@ show_search_box = True
 show_shortcuts = True
 show_links = ['abstract', 'PDF', 'BIB', 'Wikipedia', 'EndNote', 'COINS']
 smart_selections = True
-
-
+content_filter = {'bib' : 'fix_bibtex_reference'}  # currently, only this function is supported.
 
 sort_criteria = ['collection', '-year', 'type']
 show_top_section_headings = 1
@@ -424,20 +423,25 @@ def retrieve_data(collection_id, exclude=None):
             if x.lower()==s:
                 return True
         return False
+    def cfilter(atom, type, content):
+        if content_filter and type in content_filter:
+            fun = content_filter[type]
+            return [globals()[fun](item, thisatom, atom) for item, thisatom in zip(content,atom)]
+        return content
 
     a = retrieve_atom(collection_id)
-    b = retrieve_bib(collection_id,'bibtex', '')
-    h = retrieve_bib(collection_id,'bib', bib_style)
+    b = cfilter(a, 'bib', retrieve_bib(collection_id,'bibtex', ''))
+    h = cfilter(a, 'html', retrieve_bib(collection_id,'bib', bib_style))
     if check_show('EndNote') or check_show('RIS'):
-        r = retrieve_bib(collection_id,'ris', '')
+        r = cfilter(a, 'ris', retrieve_bib(collection_id,'ris', ''))
     else:
         r = [None for _x in h]
     if check_show('coins'):
-        c = retrieve_coins(collection_id)
+        c = cfilter(a, 'coins', retrieve_coins(collection_id))
     else:
         c = [None for _x in h]
     if check_show('wikipedia'):
-        w = retrieve_wikipedia(collection_id)
+        w = cfilter(a, 'wikipedia', retrieve_wikipedia(collection_id))
     else:
         w = [None for _x in h]
 
@@ -489,6 +493,13 @@ def format_bib(bib):
 
 def format_ris(bib):
     return bib.replace("\n","\\n").replace("\r","\\r")
+
+
+def fix_bibtex_reference(bib, _thisatom, _allatoms):
+    "Fix reference style for BIB entries: use authorYEARfirstword convention."
+    sub = re.sub(r'(?<=[a-z\s]{)(?P<name>[^_\s,]+)_(?P<firstword>[^_\s,]+)_(?P<year>[^_\s,]+)(?=\s*,\s*[\r\n])', "\g<name>\g<year>\g<firstword>", bib, count=1)
+    return sub or bib
+
 
 def extract_abstract(bib):
     m = re.match(r'(.*)abstract\s*=\s*{?(.*?)}\s*(,|})(.*)', bib, re.DOTALL|re.IGNORECASE)
