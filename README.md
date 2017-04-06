@@ -48,6 +48,19 @@ is also provided.
 zot_bib_web is available on Github.
 
 
+News
+----------------------------------------
+- Version 2.0.0: Rewrite and re-factoring.  Copy-to-clipboard function
+  and other conveniences.  Python 3 compatibility.
+- Version 3.0.0: New interface to allow sorting of the bibliographic
+  items not just by collection as in the Zotero library, but also by
+  year or by publication type (e.g., journal article, conference
+  paper), and arbitrary hierarchies thereof.  Extracting "selected
+  works" or "in review" papers is possible.  Even if ordering
+  chronologically, without showing thematic collections, the
+  bibliography can be filtered according to area with the collection
+  shortcuts at the top.
+
 
 Requirements
 ----------------------------------------
@@ -66,9 +79,7 @@ To install Pyzotero, a library for python:
 
 Setup
 -----------------------------------------
-
-
-- ensure zot.py is executable (chmod ug+x zot.py)
+- Ensure zot.py is executable (chmod ug+x zot.py)
 
 - Try it out.  From a unix-like command-line, do this:
 
@@ -90,7 +101,6 @@ Setup
 
 Bibliography in Zotero
 -----------------------------------------
-
 - With Zotero, create a bibliography and note its ID (e.g., from the
   URL in the Zotero web interface).  Example: `MGID90AT`.
   This ID is what you need for the "toplevelfilter" variable in
@@ -102,26 +112,30 @@ Bibliography in Zotero
   a number: "10 Social Psychology".
 
 - To cause zot_bib_web to format a sub-collection in special ways, you
-may add some qualifiers to the beginning of the collection name.
+may add some qualifiers to the beginning of the collection name:
 
-"-"  Hide this sub-collection.
-"*"  Short mode.  This sub-collection will be shown using titles, journal and years only, which
-  can then be expanded.  Journal or conference titles can be kept short.  Specify the
-  "journal abbr or "conference title" fields, or a short "note" if
-  necessary.   You may want to copy bibliographic items from other parts of the
-  bibliography into this sub-collection.
+"-" Hide this sub-collection.  We still add a shortcut at the top
+to unhide its contents if they are available elsewhere.
+
+"*" Short mode.  This sub-collection will be shown using titles,
+journal and years only, which can then be expanded.  Journal or
+conference titles can be kept short.  Specify the "journal abbr or
+"conference title" fields, or a short "note" if necessary.  You may
+want to copy bibliographic items from other parts of the bibliography
+into this sub-collection.
+
 "!"  Extract this sub-collection and show at the beginning of the
 bibliography, regardless of whether the rest of the bibliography is
 sorted by, e.g., year, and ignores the collections otherwise. In the
-collection shown below, it prevents "in review" articles to show up
-as regular journal articles (which might give the impression you're
+collection shown below, it prevents "in review" articles to show up as
+regular journal articles (which might give the impression you're
 taking credit for not-yet-reviewed/published material!)
 
 Here's an example of a bibliography structure:
 
 	My Publications [MGID90AT]
-		10*! Selected Works
-		15! In Preparation / Under Review
+		10*!- Selected Works
+		15*! In Preparation / Under Review
 		20 Refereed Works by Topic
 			Semantics
 			Parsing
