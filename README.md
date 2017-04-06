@@ -48,6 +48,20 @@ is also provided.
 zot_bib_web is available on Github.
 
 
+News
+----------------------------------------
+- Version 2.0.0: Rewrite and re-factoring.  Copy-to-clipboard function
+  and other conveniences.
+- Version 3.0.0: New interface to allow sorting of the bibliographic
+  items not just by collection as in the Zotero library, but also by
+  year or by publication type (e.g., journal article, conference
+  paper), and arbitrary hierarchies thereof.  Extracting "selected
+  works" or "in review" papers is possible.  Even if ordering
+  chronologically, without showing thematic collections, the
+  bibliography can be filtered according to area with the collection
+  shortcuts at the top.
+
+
 
 Requirements
 ----------------------------------------
