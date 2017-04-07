@@ -4,6 +4,11 @@ div.bibliography
        font-family:Verdana, Geneva, sans-serif;
    }
 
+@media print
+{
+    #bib-preamble {display:none !important;}
+}
+
 /* Collection titles */
 div.bibliography h1, div.bibliography h2, div.bibliography h3, div.bibliography h4
    {

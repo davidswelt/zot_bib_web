@@ -1075,7 +1075,7 @@ def main():
 
     sortedkeys = get_collections()
     # start with links to subsections
-    headerhtml = '<ul class="bib-cat">'
+    headerhtml = '<div id="bib-preamble"><ul class="bib-cat">'
     item_ids = {}
     collection_names = {key:name for key,_,name,_ in sortedkeys}
     fullhtml = ""
@@ -1119,7 +1119,7 @@ def main():
 
 
     headerhtml += "</ul>"
-    headerhtml += search_box
+    headerhtml += search_box + "</div>" #preamble
 
 
     write_some_html(headerhtml+fullhtml, outputfile)
