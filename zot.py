@@ -116,7 +116,7 @@ except:
 # redirect warnings (needed for InsecurePlatformWarning on Macs with standard Python)
 import logging
 logging.basicConfig(filename='zot_warnings.log',level=logging.NOTSET)
-logging.captureWarnings(True)
+logging.captureWarnings(False)
 
 import codecs
 from texconv import tex2unicode
