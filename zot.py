@@ -57,7 +57,7 @@ show_copy_button = True
 clipboard_js_path = "site/clipboard.min.js"
 copy_button_path = "site/clippy.svg"
 show_search_box = True
-show_shortcuts = True
+show_shortcuts = ['collection']
 show_links = ['abstract', 'PDF', 'BIB', 'Wikipedia', 'EndNote', 'COINS']
 smart_selections = True
 content_filter = {'bib' : 'fix_bibtex_reference'}  # currently, only this function is supported.
@@ -67,12 +67,16 @@ show_top_section_headings = 1
 
 sortkeyname_order = {}
 # Define label for article types and their ordering
-sortkeyname_order['type'] = {'article-journal':(0,'Journal Articles'),
-                           'paper-conference':(2, 'Conference and Workshop Papers'),
-                           'book':(5,'Books and Collections'),
-                           'chapter':(7,'Book Chapters'),
-                           'thesis':(10,'Theses'),
-                           'speech':(15,'Talks')}
+# types may occur in libraryCatalog or itemType
+# use libraryCatalog to override it in special cases (e.g., archival Conference papers)
+sortkeyname_order['type'] = [('journalArticle', 'Journal Articles'),
+                           ('archivalConferencePaper', 'Archival Conference Papers'),
+                           ('conferencePaper', 'Conference and Workshop Papers'),
+                           ('book','Books'),
+                           ('bookSection', 'Book Chapters'),
+                           ('edited-volume', "Edited Volumes"),
+                           ('thesis', 'Theses'),
+                           ('presentation', 'Talks')]
 
 
 ##### legacy settings
@@ -124,7 +128,7 @@ import base64
 
 
 def print_usage ():
-    print("""Usage:   zot.py {--div|--full|--limit|--group GID|--user UID} [TOPLEVEL_COLLECTION_ID] [CATCHALL_COLLECTION_ID [OUTPUTFILE]]
+    print("""Usage:   zot.py {--div|--full|--limit|--local|--group GID|--user UID} [TOPLEVEL_COLLECTION_ID] [CATCHALL_COLLECTION_ID [OUTPUTFILE]]
 Example: ./zot.py --group 160464 DTDTV2EP
 
 --group GID   set a group library              [library_id; library_type='group']
@@ -133,6 +137,7 @@ Example: ./zot.py --group 160464 DTDTV2EP
 --div         output an HTML fragment          [write_full_html_header=False]
 --full        output full html                 [write_full_html_header=True]
 --apikey KEY  set Zotero API key               [api_key]
+--local       implies --full and uses site/ directory
 
 These and additional settings can be loaded from settings.py.
 """)
@@ -148,6 +153,15 @@ if "--div" in sys.argv:
 if "--full" in sys.argv:
     write_full_html_header = True
     sys.argv.remove('--full')
+if "--test" in sys.argv:
+    write_full_html_header = True
+    stylesheet_url = "site/style.css"
+    outputfile = 'zotero-bib.html'
+    jquery_path = "site/jquery.min.js"
+    clipboard_js_path = "site/clipboard.min.js"
+    copy_button_path = "site/clippy.svg"
+    sys.argv.remove('--test')
+
 if "-i" in sys.argv:
     interactive_debugging = True
     sys.argv.remove('-i')
@@ -319,7 +333,7 @@ else:
 search_box = ""
 if show_search_box or show_shortcuts or show_copy_button:
     search_box += '<script type="text/javascript" src="'+jquery_path+'</script>'
-    
+
 if show_search_box or show_shortcuts:
     if jquery_path:
         search_box = ''
@@ -372,6 +386,30 @@ function searchFunction(searchTerms, shown) {
     else:
         warning("show_search_box or show_shortcut are True, but jquery_path undefined.")
 
+def sortkeyname(field, value):
+    global sortkeyname_dict
+    # field may be a single field, or a list of fields
+    # value corresponds to field
+    if not is_string(value):
+        # it's a path of something
+        # sorting by all the numbers (if available).
+        # e.g., 10.13, and displaying the last entry
+        if 'collection'==field:
+            return ".".join([str(sortkeyname(field, value2)[0]) for value2 in value]), sortkeyname(field, value[-1])[1]
+        else:
+            return ".".join([str(sortkeyname(field2, value2)[0]) for field2,value2 in zip(field,value)]), sortkeyname(field[-1], value[-1])[1]
+    if field in sortkeyname_dict:
+        if value in sortkeyname_dict[field]:
+            # print (sortkeyname_dict[field][value] )
+            return sortkeyname_dict[field][value]  # this is (sort_number, label)
+        return "zzz "+value,value  # sort at the end, but then according to value
+    if field == "collection":
+        name = collection_names[value] # value is an ID
+        m = re.match(r'([0-9]+)[\s*\-!]*\s(.*)', name)
+        if m:
+            return m.group(1), m.group(2)  # like "strip"
+    return value,value  # sort by value
+
 def import_legacy_configuration():
     global order_by
     global sort_criteria
@@ -390,7 +428,12 @@ def import_legacy_configuration():
         else:
             sort_reverse += [False]
 
-
+def index_configuration():
+    global sortkeyname_order
+    global sortkeyname_dict
+    # Not using OrderedDict (Python 2.7), because it does not actually
+    # indicate the index of an item by itself
+    sortkeyname_dict = {key:{val:(idx,mappedVal) for idx,(val,mappedVal) in enumerate(the_list)} for key,the_list in sortkeyname_order.items()}
 
 def retrieve_x (collection,**args):
     global limit
@@ -412,6 +455,22 @@ def retrieve_coins (collection):
 def retrieve_wikipedia (collection):
     return retrieve_x(collection, content='wikipedia')
 
+class ZotItem:
+    def __init__(self, entries):
+        self.publicationTitle = None
+        self.journalAbbreviation = None
+        self.event = None
+        self.section_keyword = None
+        self.url = None
+        self.collection = []
+        self.type = None
+        self.libraryCatalog = None  # special setting, overrides u'itemType' for our purposes
+        self.note = None
+        self.__dict__.update(entries)
+
+        self.type = self.libraryCatalog or self.itemType
+
+
 def retrieve_data(collection_id, exclude=None):
 
     global item_ids
@@ -429,7 +488,13 @@ def retrieve_data(collection_id, exclude=None):
             return [globals()[fun](item, thisatom, atom) for item, thisatom in zip(content,atom)]
         return content
 
-    a = retrieve_atom(collection_id)
+    # ii = zot.everything(zot.collection_items(collection_id))
+    ii = retrieve_x(collection_id)
+
+    a = [ZotItem(i['data']) for i in ii]
+
+    #a = [i[u'data'] for i in ii]
+    #a = retrieve_atom(collection_id)
     b = cfilter(a, 'bib', retrieve_bib(collection_id,'bibtex', ''))
     h = cfilter(a, 'html', retrieve_bib(collection_id,'bib', bib_style))
     if check_show('EndNote') or check_show('RIS'):
@@ -447,7 +512,7 @@ def retrieve_data(collection_id, exclude=None):
 
     for i in a:
         # we store by key (ID) and also by title hash
-        for key in [i[u'id'], hash(i[u'title'.lower()])]:
+        for key in [i.key, hash(i.title.lower())]:
             if key not in item_ids:
                 item_ids[key] = []
             # if not shorten:
@@ -470,19 +535,15 @@ def write_bib (items, outfile):
 
 
 
-def access(atom_item, key, default=""):
+def access(item, key, default=""):
     key = u"%s"%key
-    if key in atom_item:
-        return atom_item[key]
-    if key=='year' and u'issued' in atom_item:
-        fulldate = atom_item[u'issued'][u'raw']
-        m = re.search('[0-9][0-9][0-9][0-9]', fulldate)
+    if key in item.__dict__:
+        return item.__dict__[key]
+    if key=='year' and item.date:
+        m = re.search('[0-9][0-9][0-9][0-9]', item.date)
         if m:
             return m.group(0)
-        return fulldate  # fallback
-
-    if key=='date' and u'issued' in atom_item:
-        return atom_item[u'issued'][u'raw']
+        return item.date  # fallback
 
     return default  # default
     # raise RuntimeError("access: field %s not found."%key)
@@ -537,31 +598,6 @@ def tryreplacing (source, strings, repl):
             return source.replace(s, repl2)
     return source
 
-# def sortitems (data, sort_criteria):
-#     if not sort_criteria:
-#         return data
-#     zipped = zip(data,[[None for _i in sort_criteria] for _x in data])
-#     # the second item of each tuple in zipped
-#     # contains the values to sort by.
-#     for i,val in zipped:
-#         for num,c in enumerate(sort_criteria):
-#             # for each sort criterion, extract the value for the item
-#             if c in i[-1]:
-#                 # if available, write value into tuple
-#                 if c==u'author' and isinstance(i[-1][c],list) and u'family' in i[-1][c][0] and u'given' in i[-1][c][0]:
-#                     val[num] = i[-1][c][0][u'family']+','+i[-1][c][0][u'given']
-#                 elif c==u'page':
-#                     try:
-#                         val[num] = i[-1][c].split('-')[0]
-#                         val[num] = int(val[num])
-#                     except:
-#                         val[num] = i[-1][c]
-#                 else:
-#                     val[num] = i[-1][c]
-#     zipped = sorted(zipped, key=lambda x:x[1])
-#     return [d for d,_sv in zipped]
-# [u'issued',u'author']  (by date, then author)
-# [u'page']  (just sort by page number)
 
 entry_count=0
 def make_html (all_items, exclude={}, shorten=False):
@@ -585,19 +621,17 @@ def make_html (all_items, exclude={}, shorten=False):
     count = 0
     string = ""
     for bibitem,htmlitem,risitem,coinsitem,wikiitem,item in all_items:
-        if item[u'id'] not in exclude:
-            if u'title' in item:
+        if item.key not in exclude:
+            if item.title:
 
                 count += 1
 
                 global show_links
                 show_items = show_links
-                t =  item[u'title']
+                t =  item.title
                 u = None
-                if u'URL' in item:
-                    u = item[u'URL']
-                elif u'url' in item:
-                    u = item[u'url']
+                if item.url:
+                    u = item.url
 
                 t2 = t.replace(u"'",u'’') # technically, we're going to have to do much more (or do a flexible match)
                 t_to_replace = ["<i>"+t+"</i>.","<i>"+t2+"</i>.","<i>"+t+"</i>","<i>"+t2+"</i>",t+".",t2+".",t,t2]
@@ -617,28 +651,18 @@ def make_html (all_items, exclude={}, shorten=False):
                 else:
                     htmlitem = tryreplacing(htmlitem, t_to_replace, u"<span class=\"doctitle\">%s</span>"%("\\0"))
 
-                if u'section_keyword' in item:
-                    htmlitem += "<span style='display:none;'>%s</span>"%item[u'section_keyword']
+                if item.section_keyword:
+                    htmlitem += "<span style='display:none;'>%s</span>"%item.section_keyword
 
                 if shorten:
-                    ct = u""
-                    if u'container-title' in item:
-                        ct = item[u'container-title']
-                    if u'event' in item:
-                        ct = item[u'event']
-                    if u'journalAbbreviation' in item:
-                        ct = item[u'journalAbbreviation']
-                    if u'note' in item:
-                        if len(item[u'note']) < len(ct) or ct==u"":
-                            ct = item[u'note']
+
+                    ct = item.publicationTitle or item.journalAbbreviation or item.event or u""
+                    if item.note and (len(item.note) < len(ct) or ct==u""):
+                        ct = item.note
 
                     y = ""
-                    if u'date' in item:
-                        y = "(%s)"%item[u'date']
-                    elif u'issued' in item:
-                        i = item[u'issued']
-                        if u'raw' in i:
-                            y = "(%s)"%i[u'raw']  # to do: get year from more complex date?
+                    if item.date:
+                        y = "(%s)"%item.date
 
                 if bibitem:
                     abstract,bibitem2 = extract_abstract(bibitem)
@@ -736,29 +760,6 @@ def strip(string):
     return stripped
 
 
-def sortkeyname(field, value):
-    global sortkeyname_order
-    # field may be a single field, or a list of fields
-    # value corresponds to field
-    if not is_string(value):
-        # it's a path of something
-        # sorting by all the numbers (if available).
-        # e.g., 10.13, and displaying the last entry
-        if 'collection'==field:
-            return ".".join([str(sortkeyname(field, value2)[0]) for value2 in value]), sortkeyname(field, value[-1])[1]
-        else:
-            return ".".join([str(sortkeyname(field2, value2)[0]) for field2,value2 in zip(field,value)]), sortkeyname(field[-1], value[-1])[1]
-    if field in sortkeyname_order:
-        if value in sortkeyname_order[field]:
-            return sortkeyname_order[field][value]
-        return 100,value  # sort at the end
-    if field == "collection":
-        name = collection_names[value] # value is an ID
-        m = re.match(r'([0-9]+)[\s*\-!]*\s(.*)', name)
-        if m:
-            return m.group(1), m.group(2)  # like "strip"
-    return value,value  # sort by value
-
 def last(string_or_list):
     if not is_string(string_or_list):
         return string_or_list[-1]
@@ -801,10 +802,10 @@ def traverse(agenda, depth=0, parents=[]):
     global zot
     result = []
     # sort agenda by name
-    for item in sorted(agenda, key=coll_name):
-        c = zot.collections_sub(coll_key(item))
-        result += [(coll_key(item), depth, coll_data(item)[u'name'], parents)]
-        result += traverse(c, depth+1, parents+[coll_key(item)])
+    for collitem in sorted(agenda, key=coll_name):
+        c = zot.collections_sub(coll_key(collitem))
+        result += [(coll_key(collitem), depth, coll_data(collitem)[u'name'], parents)]
+        result += traverse(c, depth+1, parents+[coll_key(collitem)])
     return result
 
 
@@ -812,26 +813,23 @@ def traverse(agenda, depth=0, parents=[]):
 def filter_items(quaditems, exclude):
     def fil(it):
         a = it[-1]
-        # print(a)
-        return not (a[u'id'] in item_ids)
+        return not (a.key in item_ids)
     return filter(fil, quaditems)
 
 def merge_doubles(items):
     iids = {}
     def rd(it):
         a = it[-1]
-        key = a[u'id']
+        key = a.key
         if key in iids:
             # depending on sort criteria, even the short collection ones
             # can show up elsewhere.
-            #  and not (u'collection' in iids[key] and is_short_collection(iids[key][u'collection']))
-            # print("Merging ", a[u'title'])
+            #  and not (u'collection' in iids[key] and is_short_collection(iids[key].collection))
+            # print("Merging ", a.title)
 
             # merge "section keywords"
-            if u'section_keyword' in a:
-                if not u'section_keyword' in iids[key]:
-                    iids[key][u'section_keyword'] = ""
-                iids[key][u'section_keyword'] += " "+a[u'section_keyword']
+            if a.section_keyword:
+                iids[key].section_keyword += " "+a.section_keyword
             return False
         else:
             iids[key] = a
@@ -841,7 +839,7 @@ def merge_doubles(items):
 
 from datetime import datetime
 import pickle
-def retrieve_items(sortedkeys):
+def retrieve_all_items(sortedkeys):
 
     global toplevelfilter, limit
     try:
@@ -872,11 +870,11 @@ def retrieve_items(sortedkeys):
 
         parent_path = tuple(collection_parents + [key])
         for atuple in i2:  # for sorting by collection
-            atuple[-1][u'collection'] = parent_path
+            atuple[-1].collection = parent_path
 
         # if sort_criteria[0] != 'collection':
         for atuple in i2:
-            atuple[-1][u'section_keyword'] = " ".join(collection_parents + [key]) # will be added HTML so the entry can be found
+            atuple[-1].section_keyword = " ".join(collection_parents + [key]) # will be added HTML so the entry can be found
 
         if len(i2)>0:
             all_items += i2
@@ -887,11 +885,9 @@ def retrieve_items(sortedkeys):
     return all_items
 
 def compile_data(all_items, section_code, crits, exclude={}, shorten=False):
-    global fullhtml
     global item_ids
     global bib_style
     global show_top_section_headings
-
 
     corehtml,count = make_html(all_items, exclude=exclude, shorten=shorten)
 
@@ -922,31 +918,26 @@ def compile_data(all_items, section_code, crits, exclude={}, shorten=False):
             html += "<h%s class=\"collectiontitle\">%s</h3>\n"%(2+depth,section_print_title)
     html += corehtml
     # write_some_html(html, category_outputfile_prefix+"-%s.html"%collection_id)
-    fullhtml += html
 
-    return None
+    return html
 
 def show_double_warnings ():
     global item_ids
 
     def itemref(i):
-        auth = ""
-        if u'title' in i:
-            auth = i[u'title'][:30]
-        year = ""
-        if u'issued' in i and u'raw' in i[u'issued']:
-            year = i[u'issued'][u'raw']
+        auth = (i.title and i.title[:30]) or u""
+        year = i.date or u""
         ref = "%s (%s)"%(auth, year)
         return ref
 
     for key,itemcolls in item_ids.items():
         if len(itemcolls)>1:
-            uniqueitems = set([i[u'id'] for i,_c in itemcolls])
+            uniqueitems = set([i.key for i,_c in itemcolls])
             if len(uniqueitems)>1:
                 # This only applies to different items with the same title
                 warning("%s items sharing the same title included:"%len(itemcolls))
                 for i,c in itemcolls:
-                    warn(" %s [%s] (collection: %s)"%(itemref(i), i[u'id'], c))
+                    warn(" %s [%s] (collection: %s)"%(itemref(i), i.key, c))
             else:
                 # if item is the same, it may still be included in several collections:
                 uniquecolls = set([c for _i,c in itemcolls])
@@ -959,9 +950,9 @@ def show_double_warnings ():
 from collections import defaultdict
 def pull_up_featured_remove_hidden_items (all_items):
     # split up into featured and other sections
-    visible_items = list(filter(lambda it: not is_hidden_collection(it[-1][u'collection']), all_items))
-    featured_items = filter(lambda it: is_featured_collection(it[-1][u'collection']), visible_items)
-    other_items = filter(lambda it: not is_featured_collection(it[-1][u'collection']), visible_items)
+    visible_items = list(filter(lambda it: not is_hidden_collection(it[-1].collection), all_items))
+    featured_items = filter(lambda it: is_featured_collection(it[-1].collection), visible_items)
+    other_items = filter(lambda it: not is_featured_collection(it[-1].collection), visible_items)
 
     # if a hidden item is available elsewhere, transfer its category so that it
     # can be searched for using the category shortcuts.
@@ -970,12 +961,12 @@ def pull_up_featured_remove_hidden_items (all_items):
 
     hidden_item_categories = defaultdict(str)
     for it in all_items:
-        if is_hidden_collection(it[-1][u'collection']):
-            hidden_item_categories[it[-1][u'id']] += it[-1][u'section_keyword'] + " "
+        if is_hidden_collection(it[-1].collection):
+            hidden_item_categories[it[-1].key] += it[-1].section_keyword + " "
     for it in visible_items:
-        id = it[-1][u'id']
+        id = it[-1].key
         if id in hidden_item_categories:
-            it[-1][u'section_keyword'] += " " + hidden_item_categories[id]
+            it[-1].section_keyword += " " + hidden_item_categories[id]
 
     return featured_items, other_items
 
@@ -991,7 +982,7 @@ def sort_items(all_items, sort_criteria, sort_reverse):
             all_items.sort(key=lambda x: sortkeyname(crit, access(x[-1],crit))[0], reverse=rev)
 
         # prioritize featured collections
-        # all_items.sort(key=lambda x: is_featured_collection(x[-1][u'collection']))
+        # all_items.sort(key=lambda x: is_featured_collection(x[-1].collection))
     return all_items
 
 
@@ -1003,11 +994,12 @@ except ImportError:
     from itertools import izip_longest as zip_longest
 
 
-def section_generator (all_items, crits):
+def section_generator (items, crits):
     "Iterate over all items, return them section by section"
 
     collect = []
     prev_section = ""
+    prev_crits_sec = ""
     #crit = crits[0]  ## TO DO:  section headings for all sort criteria
     crits_sec = []
     section = []
@@ -1021,7 +1013,7 @@ def section_generator (all_items, crits):
                 do_rem = True
 
 
-    for item_tuple in all_items:
+    for item_tuple in items:
         item = item_tuple[-1]
         # construct section path identifier
         # also, make matching criterion identifier
@@ -1029,8 +1021,8 @@ def section_generator (all_items, crits):
         section = []
         crits_sec = []
 
-        if is_featured_collection(item[u'collection']):
-            section=list(get_featured_collections(item[u'collection']))
+        if is_featured_collection(item.collection):
+            section=list(get_featured_collections(item.collection))
             crits_sec += ['collection'] * len(section)
         else:
             # Then, everything is organized according to the sort criteria
@@ -1067,15 +1059,15 @@ def section_generator (all_items, crits):
 def main():
 
     global item_ids
-    global fullhtml
     global catchallcollection
     global collection_names
 
     import_legacy_configuration()
+    index_configuration()
 
     sortedkeys = get_collections()
     # start with links to subsections
-    headerhtml = '<div id="bib-preamble"><ul class="bib-cat">'
+    headerhtmls = {'collection':u"", 'year':u"", 'type':u""}
     item_ids = {}
     collection_names = {key:name for key,_,name,_ in sortedkeys}
     fullhtml = ""
@@ -1086,13 +1078,14 @@ def main():
     all_items = []
     section_items = []
 
-    all_items = retrieve_items(sortedkeys)
+    all_items = retrieve_all_items(sortedkeys)
 
 
     for key,_depth,collection_name,_collection_parents in sortedkeys:
-        if show_shortcuts:  # search box is necessary for this to work
-        # Keyword filter
-            headerhtml += "   <li class='link'><a style='white-space: nowrap;' href='#' onclick='searchFunction([\"%s\"],\"%s\");return false;'>%s</a></li>\n"%(key, strip(collection_name),strip(collection_name))
+        if show_shortcuts and 'collection' in show_shortcuts:  # search box is necessary for this to work
+            # Keyword filter
+            # only collection headers are supported, for now
+            headerhtmls['collection'] += "   <li class='link'><a style='white-space: nowrap;' href='#' onclick='searchFunction([\"%s\"],\"%s\");return false;'>%s</a></li>\n"%(key, strip(collection_name),strip(collection_name))
 
     if 'collection' in sort_criteria:
         show_double_warnings()
@@ -1107,18 +1100,17 @@ def main():
     all_items = chain(featured_items, regular_items)
     # all_items = list(featured_items) + list(regular_items)
 
-    for section_code, crits, items in list(section_generator(all_items, sort_criteria)):
-        # print (section_code, crits, len(items), "items")
+    fullhtml = u""
 
+    for section_code, crits, items in list(section_generator(all_items, sort_criteria)):
         # remove double entries within one section
         items = list(merge_doubles(items))
-        # if len(items)>0:
-            # print(items[0][-1][u'title'])
-        compile_data(items, section_code, crits, shorten=is_short_collection(section_code))
+        fullhtml += compile_data(items, section_code, crits, shorten=is_short_collection(section_code))
 
 
-
-    headerhtml += "</ul>"
+    headerhtml = '<div id="bib-preamble">'
+    for t in show_shortcuts:
+        headerhtml += '<ul class="bib-cat">' + headerhtmls[t] + "</ul>"
     headerhtml += search_box + "</div>" #preamble
 
 
