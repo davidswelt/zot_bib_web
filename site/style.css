@@ -133,9 +133,10 @@ span.doctitle {
 .bib-cat li {
     display: inline;
 }
-.bib-cat li:after {
+.bib-cat:before, .bib-cat li:after {
     content: " | ";
 }
-.bib-cat li:last-child:after {
+.bib-cat:first-child:before, .bib-cat li:last-child:after
+{
     content: ""
 }

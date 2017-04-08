@@ -479,6 +479,18 @@ class ZotItem:
         # allow libraryCatalog to override itemType
         self.type = self.libraryCatalog or self.itemType
 
+    def access(self, key, default=""):
+        if key in self.__dict__:
+            return self.__dict__[key]
+        if key=='year' and self.date:
+            m = re.search('[0-9][0-9][0-9][0-9]', self.date)
+            if m:
+                return m.group(0)
+            return self.date  # fallback
+
+        return default  # default
+        # raise RuntimeError("access: field %s not found."%key)
+
 
 def retrieve_data(collection_id, exclude=None):
 
@@ -554,18 +566,6 @@ def write_bib (items, outfile):
 
 
 
-def access(item, key, default=""):
-    key = u"%s"%key
-    if key in item.__dict__:
-        return item.__dict__[key]
-    if key=='year' and item.date:
-        m = re.search('[0-9][0-9][0-9][0-9]', item.date)
-        if m:
-            return m.group(0)
-        return item.date  # fallback
-
-    return default  # default
-    # raise RuntimeError("access: field %s not found."%key)
 
 
 def format_bib(bib):
@@ -617,6 +617,22 @@ def tryreplacing (source, strings, repl):
             return source.replace(s, repl2)
     return source
 
+def make_header_htmls(all_items):
+    # filters for criteria
+
+    # ordering:
+    # sort collections as they are normally sorted (sortkeyname)
+
+    headerhtmls = {'collection':u"", 'year':u"", 'type':u""}
+    for crit in show_shortcuts:
+
+        l = [sortkeyname(crit, value)+(i.access(crit),) for value in set([i.access(crit) for i in all_items])]
+        l.sort(key=lambda x: x[0], reverse=crit=='year')
+        for _,section_print_title,section_code in l:
+            last_section_id=last(section_code)  # if collection, get its ID
+            headerhtmls[crit] += "   <li class='link'><a style='white-space: nowrap;' href='#' onclick='searchFunction([\"%s\"],\"%s\");return false;'>%s</a></li>\n"%(last_section_id, section_print_title,section_print_title)
+
+    return headerhtmls
 
 entry_count=0
 def make_html (all_items, exclude={}, shorten=False):
@@ -912,22 +928,22 @@ def compile_data(all_items, section_code, crits, exclude={}, shorten=False):
 
     # empty categories shouldn't actually be passed to compile_data
 
-    #if collection_id != catchallcollection or (corehtml and len(corehtml)>0):
     html = ""
     if section_code:
         section_print_title = sortkeyname(crits, section_code)[1]
-        collection_id=last(section_code)  # if collection, get its ID
+        last_section_id=last(section_code)  # if collection, get its ID
+        last_crit=last(crits)
     else:
         section_print_title = "Empty"
-        collection_id = None
+        last_section_id = last_crit = None
         section_code=['A']
         print(all_items)
         raise RuntimeException("compile_data called with empty section_code")
 
 
-    if collection_id:
+    if last_section_id:
 
-        html += "<a id='%s' style='{display: block; position: relative; top: -150px; visibility: hidden;}'></a>"%collection_id
+        html += "<a id='%s' style='{display: block; position: relative; top: -150px; visibility: hidden;}'></a>"%last_section_id
         if section_code and show_top_section_headings:
             depth=0
             if not is_string(section_code):
@@ -936,7 +952,7 @@ def compile_data(all_items, section_code, crits, exclude={}, shorten=False):
             # if depth<=show_top_section_headings:
             html += "<h%s class=\"collectiontitle\">%s</h3>\n"%(2+depth,section_print_title)
     html += corehtml
-    # write_some_html(html, category_outputfile_prefix+"-%s.html"%collection_id)
+    # write_some_html(html, category_outputfile_prefix+"-%s.html"%last_section_id)
 
     return html
 
@@ -998,7 +1014,7 @@ def sort_items(all_items, sort_criteria, sort_reverse):
         for crit,rev in reversed(list(zip(sort_criteria, sort_reverse))):
             # print("Sorting by",crit, rev)
             # all_items contains 4-tuples, the last one is the atom representation
-            all_items.sort(key=lambda x: sortkeyname(crit, access(x,crit))[0], reverse=rev)
+            all_items.sort(key=lambda x: sortkeyname(crit, x.access(crit))[0], reverse=rev)
 
         # prioritize featured collections
         # all_items.sort(key=lambda x: is_featured_collection(x.collection))
@@ -1046,7 +1062,7 @@ def section_generator (items, crits):
         else:
             # Then, everything is organized according to the sort criteria
             for crit in crits[:show_top_section_headings]:
-                val = access(item, crit)
+                val = item.access(crit)
                 if is_string(val):  # basic fields
                     section += [val]
                     crits_sec += [crit]
@@ -1054,7 +1070,7 @@ def section_generator (items, crits):
                     section += val # flat concat
                     crits_sec += [crit] * len(val)
 
-        #section = access(item, crit)
+        #section = item.access(crit)
         if section != prev_section:
             changed_sections = list(changed_section_headings(prev_section, section))
             if changed_sections:
@@ -1085,8 +1101,6 @@ def main():
     index_configuration()
 
     sortedkeys = get_collections()
-    # start with links to subsections
-    headerhtmls = {'collection':u"", 'year':u"", 'type':u""}
     item_ids = {}
     collection_names = {key:name for key,_,name,_ in sortedkeys}
     fullhtml = ""
@@ -1100,12 +1114,6 @@ def main():
     all_items = retrieve_all_items(sortedkeys)
 
 
-    for key,_depth,collection_name,_collection_parents in sortedkeys:
-        if show_shortcuts and 'collection' in show_shortcuts:  # search box is necessary for this to work
-            # Keyword filter
-            # only collection headers are supported, for now
-            headerhtmls['collection'] += "   <li class='link'><a style='white-space: nowrap;' href='#' onclick='searchFunction([\"%s\"],\"%s\");return false;'>%s</a></li>\n"%(key, strip(collection_name),strip(collection_name))
-
     if 'collection' in sort_criteria:
         show_double_warnings()
         # If collection doesn't feature in sort criteria,
@@ -1116,11 +1124,13 @@ def main():
     featured_items = sort_items(featured_items, ['collection'], [False])
     regular_items = sort_items(regular_items, sort_criteria, sort_reverse)
 
-    all_items = chain(featured_items, regular_items)
-    # all_items = list(featured_items) + list(regular_items)
+    # don't use chain - we will iterate over all_items several times, so
+    # we need a list
+    all_items = list(featured_items) + list(regular_items)
+
+    headerhtmls = make_header_htmls(all_items)
 
     fullhtml = u""
-
     for section_code, crits, items in list(section_generator(all_items, sort_criteria)):
         # remove double entries within one section
         items = list(merge_doubles(items))
@@ -1131,7 +1141,6 @@ def main():
     for t in show_shortcuts:
         headerhtml += '<ul class="bib-cat">' + headerhtmls[t] + "</ul>"
     headerhtml += search_box + "</div>" #preamble
-
 
     write_some_html(headerhtml+fullhtml, outputfile)
 

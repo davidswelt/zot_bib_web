@@ -113,8 +113,8 @@ jquery_path = "site/jquery.min.js"  # path to jquery file on the server
 # jquery_path = "../wp-includes/js/jquery/jquery.js"  # wordpress location
 
 # Show categories at the top of the bibliography for quick filtering
-# only 'collection' is supported for now.
-show_shortcuts = ['collection']
+# 'collection', 'type', 'year' are supported
+show_shortcuts = ['collection', 'year']
 
 show_copy_button = True  # show clipbaord copy button.  Must define jquery_path.
 clipboard_js_path = "site/clipboard.min.js"  # path to file on server
