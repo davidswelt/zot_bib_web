@@ -115,7 +115,8 @@ span.doctitle {
     padding: 0;
 }
 #pubSearchBox {
-    position:absolute; 
+    position:static;
+    text-align:right;
     right:10px; top:100px;
     display:block;
 }
