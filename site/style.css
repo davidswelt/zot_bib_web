@@ -19,7 +19,7 @@ div.bibliography h1, div.bibliography h2, div.bibliography h3, div.bibliography 
 
 /* Search term highlighted */
 #searchTermSectionTitle, #searchTermSectionTitle a {
-    color:Red;
+    color:DarkGreen;
 }
 
 /* Collections */
