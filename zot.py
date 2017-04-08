@@ -466,8 +466,17 @@ class ZotItem:
         self.type = None
         self.libraryCatalog = None  # special setting, overrides u'itemType' for our purposes
         self.note = None
+        
         self.__dict__.update(entries)
 
+        # Will be set later - None is a good default
+        self.bib = None
+        self.ris = None
+        self.html = None
+        self.coins = None
+        self.wikipedia = None
+        
+        # allow libraryCatalog to override itemType
         self.type = self.libraryCatalog or self.itemType
 
 
@@ -493,8 +502,9 @@ def retrieve_data(collection_id, exclude=None):
 
     a = [ZotItem(i['data']) for i in ii]
 
-    #a = [i[u'data'] for i in ii]
-    #a = retrieve_atom(collection_id)
+    # PyZotero can retrieve different formats at once,
+    # but this does not seem to work with current versions of the library or API
+
     b = cfilter(a, 'bib', retrieve_bib(collection_id,'bibtex', ''))
     h = cfilter(a, 'html', retrieve_bib(collection_id,'bib', bib_style))
     if check_show('EndNote') or check_show('RIS'):
@@ -518,7 +528,16 @@ def retrieve_data(collection_id, exclude=None):
             # if not shorten:
             item_ids[key] += [(i, collection_id)]
 
-    return zip(b,h,r,c,w,a)
+    for bi,hi,ri,ci,wi,ai in zip(b,h,r,c,w,a):
+
+        ai.bib = bi
+        ai.html = hi
+        ai.ris = ri
+        ai.coins = ci
+        ai.wikipedia = wi
+
+        
+    return a
 
 
 def write_bib (items, outfile):
@@ -620,12 +639,14 @@ def make_html (all_items, exclude={}, shorten=False):
 
     count = 0
     string = ""
-    for bibitem,htmlitem,risitem,coinsitem,wikiitem,item in all_items:
+    for item in all_items:
         if item.key not in exclude:
             if item.title:
 
                 count += 1
 
+                htmlitem = item.html
+                
                 global show_links
                 show_items = show_links
                 t =  item.title
@@ -664,24 +685,24 @@ def make_html (all_items, exclude={}, shorten=False):
                     if item.date:
                         y = "(%s)"%item.date
 
-                if bibitem:
-                    abstract,bibitem2 = extract_abstract(bibitem)
+                if item.bib:
+                    abstract,bibitem2 = extract_abstract(item.bib)
                     blinkitem = u""
                     # we print the original item name as label so that capitalization may be chosen via the items list
-                    for item in show_items:
+                    for show in show_items:
 
-                        if 'abstract' == item.lower() and abstract:
-                            blinkitem += u'<div class="blink">'+a_button(item)+u'<div class="bibshowhide"><div class="abstract">%s</div></div></div>'%(abstract)
-                        elif 'wikipedia' == item.lower() and wikiitem:
-                            blinkitem += u'<div class="blink">'+a_button(item)+u'<div class="bibshowhide"><div class="bib" style="white-space:pre-wrap;">%s</div></div></div>'%(wikiitem)
-                        elif 'bib' == item.lower() and bibitem2:
-                            blinkitem += u'<div class="blink">'+a_button(item)+u'<div class="bibshowhide"><div class="bib">%s</div></div></div>'%(bibitem2)
-                        elif 'pdf' == item.lower() and u:
-                            blinkitem += u'<div class="blink">'+a_button(item,url=u)+u'</div>'
-                        elif ('ris' == item.lower() or 'endnote' == item.lower()) and risitem:
-                            blinkitem += u'<div class="blink">'+'<a class="%s" title="Download EndNote record" onclick="dwnD(\'%s\');return false;"></a></div>'%(item,base64.b64encode(risitem.encode('utf-8')).decode('utf-8'))
-                        elif 'coins' == item.lower() and coinsitem:
-                            blinkitem += str(coinsitem).strip()
+                        if 'abstract' == show.lower() and abstract:
+                            blinkitem += u'<div class="blink">'+a_button(show)+u'<div class="bibshowhide"><div class="abstract">%s</div></div></div>'%(abstract)
+                        elif 'wikipedia' == show.lower() and item.wikipedia:
+                            blinkitem += u'<div class="blink">'+a_button(show)+u'<div class="bibshowhide"><div class="bib" style="white-space:pre-wrap;">%s</div></div></div>'%(item.wikipedia)
+                        elif 'bib' == show.lower() and bibitem2:
+                            blinkitem += u'<div class="blink">'+a_button(show)+u'<div class="bibshowhide"><div class="bib">%s</div></div></div>'%(bibitem2)
+                        elif 'pdf' == show.lower() and u:
+                            blinkitem += u'<div class="blink">'+a_button(show,url=u)+u'</div>'
+                        elif ('ris' == show.lower() or 'endnote' == show.lower()) and item.ris:
+                            blinkitem += u'<div class="blink">'+'<a class="%s" title="Download EndNote record" onclick="dwnD(\'%s\');return false;"></a></div>'%(show,base64.b64encode(item.ris.encode('utf-8')).decode('utf-8'))
+                        elif 'coins' == show.lower() and item.coins:
+                            blinkitem += str(item.coins).strip()
 
                     if shorten:
                         blinkitem = u'<div style="padding-left:20px;">' + blinkitem + u'</div>'
@@ -811,15 +832,13 @@ def traverse(agenda, depth=0, parents=[]):
 
 
 def filter_items(quaditems, exclude):
-    def fil(it):
-        a = it[-1]
+    def fil(a):
         return not (a.key in item_ids)
     return filter(fil, quaditems)
 
 def merge_doubles(items):
     iids = {}
-    def rd(it):
-        a = it[-1]
+    def rd(a):
         key = a.key
         if key in iids:
             # depending on sort criteria, even the short collection ones
@@ -870,11 +889,11 @@ def retrieve_all_items(sortedkeys):
 
         parent_path = tuple(collection_parents + [key])
         for atuple in i2:  # for sorting by collection
-            atuple[-1].collection = parent_path
+            atuple.collection = parent_path
 
         # if sort_criteria[0] != 'collection':
         for atuple in i2:
-            atuple[-1].section_keyword = " ".join(collection_parents + [key]) # will be added HTML so the entry can be found
+            atuple.section_keyword = " ".join(collection_parents + [key]) # will be added HTML so the entry can be found
 
         if len(i2)>0:
             all_items += i2
@@ -950,9 +969,9 @@ def show_double_warnings ():
 from collections import defaultdict
 def pull_up_featured_remove_hidden_items (all_items):
     # split up into featured and other sections
-    visible_items = list(filter(lambda it: not is_hidden_collection(it[-1].collection), all_items))
-    featured_items = filter(lambda it: is_featured_collection(it[-1].collection), visible_items)
-    other_items = filter(lambda it: not is_featured_collection(it[-1].collection), visible_items)
+    visible_items = list(filter(lambda it: not is_hidden_collection(it.collection), all_items))
+    featured_items = filter(lambda it: is_featured_collection(it.collection), visible_items)
+    other_items = filter(lambda it: not is_featured_collection(it.collection), visible_items)
 
     # if a hidden item is available elsewhere, transfer its category so that it
     # can be searched for using the category shortcuts.
@@ -961,12 +980,12 @@ def pull_up_featured_remove_hidden_items (all_items):
 
     hidden_item_categories = defaultdict(str)
     for it in all_items:
-        if is_hidden_collection(it[-1].collection):
-            hidden_item_categories[it[-1].key] += it[-1].section_keyword + " "
+        if is_hidden_collection(it.collection):
+            hidden_item_categories[it.key] += it.section_keyword + " "
     for it in visible_items:
-        id = it[-1].key
+        id = it.key
         if id in hidden_item_categories:
-            it[-1].section_keyword += " " + hidden_item_categories[id]
+            it.section_keyword += " " + hidden_item_categories[id]
 
     return featured_items, other_items
 
@@ -979,10 +998,10 @@ def sort_items(all_items, sort_criteria, sort_reverse):
         for crit,rev in reversed(list(zip(sort_criteria, sort_reverse))):
             # print("Sorting by",crit, rev)
             # all_items contains 4-tuples, the last one is the atom representation
-            all_items.sort(key=lambda x: sortkeyname(crit, access(x[-1],crit))[0], reverse=rev)
+            all_items.sort(key=lambda x: sortkeyname(crit, access(x,crit))[0], reverse=rev)
 
         # prioritize featured collections
-        # all_items.sort(key=lambda x: is_featured_collection(x[-1].collection))
+        # all_items.sort(key=lambda x: is_featured_collection(x.collection))
     return all_items
 
 
@@ -1014,7 +1033,7 @@ def section_generator (items, crits):
 
 
     for item_tuple in items:
-        item = item_tuple[-1]
+        item = item_tuple
         # construct section path identifier
         # also, make matching criterion identifier
 
