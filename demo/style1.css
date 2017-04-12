@@ -1,0 +1,154 @@
+/* The bibliography */
+div.bibliography 
+   {
+       font-family:Times New Roman, serif;
+   }
+
+@media print
+{
+    #bib-preamble {display:none !important;}
+}
+
+/* Collection titles */
+div.bibliography h1, div.bibliography h2, div.bibliography h3, div.bibliography h4
+   {
+       font-family:Optima,sans-serif;
+       font-weight:1000;
+       color:DarkSlateGray;
+   }
+
+/* Search term highlighted */
+#searchTermSectionTitle, #searchTermSectionTitle a {
+    color:DarkGreen;
+}
+
+/* Collections */
+
+div.bibliography div.collection { }
+div.bibliography div.collection div.collection { /* nested collection */ }
+
+/* The entire bibliographic item */
+div.bib-item {
+}
+div.full-bib-section div.bib-item {
+    margin-bottom:25px;
+}
+/* the short format (selected works) */
+div.short-bib-section div.bib-item {
+    margin-bottom:5px;
+}
+
+/* numbered citations */
+
+div.full-bib-section li {
+    margin-bottom:10px;
+}
+div.short-bib-section li {
+    margin-bottom:5px;
+    /* list-style-type: none; */    /* Use this to turn off numbering */
+}
+
+
+/* the abbreviated conference or journal title in the short format section */
+div.short-bib-section .containertitle {
+    font-style:italic;
+}bib
+/* The actual BibTeX record (when visible) */
+div.bib {
+    font-family:Menlo,Courier,monospaced;
+    color:brown;
+    padding-left:30px;
+    white-space: pre;
+    margin:20px 60px 60px 10px;
+}
+
+/* Text "bib" or "abstract" */
+
+/* Text "bib" or "abstract" */
+.blink a {
+    font-variant: small-caps;
+    font-family:Arial,sans-serif;
+    font-size:80%;
+    text-decoration: none;
+    clear: both;
+    padding:0;
+    margin:0;
+}
+
+/* the .blink p style is a hack because Wordpress seems to insert <p> at times. */
+.blink p {
+    display:inline;
+}
+
+div.full-bib-section .blink a {
+    margin-bottom:-30px;
+}
+div.short-bib-section .blink {
+    display:inline-block; /* needed to make margin-top work (collapsed margins) */
+    margin-top:-5px;
+    margin-bottom:10px;
+}
+
+
+/* The actual abstract (when visible) */
+div.abstract {
+    color:black;
+    margin:20px 60px 60px 10px;
+    padding:10px;
+    border:1px solid black;
+}
+
+/* Document titles */
+.doctitle {
+    font-weight:200;
+}
+
+/* Document titles linking to a PDF or somewhere else */
+a.doctitle:link,a.doctitle:visited,a.doctitle,a.doctitle:hover,a.doctitle.active {
+    color:blue;
+    font-weight:200;
+    text-decoration:none; /* do not underline */ 
+}
+
+/* Document titles where shorted, e.g. "selected works" */
+.doctitle-short {
+}
+
+/* Display publication titles in their own lines.
+Remove to disable. */
+span.doctitle {
+    /* display:block; */
+}
+
+/* Search box */
+#pubSearchButton {
+    /* border: 0 solid #d4d0ba; */
+    font-family: inherit;
+    padding: 0;
+}
+#pubSearchBox {
+    position:static;
+    text-align:right;
+    right:10px; top:100px;
+    display:block;
+}
+
+
+/* Categories at top of the bibliography */
+.bib-cat {
+    display: inline;
+    list-style: none;
+    text-indent: 0;
+    margin: 0; padding: 0; 
+}
+
+.bib-cat li {
+    display: inline;
+}
+.bib-cat:before, .bib-cat li:after {
+    content: " | ";
+}
+.bib-cat:first-child:before, .bib-cat li:last-child:after
+{
+    content: ""
+}
