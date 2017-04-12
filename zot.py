@@ -777,6 +777,7 @@ def make_html (all_items, exclude={}, shorten=False):
 
                 if item.section_keyword:
                     htmlitem += "<span style='display:none;'>%s</span>"%item.section_keyword
+                htmlitem = u'<div class="bib-details">' + htmlitem + u'</div>'
 
                 if shorten:
 
@@ -807,10 +808,10 @@ def make_html (all_items, exclude={}, shorten=False):
                         elif 'coins' == show.lower() and item.coins:
                             blinkitem += str(item.coins).strip()
 
-                    if shorten:
+                    if shorten: # to do - consider moving this to the CSS
                         blinkitem = u'<div style="padding-left:20px;">' + blinkitem + u'</div>'
 
-                    htmlitem += blinkitem
+                    htmlitem += u'<div class="blinkitems">' + blinkitem + u'</div>'
 
                 if shorten:
                     htmlitem = u"<a href=\"#\" onclick=\"show(this);\">&#8862;</a> <span class=\"doctitle-short\">%s</span> <span class=\"containertitle\">%s</span> %s"%(t,ct,y) + "<div class=\"bibshowhide\" style=\"padding-left:20px;\">"+htmlitem+"</div>"
