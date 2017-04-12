@@ -5,7 +5,7 @@
 
 library_id = '1366641' # your group or user ID (e.g., six numeric digits)
 library_type ='user'  # or 'group' # group or userm
-api_key = 'X4iUU2a7P5mQWNTO7hvuQwzB'  # secret key (from Zotero)
+api_key = 'X4iUU2a7P5mQWNTO7hvuQwzB'  # not-so-secret key (from Zotero Feeds/API settings)
 
 toplevelfilter = 'FCQK6PT6'   # collection where to start retrieving
 
