@@ -1,3 +1,25 @@
+zot_bib_web 3.0.0
+-----------------------------------------
+
+- New interface to allow sorting of the bibliographic items not just
+  by collection as in the Zotero library, but also by year or by
+  publication type (e.g., journal article, conference paper), and
+  arbitrary hierarchies thereof.  Extracting "selected works" or "in
+  review" papers is possible.  Even if ordering chronologically,
+  without showing thematic collections, the bibliography can be
+  filtered according to area with the collection shortcuts at the top.
+  
+- Bibliographic entries can be numbered within their sections now.
+  See the number_bib_items variable.
+  
+- full-bib-section and short-bib-section divs now contain their
+  respective section headings.
+
+- Added several worked examples with output in the demo folder.
+  Run make-demo.sh to generate them.
+
+
+
 zot_bib_web 2.0.0
 -----------------------------------------
 - Much simplified installation and setup.  Improved documentation.
