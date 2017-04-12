@@ -1144,7 +1144,7 @@ def main():
 
     headerhtml = '<div id="bib-preamble">'
     for t in show_shortcuts:
-        headerhtml += '<ul class="bib-cat">' + headerhtmls[t] + "</ul>"
+        headerhtml += '<ul id="%s" class="bib-cat">'%t + headerhtmls[t] + "</ul>"
     headerhtml += search_box + "</div>" #preamble
 
     write_some_html(headerhtml+fullhtml, outputfile)
