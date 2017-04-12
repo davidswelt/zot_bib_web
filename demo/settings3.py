@@ -50,7 +50,7 @@ category_outputfile_prefix = 'zotero'  # relative or absolute path prefix
 show_search_box = True  # show a Javascript/JQuery based search box to filter pubs by keyword.  Must define jquery_path.
 jquery_path = "site/jquery.min.js"  # path to jquery file on the server - default: wordpress location
 
-number_bib_items = True  # show bibliographic items as numbered, ordered list
+number_bib_items = False  # show bibliographic items as numbered, ordered list
     
 show_copy_button = True
 clipboard_js_path = "site/clipboard.min.js"
@@ -60,6 +60,6 @@ show_links = ['abstract', 'pdf', 'bib','ris']   # unconditionally show these ite
 
 show_shortcuts = ['collection', 'year', 'type']
 
-stylesheet_url = "style2.css"
+stylesheet_url = "style3.css"
 
 
