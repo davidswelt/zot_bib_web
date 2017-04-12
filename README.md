@@ -56,6 +56,15 @@ Demo
   are included.
 
 
+License
+----------------------------------------
+
+- Use and modify this software free of charge.
+- No warranty is provided whatsoever.
+- Please e-mail david.reitter@gmail.com a link to the bibliography on
+  your website if you decide to use zot_bib_web.
+
+
 Requirements
 ----------------------------------------
 - Python 2.7 or 3
