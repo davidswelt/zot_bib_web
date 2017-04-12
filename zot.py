@@ -711,12 +711,17 @@ def make_header_htmls(all_items):
 
     headerhtmls = {'collection':u"", 'year':u"", 'type':u""}
     for crit in show_shortcuts:
-
-        l = [sortkeyname(crit, value)+(i.access(crit),) for value in set([i.access(crit) for i in all_items])]
+        if crit == 'date':
+            crit = 'year'
         l = [sortkeyname(crit, value) + (value,) for value in set([i.access(crit) for i in all_items])]
         l.sort(key=lambda x: x[0], reverse=crit=='year')
         for _,section_print_title,section_code in l:
             last_section_id=last(section_code)  # if collection, get its ID
+            if crit == 'year':
+                last_section_id = 'year__'+last_section_id
+            if crit == 'type':
+                last_section_id = 'type__'+last_section_id
+            # collection does not need to be marked
             headerhtmls[crit] += "   <li class='link'><a style='white-space: nowrap;' href='#' onclick='searchFunction([\"%s\"],\"%s\");return false;'>%s</a></li>\n"%(last_section_id, section_print_title,section_print_title)
 
     return headerhtmls
@@ -775,8 +780,14 @@ def make_html (all_items, exclude={}, shorten=False):
                 else:
                     htmlitem = tryreplacing(htmlitem, t_to_replace, u"<span class=\"doctitle\">%s</span>"%("\\0"))
 
+                search_tags = ''
                 if item.section_keyword:
-                    htmlitem += "<span style='display:none;'>%s</span>"%item.section_keyword
+                    search_tags += item.section_keyword  # no special tag for collections
+                search_tags += " year__" + item.access('year')  # no search by date
+                if item.type:
+                    search_tags += " type__" + item.type
+                htmlitem += "<span class='bib-kw' style='display:none;'>%s</span>"%search_tags
+
                 htmlitem = u'<div class="bib-details">' + htmlitem + u'</div>'
 
                 if shorten:
