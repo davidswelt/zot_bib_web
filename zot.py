@@ -53,6 +53,7 @@ outputfile = 'zotero-bib.html'
 category_outputfile_prefix = 'zotero'
 jquery_path = "site/jquery.min.js"
 # jquery_path = "../wp-includes/js/jquery/jquery.js"  # wordpress location
+number_bib_items = False
 show_copy_button = True
 clipboard_js_path = "site/clipboard.min.js"
 copy_button_path = "site/clippy.svg"
@@ -729,10 +730,14 @@ def make_html (all_items, exclude={}, shorten=False):
                     htmlitem = u"<a href=\"#\" onclick=\"show(this);\">&#8862;</a> <span class=\"doctitle-short\">%s</span> <span class=\"containertitle\">%s</span> %s"%(t,ct,y) + "<div class=\"bibshowhide\" style=\"padding-left:20px;\">"+htmlitem+"</div>"
                     htmlitem = u"<div>" + htmlitem + "</div>" # to limit was is being expanded
 
-                string += u'<div class="bib-item">' + htmlitem + u'</div>'
+                tag = "li" if number_bib_items else "div"
+                string += u'<%s class="bib-item">'%tag + htmlitem + u'</%s>'%tag
 
     if len(string)==0:
         return "",0  # avoid adding title for section later on
+
+    if number_bib_items:
+        string = u'<ol>' + string + u'</ol>'
 
     if shorten:
         string = u'<div class="short-bib-section">' + string + u'</div>'

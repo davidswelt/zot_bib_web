@@ -116,6 +116,7 @@ jquery_path = "site/jquery.min.js"  # path to jquery file on the server
 # 'collection', 'type', 'year' are supported
 show_shortcuts = ['collection', 'year']
 
+number_bib_items = False  # show bibliographic items as numbered, ordered list
 show_copy_button = True  # show clipbaord copy button.  Must define jquery_path.
 clipboard_js_path = "site/clipboard.min.js"  # path to file on server
 copy_button_path = "site/clippy.svg" # path to file on server

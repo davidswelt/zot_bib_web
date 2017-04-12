@@ -37,10 +37,22 @@ div.full-bib-section div.bib-item {
 div.short-bib-section div.bib-item {
     margin-bottom:5px;
 }
+
+/* numbered citations */
+
+div.full-bib-section li {
+    margin-bottom:10px;
+}
+div.short-bib-section li {
+    margin-bottom:5px;
+    /* list-style-type: none; */    /* Use this to turn off numbering */
+}
+
+
 /* the abbreviated conference or journal title in the short format section */
 div.short-bib-section .containertitle {
     font-style:italic;
-}
+}bib
 /* The actual BibTeX record (when visible) */
 div.bib {
     font-family:Menlo,Courier,monospaced;
