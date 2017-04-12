@@ -713,6 +713,7 @@ def make_header_htmls(all_items):
     for crit in show_shortcuts:
 
         l = [sortkeyname(crit, value)+(i.access(crit),) for value in set([i.access(crit) for i in all_items])]
+        l = [sortkeyname(crit, value) + (value,) for value in set([i.access(crit) for i in all_items])]
         l.sort(key=lambda x: x[0], reverse=crit=='year')
         for _,section_print_title,section_code in l:
             last_section_id=last(section_code)  # if collection, get its ID
