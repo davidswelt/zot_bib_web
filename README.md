@@ -59,7 +59,8 @@ News
   works" or "in review" papers is possible.  Even if ordering
   chronologically, without showing thematic collections, the
   bibliography can be filtered according to area with the collection
-  shortcuts at the top.
+  shortcuts at the top.  Bibliographic entries can be numbered within
+  their sections now.
 
 
 Requirements
