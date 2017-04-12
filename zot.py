@@ -125,20 +125,15 @@ def load_settings(file="settings.py"):
     try:
         import imp
 
+        # from settings import *
         settings = imp.load_source("settings", file)
-
-        # how do i import this now?
-        #test = __import__('os', globals(), locals())
-        # print(settings.__dict__)
+        # import settings into local namespace:
         for k,v in settings.__dict__.items():
             if k in globals() and not "__" in k:  # only if default is defined
                 globals()[k]=v
-                print(k,v)
-
-
-
-    # from settings import *
+                # print(k,v)
         print("Loaded settings from %s."%file)
+
     except ImportError:
         pass
 
