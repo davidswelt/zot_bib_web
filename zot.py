@@ -78,6 +78,7 @@ sortkeyname_order['type'] = [('journalArticle', 'Journal Articles'),
                            ('bookSection', 'Book Chapters'),
                            ('edited-volume', "Edited Volumes"),
                            ('thesis', 'Theses'),
+                           ('report', 'Tech Reports'),
                            ('presentation', 'Talks')]
 
 
