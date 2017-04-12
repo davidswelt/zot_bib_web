@@ -39,6 +39,7 @@ from __future__ import print_function
 ## The following items are defaults.
 
 library_id = None
+library_id = None
 library_type ='group'
 api_key = None
 toplevelfilter = None
@@ -91,14 +92,6 @@ sort_order = 'desc'   # "desc" or "asc"
 
 __version__ = "3.0.0"
 
-#############################################################################
-
-
-try:
-    from settings import *
-    print("Loaded settings from settings.py.")
-except ImportError:
-    pass
 
 #############################################################################
 import sys
@@ -128,17 +121,51 @@ from texconv import tex2unicode
 import base64
 
 
+def load_settings(file="settings.py"):
+    try:
+        import imp
+
+        settings = imp.load_source("settings", file)
+
+        # how do i import this now?
+        #test = __import__('os', globals(), locals())
+        # print(settings.__dict__)
+        for k,v in settings.__dict__.items():
+            if k in globals() and not "__" in k:  # only if default is defined
+                globals()[k]=v
+                print(k,v)
+
+
+
+    # from settings import *
+        print("Loaded settings from %s."%file)
+    except ImportError:
+        pass
+
+def fetch_tag (tag, default=None):
+    result = default
+    if tag in sys.argv:
+        i = sys.argv.index(tag)
+        if len(sys.argv)>i+1:
+            result = sys.argv[i+1]
+            sys.argv=sys.argv[:i]+sys.argv[i+2:]
+        else:
+            warn("%s needs a value."%tag)
+    return result
+
 def print_usage ():
-    print("""Usage:   zot.py {--div|--full|--limit|--local|--group GID|--user UID} [TOPLEVEL_COLLECTION_ID] [CATCHALL_COLLECTION_ID [OUTPUTFILE]]
+    print("""Usage:   zot.py {--div|--full|--limit|--test|--group GID|--user UID} [TOPLEVEL_COLLECTION_ID] [CATCHALL_COLLECTION_ID [OUTPUTFILE]]
 Example: ./zot.py --group 160464 DTDTV2EP
 
---group GID   set a group library              [library_id; library_type='group']
---user UID    set a user library               [library_id; library_type='user']
---limit       sets limit to 5 for fast testing [limit=5]
---div         output an HTML fragment          [write_full_html_header=False]
---full        output full html                 [write_full_html_header=True]
---apikey KEY  set Zotero API key               [api_key]
---local       implies --full and uses site/ directory
+--settings FILE.py  load settings from FILE
+
+--group GID          set a group library              [library_id; library_type='group']
+--user UID           set a user library               [library_id; library_type='user']
+--limit              sets limit to 5 for fast testing [limit=5]
+--div                output an HTML fragment          [write_full_html_header=False]
+--full               output full html                 [write_full_html_header=True]
+--apikey KEY         set Zotero API key               [api_key]
+--test               implies --full and uses site/ directory
 
 These and additional settings can be loaded from settings.py.
 """)
@@ -147,6 +174,14 @@ print_usage_and_exit = False
 
 if len(sys.argv)<=1 and not library_id:  # if no settings file loaded and no args given
     print_usage_and_exit = True
+
+x = fetch_tag ("--settings")
+if x:
+    load_settings(x)
+else:
+    load_settings()
+
+# Parase remaining arguments
 
 if "--div" in sys.argv:
     write_full_html_header = False
@@ -162,6 +197,7 @@ if "--test" in sys.argv:
     clipboard_js_path = "site/clipboard.min.js"
     copy_button_path = "site/clippy.svg"
     sys.argv.remove('--test')
+    print("Test mode.  Forcing settings for local testing.")
 
 if "-i" in sys.argv:
     interactive_debugging = True
@@ -177,17 +213,6 @@ if "-h" in sys.argv:
 if "--help" in sys.argv:
     sys.argv.remove('--help')
     print_usage()
-
-def fetch_tag (tag, default=None):
-    result = default
-    if tag in sys.argv:
-        i = sys.argv.index(tag)
-        if len(sys.argv)>i+1:
-            result = sys.argv[i+1]
-            sys.argv=sys.argv[:i]+sys.argv[i+2:]
-        else:
-            warn("%s needs a value."%tag)
-    return result
 
 x = fetch_tag ("--user")
 if x:
@@ -216,6 +241,8 @@ if len(sys.argv)>3:
     if not sys.argv[3] == "None":
         outputfile =sys.argv[3]
 
+###########
+
 if not library_id:
     warn("You must give --user or --group, or set library_id and library_type in settings.py.")
     print_usage_and_exit = True
@@ -223,6 +250,7 @@ if not library_id:
 if print_usage_and_exit:
     print_usage()
     sys.exit(1)
+
 
 
 ###########
@@ -467,7 +495,7 @@ class ZotItem:
         self.type = None
         self.libraryCatalog = None  # special setting, overrides u'itemType' for our purposes
         self.note = None
-        
+
         self.__dict__.update(entries)
 
         # Will be set later - None is a good default
@@ -476,7 +504,7 @@ class ZotItem:
         self.html = None
         self.coins = None
         self.wikipedia = None
-        
+
         # allow libraryCatalog to override itemType
         self.type = self.libraryCatalog or self.itemType
 
@@ -549,7 +577,7 @@ def retrieve_data(collection_id, exclude=None):
         ai.coins = ci
         ai.wikipedia = wi
 
-        
+
     return a
 
 
@@ -618,6 +646,66 @@ def tryreplacing (source, strings, repl):
             return source.replace(s, repl2)
     return source
 
+from six import string_types
+def is_string (s):
+    return isinstance(s, string_types)
+
+
+def coll_data(c):
+    if not (u'key' in c and u'name' in c) and u'data' in c:
+        c = c[u'data']
+    return c
+
+def coll_key(c):
+    if u'key' in c:
+        return c[u'key']
+    return c[u'data'][u'key']
+
+def coll_name(c):
+    return coll_data(c)[u'name']
+
+
+def is_short_collection(section_code):
+    "Show abbreviated entries for items in this collection"
+    return is_special_collection(section_code, "*")
+# def is_exclusive_collection(section_code):
+#     "Show item in this collection, and do not show them in regular collections"
+#     return is_special_collection(section_code, "-")
+def is_featured_collection(section_code):
+    """Regardless of sort_criteria, show this collection
+at the top of the bibliography"""
+    return is_special_collection(section_code, "!")
+def is_hidden_collection(section_code):
+    "Hide items in this collection."
+    return is_special_collection(section_code, "-")
+
+def is_special_collection(section_code, special):
+    if not is_string(section_code):
+        return any([is_special_collection(x, special) for x in section_code])
+    if section_code in collection_names:  # it's a collection key
+        name = collection_names[section_code] # value is an ID
+        return special in name.partition(' ')[0]
+    # if it's not a section key, then it doesn't indicate a short section
+    return False
+
+def get_featured_collections(section_code):
+    return filter(lambda x: is_featured_collection(x), section_code)
+
+
+def strip(string):
+    stripped = string.lstrip("0123456789*!- ")
+    if stripped == "":
+        return string
+    return stripped
+
+
+def last(string_or_list):
+    if not is_string(string_or_list):
+        return string_or_list[-1]
+    return string_or_list
+
+
+
 def make_header_htmls(all_items):
     # filters for criteria
 
@@ -663,7 +751,7 @@ def make_html (all_items, exclude={}, shorten=False):
                 count += 1
 
                 htmlitem = item.html
-                
+
                 global show_links
                 show_items = show_links
                 t =  item.title
@@ -749,63 +837,6 @@ def make_html (all_items, exclude={}, shorten=False):
 
     return cleanup_lines(string),count
 
-from six import string_types
-def is_string (s):
-    return isinstance(s, string_types)
-
-
-def coll_data(c):
-    if not (u'key' in c and u'name' in c) and u'data' in c:
-        c = c[u'data']
-    return c
-
-def coll_key(c):
-    if u'key' in c:
-        return c[u'key']
-    return c[u'data'][u'key']
-
-def coll_name(c):
-    return coll_data(c)[u'name']
-
-
-def is_short_collection(section_code):
-    "Show abbreviated entries for items in this collection"
-    return is_special_collection(section_code, "*")
-# def is_exclusive_collection(section_code):
-#     "Show item in this collection, and do not show them in regular collections"
-#     return is_special_collection(section_code, "-")
-def is_featured_collection(section_code):
-    """Regardless of sort_criteria, show this collection
-at the top of the bibliography"""
-    return is_special_collection(section_code, "!")
-def is_hidden_collection(section_code):
-    "Hide items in this collection."
-    return is_special_collection(section_code, "-")
-
-def is_special_collection(section_code, special):
-    if not is_string(section_code):
-        return any([is_special_collection(x, special) for x in section_code])
-    if section_code in collection_names:  # it's a collection key
-        name = collection_names[section_code] # value is an ID
-        return special in name.partition(' ')[0]
-    # if it's not a section key, then it doesn't indicate a short section
-    return False
-
-def get_featured_collections(section_code):
-    return filter(lambda x: is_featured_collection(x), section_code)
-
-
-def strip(string):
-    stripped = string.lstrip("0123456789*!- ")
-    if stripped == "":
-        return string
-    return stripped
-
-
-def last(string_or_list):
-    if not is_string(string_or_list):
-        return string_or_list[-1]
-    return string_or_list
 
 def init_db ():
     global zot
@@ -958,7 +989,6 @@ def compile_data(all_items, section_code, crits, exclude={}, shorten=False):
             html += "<h%s class=\"collectiontitle\">%s</h3>\n"%(2+depth,section_print_title)
     html += corehtml
     # write_some_html(html, category_outputfile_prefix+"-%s.html"%last_section_id)
-
     return html
 
 def show_double_warnings ():
