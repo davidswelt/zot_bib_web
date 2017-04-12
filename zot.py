@@ -432,6 +432,7 @@ def sortkeyname(field, value):
         m = re.match(r'([0-9]+)[\s*\-!]*\s(.*)', name)
         if m:
             return m.group(1), m.group(2)  # like "strip"
+        return name,name
     return value,value  # sort by value
 
 def import_legacy_configuration():
