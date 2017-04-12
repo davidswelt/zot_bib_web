@@ -877,19 +877,19 @@ def merge_doubles(items):
 
     return filter(rd, items)
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import pickle
 def retrieve_all_items(sortedkeys):
 
     global toplevelfilter, limit
     try:
         sklen, date, tlc, l, items = pickle.load(open("retrieve.cache", 'rb'))
-        if date > datetime.datetime.now()-datetime.timedelta(days=1):
-            if sklen == len(sortedkeys) and tlc==toplevelfilter and l==limit:
+        if date > datetime.now()-timedelta(days=1):
+            if sklen == hash(str(sortedkeys)) and tlc==toplevelfilter and l==limit:
+                print("Using cached Zotero items (retrieve.cache).")
                 return items
-    except:
+    except e:
         pass
-
 
     all_items = []
     for key,depth,collection_name,collection_parents in sortedkeys:
@@ -920,7 +920,7 @@ def retrieve_all_items(sortedkeys):
             all_items += i2
 
 
-    pickle.dump((len(sortedkeys), datetime.now(), toplevelfilter, limit, all_items), open("retrieve.cache", 'wb'))
+    pickle.dump((hash(str(sortedkeys)), datetime.now(), toplevelfilter, limit, all_items), open("retrieve.cache", 'wb'))
 
     return all_items
 
