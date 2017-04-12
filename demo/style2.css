@@ -76,7 +76,7 @@ div.short-bib-section li {
 /* the abbreviated conference or journal title in the short format section */
 div.short-bib-section .containertitle {
     font-style:italic;
-}bib
+}
 /* The actual BibTeX record (when visible) */
 div.bib {
     font-family:Menlo,Courier,monospaced;
