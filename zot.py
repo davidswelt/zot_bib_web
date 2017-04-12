@@ -827,10 +827,6 @@ def make_html (all_items, exclude={}, shorten=False):
     if number_bib_items:
         string = u'<ol>' + string + u'</ol>'
 
-    if shorten:
-        string = u'<div class="short-bib-section">' + string + u'</div>'
-    else:
-        string = u'<div class="full-bib-section">' + string + u'</div>'
 
     global entry_count
     entry_count += count
@@ -988,6 +984,8 @@ def compile_data(all_items, section_code, crits, exclude={}, shorten=False):
             # if depth<=show_top_section_headings:
             html += "<h%s class=\"collectiontitle\">%s</h3>\n"%(2+depth,section_print_title)
     html += corehtml
+    html = u'<div class="%s-bib-section">'%(u'short' if shorten else u'full') + html + u'</div>'
+
     # write_some_html(html, category_outputfile_prefix+"-%s.html"%last_section_id)
     return html
 
