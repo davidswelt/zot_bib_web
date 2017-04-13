@@ -947,7 +947,7 @@ def retrieve_all_items(sortedkeys):
             if sklen == hash(str(sortedkeys)) and tlc==toplevelfilter and l==limit:
                 print("Using cached Zotero items (retrieve.cache).")
                 return items
-    except e:
+    except IOError:
         pass
 
     all_items = []
