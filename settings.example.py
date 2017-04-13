@@ -122,12 +122,33 @@ clipboard_js_path = "site/clipboard.min.js"  # path to file on server
 copy_button_path = "site/clippy.svg" # path to file on server
 
 # unconditionally show these items if they are available for the item
-# (don't set for default)
+# (don't set to obtain defaults)
 # show_links = ['abstract', 'pdf', 'bib', 'wikipedia', 'ris', 'coins']
 
 # Prevent viewers from selecting "bib", "pdf" etc for easier copy/paste of bibliography
-# (don't set for default)
+# (don't set to obtain default)
 # smart_selections = True
+
+# Output in this language
+language_code = 'en'
+
+# Define labels for article types and their ordering
+# types may occur in libraryCatalog or itemType
+# use libraryCatalog to override it in special cases (e.g., archival Conference papers)
+sortkeyname_order['en']['type'] = [('journalArticle', 'Journal Articles'),
+                            ('archivalConferencePaper', 'Archival Conference Papers'),
+                            ('conferencePaper', 'Conference and Workshop Papers'),
+                            ('book','Books'),
+                            ('bookSection', 'Book Chapters'),
+                            ('edited-volume', "Edited Volumes"),
+                            ('thesis', 'Theses'),
+                            ('report', 'Tech Reports'),
+                            ('presentation', 'Talks')]
+
+# Translations for links
+# Provide additional languages like so:
+# link_translations['de'] = {'abstract':'Abstrakt', 'pdf':'Volltext'}
+
 
 
 

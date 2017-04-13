@@ -42,6 +42,8 @@ COINS is always included (invisible).
 The content generated is static.  This program is meant to
 be run periodically.
 
+Support for other languages is provided; by default for German and English.
+
 A tool to push the resulting bibliography to a Wordpress installation
 is also provided.
 

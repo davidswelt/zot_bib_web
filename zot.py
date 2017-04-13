@@ -67,19 +67,35 @@ content_filter = {'bib' : 'fix_bibtex_reference'}  # currently, only this functi
 sort_criteria = ['collection', '-year', 'type']
 show_top_section_headings = 1
 
+language_code = 'en'
 sortkeyname_order = {}
 # Define label for article types and their ordering
 # types may occur in libraryCatalog or itemType
 # use libraryCatalog to override it in special cases (e.g., archival Conference papers)
-sortkeyname_order['type'] = [('journalArticle', 'Journal Articles'),
-                           ('archivalConferencePaper', 'Archival Conference Papers'),
-                           ('conferencePaper', 'Conference and Workshop Papers'),
-                           ('book','Books'),
-                           ('bookSection', 'Book Chapters'),
-                           ('edited-volume', "Edited Volumes"),
-                           ('thesis', 'Theses'),
-                           ('report', 'Tech Reports'),
-                           ('presentation', 'Talks')]
+sortkeyname_order['en']={}
+sortkeyname_order['en']['type'] = [('journalArticle', 'Journal Articles'),
+                            ('archivalConferencePaper', 'Archival Conference Papers'),
+                            ('conferencePaper', 'Conference and Workshop Papers'),
+                            ('book', 'Books'),
+                            ('bookSection', 'Book Chapters'),
+                            ('edited-volume', "Edited Volumes"),
+                            ('thesis', 'Theses'),
+                            ('report', 'Tech Reports'),
+                            ('presentation', 'Talks')]
+sortkeyname_order['de']={}
+sortkeyname_order['de']['type'] = [('journalArticle', 'Journal-Artikel'),
+                            ('archivalConferencePaper', u'Konferenz-Veröffentlichungen'),
+                            ('conferencePaper', 'Konferenz- und Workshop-Papiere'),
+                            ('book', u'Bücher'),
+                            ('bookSection', 'Kapitel'),
+                            ('edited-volume', "Sammlungen (als Herausgeber)"),
+                            ('thesis', 'Dissertationen'),
+                            ('report', 'Technische Mitteilungen'),
+                            ('presentation', u'Vorträge')]
+
+# Basic translations
+link_translations = {}
+link_translations['de'] = {'abstract':'Abstrakt', 'pdf':'Volltext'}
 
 
 ##### legacy settings
@@ -168,9 +184,6 @@ These and additional settings can be loaded from settings.py.
 
 print_usage_and_exit = False
 
-if len(sys.argv)<=1 and not library_id:  # if no settings file loaded and no args given
-    print_usage_and_exit = True
-
 x = fetch_tag ("--settings")
 if x:
     load_settings(x)
@@ -238,6 +251,9 @@ if len(sys.argv)>3:
         outputfile =sys.argv[3]
 
 ###########
+
+if len(sys.argv)<=1 and not library_id:  # if no settings file loaded and no args given
+    print_usage_and_exit = True
 
 if not library_id:
     warn("You must give --user or --group, or set library_id and library_type in settings.py.")
@@ -457,9 +473,12 @@ def import_legacy_configuration():
 def index_configuration():
     global sortkeyname_order
     global sortkeyname_dict
+    global language_code
     # Not using OrderedDict (Python 2.7), because it does not actually
     # indicate the index of an item by itself
-    sortkeyname_dict = {key:{val:(idx,mappedVal) for idx,(val,mappedVal) in enumerate(the_list)} for key,the_list in sortkeyname_order.items()}
+    if not language_code in sortkeyname_order:
+        language_code = 'en' # fallback - should be present.
+    sortkeyname_dict = {key:{val:(idx,mappedVal) for idx,(val,mappedVal) in enumerate(the_list)} for key,the_list in sortkeyname_order[language_code].items()}
 
 def retrieve_x (collection,**args):
     global limit
@@ -730,6 +749,7 @@ entry_count=0
 def make_html (all_items, exclude={}, shorten=False):
     def a_button (name,url=None,js=None,title=None,cls=None):
         global smart_selections
+        global language_code
         if not js:
             js = "show(this)"
         if not url:
@@ -741,6 +761,8 @@ def make_html (all_items, exclude={}, shorten=False):
         title2 = ""
         if title:
             title2 = "title=\"%s\""%title
+        if language_code in link_translations:
+            name = link_translations[language_code].get(name.lower(), name)
         return u"<a class=\"%s\" %s %s onclick=\"%s\">%s</a>"%(cls,title2,url,js,("" if smart_selections else name))
 
     sort_criteria = None   # [u'page']  # TODO - allow user to set this; document

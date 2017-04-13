@@ -64,5 +64,4 @@ show_shortcuts = ['collection', 'year', 'type']
 
 stylesheet_url = "style1.css"
 
-
-
+language_code = 'en'
