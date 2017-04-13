@@ -145,10 +145,6 @@ span.doctitle {
 .bib-cat li {
     display: inline;
 }
-.bib-cat:before, .bib-cat li:after {
+.bib-cat:not(:last-child):before, .bib-cat li:not(:last-child):after {
     content: " | ";
-}
-.bib-cat:first-child:before, .bib-cat li:last-child:after
-{
-    content: ""
 }

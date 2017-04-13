@@ -180,17 +180,10 @@ span.doctitle {
     display: block;
 }
 
-#year {
+#bib-cat-year {
     max-width:20%;
 }
-#year li {
+#bib-cat-year li {
     display:inline;
 }
 
-.bib-cat:before, .bib-cat li:after {
-    content: "";
-}
-.bib-cat:first-child:before, .bib-cat li:last-child:after
-{
-    content: ""
-}
