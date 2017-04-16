@@ -73,25 +73,37 @@ sortkeyname_order = {}
 # types may occur in libraryCatalog or itemType
 # use libraryCatalog to override it in special cases (e.g., archival Conference papers)
 sortkeyname_order['en']={}
-sortkeyname_order['en']['type'] = [('journalArticle', 'Journal Articles'),
-                            ('archivalConferencePaper', 'Archival Conference Papers'),
-                            ('conferencePaper', 'Conference and Workshop Papers'),
-                            ('book', 'Books'),
-                            ('bookSection', 'Book Chapters'),
-                            ('edited-volume', "Edited Volumes"),
-                            ('thesis', 'Theses'),
-                            ('report', 'Tech Reports'),
-                            ('presentation', 'Talks')]
+sortkeyname_order['en']['type'] = [
+    ('journalArticle', 'Journal Articles'),
+    ('archivalConferencePaper', 'Archival Conference Papers'),
+    ('conferencePaper', 'Conference and Workshop Papers'),
+    ('book', 'Books'),
+    ('bookSection', 'Book Chapters'),
+    ('edited-volume', "Edited Volumes"),
+    ('thesis', 'Theses'),
+    ('report', 'Tech Reports'),
+    ('presentation', 'Talks')]
+
+sortkeyname_order['en']['date'] = sortkeyname_order['en']['year'] = [
+    (None, None), # sort all other values here
+    ('in preparation', None),
+    ('submitted', None),
+    ('in review', None),
+    ('accepted', None),
+    ('to appear', None),
+    ('in press', None)]
+
 sortkeyname_order['de']={}
-sortkeyname_order['de']['type'] = [('journalArticle', 'Journal-Artikel'),
-                            ('archivalConferencePaper', u'Konferenz-Veröffentlichungen'),
-                            ('conferencePaper', 'Konferenz- und Workshop-Papiere'),
-                            ('book', u'Bücher'),
-                            ('bookSection', 'Kapitel'),
-                            ('edited-volume', "Sammlungen (als Herausgeber)"),
-                            ('thesis', 'Dissertationen'),
-                            ('report', 'Technische Mitteilungen'),
-                            ('presentation', u'Vorträge')]
+sortkeyname_order['de']['type'] = [
+    ('journalArticle', 'Journal-Artikel'),
+    ('archivalConferencePaper', u'Konferenz-Veröffentlichungen'),
+    ('conferencePaper', 'Konferenz- und Workshop-Papiere'),
+    ('book', u'Bücher'),
+    ('bookSection', 'Kapitel'),
+    ('edited-volume', "Sammlungen (als Herausgeber)"),
+    ('thesis', 'Dissertationen'),
+    ('report', 'Technische Mitteilungen'),
+    ('presentation', u'Vorträge')]
 
 # Basic translations
 link_translations = {}
@@ -431,6 +443,9 @@ def sortkeyname(field, value):
     global sortkeyname_dict
     # field may be a single field, or a list of fields
     # value corresponds to field
+
+    sort_prefix = ""
+
     if not is_string(value):
         # it's a path of something
         # sorting by all the numbers (if available).
@@ -439,18 +454,23 @@ def sortkeyname(field, value):
             return ".".join([str(sortkeyname(field, value2)[0]) for value2 in value]), sortkeyname(field, value[-1])[1]
         else:
             return ".".join([str(sortkeyname(field2, value2)[0]) for field2,value2 in zip(field,value)]), sortkeyname(field[-1], value[-1])[1]
-    if field in sortkeyname_dict:
-        if value in sortkeyname_dict[field]:
-            # print (sortkeyname_dict[field][value] )
-            return sortkeyname_dict[field][value]  # this is (sort_number, label)
-        return "zzz "+value,value  # sort at the end, but then according to value
+
     if field == "collection":
         name = collection_names[value] # value is an ID
         m = re.match(r'([0-9]+)[\s*\-!]*\s(.*)', name)
         if m:
-            return m.group(1), m.group(2)  # like "strip"
-        return name,name
-    return value,value  # sort by value
+            sort_prefix,value = m.group(1),m.group(2)
+        else:
+            sort_prefix,value = "", name
+
+    if field in sortkeyname_dict:
+        if value in sortkeyname_dict[field]:
+            s, value = sortkeyname_dict[field][value]   # this is (sort_number, label)
+            sort_prefix = str(s) + " " + sort_prefix
+        elif None in sortkeyname_dict[field]:  # default for unknown values
+            sort_prefix = str(sortkeyname_dict[field][None][0]) + " " + sort_prefix
+
+    return " ".join([sort_prefix,value.lower()]),value  # sort by value
 
 def import_legacy_configuration():
     global order_by
@@ -470,6 +490,16 @@ def import_legacy_configuration():
         else:
             sort_reverse += [False]
 
+def sort_crit_in_reversed_order(field):
+    global sort_criteria
+    if field in sort_criteria:
+        return sort_reverse[sort_criteria.index(field)]
+    if field=='date' and 'year' in sort_criteria:
+        return sort_reverse[sort_criteria.index('year')]
+    if field=='year' and 'date' in sort_criteria:
+        return sort_reverse[sort_criteria.index('date')]
+    return False
+
 def index_configuration():
     global sortkeyname_order
     global sortkeyname_dict
@@ -478,7 +508,9 @@ def index_configuration():
     # indicate the index of an item by itself
     if not language_code in sortkeyname_order:
         language_code = 'en' # fallback - should be present.
-    sortkeyname_dict = {key:{val:(idx,mappedVal) for idx,(val,mappedVal) in enumerate(the_list)} for key,the_list in sortkeyname_order[language_code].items()}
+
+    # use val as default if it is given as None
+    sortkeyname_dict = {key:{val:(idx,mappedVal or val) for idx,(val,mappedVal) in enumerate(list(the_list))} for key,the_list in sortkeyname_order[language_code].items()}
 
 def retrieve_x (collection,**args):
     global limit
@@ -733,7 +765,7 @@ def make_header_htmls(all_items):
         if crit == 'date':
             crit = 'year'
         l = [sortkeyname(crit, value) + (value,) for value in set([i.access(crit) for i in all_items])]
-        l.sort(key=lambda x: x[0], reverse=crit=='year')
+        l.sort(key=lambda x: x[0], reverse=sort_crit_in_reversed_order(crit))
         for _,section_print_title,section_code in l:
             last_section_id=last(section_code)  # if collection, get its ID
             if crit == 'year':
@@ -1186,7 +1218,7 @@ def main():
         # or they are desired (e.g., Selected Works)
 
     featured_items, regular_items = pull_up_featured_remove_hidden_items(all_items)
-    featured_items = sort_items(featured_items, ['collection'], [False])
+    featured_items = sort_items(featured_items, ['collection']+sort_criteria, [False]+sort_reverse)
     regular_items = sort_items(regular_items, sort_criteria, sort_reverse)
 
     # don't use chain - we will iterate over all_items several times, so
