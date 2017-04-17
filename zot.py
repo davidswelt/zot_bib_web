@@ -84,7 +84,8 @@ sortkeyname_order['en']['type'] = [
     ('edited-volume', "Edited Volumes"),
     ('thesis', 'Theses'),
     ('report', 'Tech Reports'),
-    ('presentation', 'Talks')]
+    ('presentation', 'Talks'),
+    ('computerProgram', 'Computer Programs')]
 
 sortkeyname_order['en']['date'] = sortkeyname_order['en']['year'] = [
     (None, None), # sort all other values here
@@ -105,7 +106,8 @@ sortkeyname_order['de']['type'] = [
     ('edited-volume', "Sammlungen (als Herausgeber)"),
     ('thesis', 'Dissertationen'),
     ('report', 'Technische Mitteilungen'),
-    ('presentation', u'Vorträge')]
+    ('presentation', u'Vorträge'),
+    ('computerProgram', 'Software')]
 
 # Basic translations
 link_translations = {}
