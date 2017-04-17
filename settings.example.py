@@ -102,13 +102,6 @@ no_cache = True  # Do not use cache; retrieve items from Zotero database every t
 write_full_html_header = True   # False to not output HTML headers.  In this case, expect a file in UTF-8 encoding.
 stylesheet_url = "style.css"  # If set and write_full_html_header is True, link to this style sheet (a URL)
 
-# If set, include "Miscellaneous" category at end containing all items from this
-# collection that were not mentioend anywhere else.
-# You can use the toplevel collection here
-catchallcollection = None # e.g., '4KATF6MA', or simply toplevelcollection
-# Title for the catch-all collection (shown at end)
-catchall_title = 'Miscellanous'
-
 outputfile = 'zotero-bib.html'  # relative or absolute path name of output file
 category_outputfile_prefix = 'zotero'  # relative or absolute path prefix
 

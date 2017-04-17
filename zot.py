@@ -502,7 +502,7 @@ def import_legacy_configuration():
             sort_reverse += [False]
 
     if catchallcollection:
-        additional_collections += [catchallcollection]
+        warn('catchallcollection setting no longer available. Ignoring.\nUse & modifier for collection name (e.g., "& Miscellaenous") and, if necessary, the new additional_collections setting.')
 
 def sort_crit_in_reversed_order(field):
     global sort_criteria
@@ -739,7 +739,7 @@ def collname(code):
     return "?"
 
 def collname_split(name):  # returns sort_prefix,modifiers,value
-    m = re.match(r'([0-9]*)([\s*\-!\^&]*)\s(.*)', name)
+    m = re.match(r'([0-9]*)([\s\*\-!\^\&]*)\s(.*)', name)
     if m:
         return m.group(1),m.group(2),m.group(3)
     return "", "", name
@@ -747,24 +747,28 @@ def collname_split(name):  # returns sort_prefix,modifiers,value
 def is_short_collection(section_code):
     "Show abbreviated entries for items in this collection"
     return is_special_collection(section_code, "*")
+
 # def is_exclusive_collection(section_code):
 #     "Show items in this collection, and do not show them in regular collections"
 #     return is_special_collection(section_code, "^")
+
 def is_featured_collection(section_code):
     """Regardless of sort_criteria, show this collection
 at the top of the bibliography"""
     return is_special_collection(section_code, "!")
+
 def is_hidden_collection(section_code):
     "Hide items in this collection."
     return is_special_collection(section_code, "-")
+
 def is_misc_collection(section_code):
     "Show only those items in this collection that are not contained elsewhere"
     return is_special_collection(section_code, "&")
+
 def is_regular_collection(s):
     "Regular collection: not featured, short, hidden or misc"
     return not (is_short_collection(s) or is_featured_collection(s)
                     or is_hidden_collection(s) or is_misc_collection(s))
-
 
 def is_special_collection(section_code, special):
     global collection_names
@@ -984,10 +988,7 @@ def init_db ():
 def get_collections ():
     global zot
     global collection_names
-    additional_collections = []
-    if catchallcollection:
-        additional_collections += [catchallcollection]
-
+    global additional_collections
     try:
         if toplevelfilter:
             colls= traverse (zot.collections_sub(toplevelfilter))
@@ -1000,10 +1001,8 @@ def get_collections ():
 
         collection_names = {key:name for key,_,name,_ in colls}
 
-        # move catchallcollection items to the end
+        # move miscellaneous collections to the end
         at_end = [e for e in colls if is_misc_collection(e[0])]
-    #           if len(at_end)>0:
-    #                at_end += [(catchallcollection, 0, catchall_title, [])]
         colls = [e for e in colls if not is_misc_collection(e[0])] + at_end
 
         return colls
@@ -1182,13 +1181,12 @@ def pull_up_featured_remove_hidden_items (all_items):
     # split up into featured and other sections
     visible_items = list(filter(lambda it: not is_hidden_collection(it.collection), all_items))
 
-    if len(visible_items)<len(all_items):
-        warning("Out of %s items, only %s will be visible due to hidden collections."%(len(all_items), len(visible_items)))
-        warning("The following collections are hidden: ", map(collname, filter(lambda c: is_hidden_collection(c), set(map(lambda it:it.collection, all_items)))))
+    # if len(visible_items)<len(all_items):
+    #     warning("Out of %s items, only %s will be visible due to hidden collections."%(len(all_items), len(visible_items)))
+    #     warning("The following collections are hidden: ", map(collname, filter(lambda c: is_hidden_collection(c), set(map(lambda it:it.collection, all_items)))))
 
     featured_items = filter(lambda it: is_featured_collection(it.collection), visible_items)
     other_items = filter(lambda it: not is_featured_collection(it.collection), visible_items)
-
     # if a hidden item is available elsewhere, transfer its category so that it
     # can be searched for using the category shortcuts.
     # E.g., "selected works" might not be shown at the top of the bibliography,
@@ -1203,7 +1201,7 @@ def pull_up_featured_remove_hidden_items (all_items):
         if id in hidden_item_categories:
             it.section_keyword += " " + hidden_item_categories[id]
 
-    return featured_items, other_items
+    return list(featured_items), list(other_items)
 
 def sort_items(all_items, sort_criteria, sort_reverse):
     # sort the items (in place)
@@ -1319,7 +1317,6 @@ def main():
     featured_items, regular_items = pull_up_featured_remove_hidden_items(all_items)
     featured_items = sort_items(featured_items, ['collection']+sort_criteria, [False]+sort_reverse)
     regular_items = sort_items(regular_items, sort_criteria, sort_reverse)
-
     # don't use chain - we will iterate over all_items several times, so
     # we need a list
     all_items = list(featured_items) + list(regular_items)

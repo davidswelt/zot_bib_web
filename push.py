@@ -56,13 +56,13 @@ server = xmlrpclib.ServerProxy(wp_url)
 
 from subprocess import call
 
-def get_bibliography (coll, catchall):
+def get_bibliography (coll):
     global infile
 
     if coll:
         infile = 'zotero-bib.html'
         # to do: why call as a sub-process when we can just import it?
-        call(["./zot.py", coll, catchall, infile, '--div'])
+        call(["./zot.py", coll, infile, '--div'])
 
     if infile:
         file = codecs.open(infile, "r", "utf-8")
@@ -82,9 +82,9 @@ if m:
     newpost = m.group(1) + m.group(2)
 
     coll = m.group(3)
-    catchall = m.group(4)
+    #  catchall = m.group(4)  (legacy)
 
-    contents = get_bibliography(coll, catchall)
+    contents = get_bibliography(coll)
     if contents:
         newpost += contents + "\n<!--zot_bib_end_of_bibliography-->"
 
@@ -111,4 +111,4 @@ if m:
             sys.exit(1)
 else:
     print "No shortcode found in post %s."%post_id
-    print " Need  <!--zot_bib_web--> or <!--zot_bib_web COLLECTIONID--> or <!--zot_bib_web COLLECTIONID CATCHALLID-->"
+    print " Need  <!--zot_bib_web--> or <!--zot_bib_web COLLECTIONID--> or <!--zot_bib_web COLLECTIONID -->"
