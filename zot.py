@@ -705,11 +705,24 @@ def write_some_html (body, outfile, title=None):
     file.close()
     print("Output written to %s."%outfile)
 
+def flexible_html_regex (r):  # To Do: request non-HTML output from Zotero instead
+    r = r.replace("&",r"(&amp;|&)")
+    r = r.replace("<",r"(&lt;|<)")
+    r = r.replace(">",r"(&gt;|>)")
+    r = r.replace(" ",r"\s+")
+    r = r.replace(u" ",ur"[\s ]+")
+    return r
+
 def tryreplacing (source, strings, repl):
     for s in strings:
         if s in source:
             repl2 = repl.replace("\\0", s)
             return source.replace(s, repl2)
+        r=flexible_html_regex(s)
+        if re.search(r, source):
+            repl2 = repl.replace("\\0", s)
+            return re.sub(r, repl2, source)
+    # print("not successful: ", source, strings)
     return source
 
 from six import string_types
