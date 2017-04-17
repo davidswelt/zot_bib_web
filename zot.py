@@ -67,6 +67,8 @@ content_filter = {'bib' : 'fix_bibtex_reference'}  # currently, only this functi
 sort_criteria = ['collection', '-year', 'type']
 show_top_section_headings = 1
 
+no_cache = True
+
 language_code = 'en'
 sortkeyname_order = {}
 # Define label for article types and their ordering
@@ -178,11 +180,11 @@ def fetch_tag (tag, default=None):
     return result
 
 def print_usage ():
-    print("""Usage:   zot.py {--div|--full|--limit|--test|--group GID|--user UID} [TOPLEVEL_COLLECTION_ID] [CATCHALL_COLLECTION_ID [OUTPUTFILE]]
+    print("""Usage:   zot.py {OPTIONS} [TOPLEVEL_COLLECTION_ID] [CATCHALL_COLLECTION_ID [OUTPUTFILE]]
 Example: ./zot.py --group 160464 DTDTV2EP
 
---settings FILE.py  load settings from FILE
-
+OPTIONS:
+--settings FILE.py   load settings from FILE
 --group GID          set a group library              [library_id; library_type='group']
 --user UID           set a user library               [library_id; library_type='user']
 --limit              sets limit to 5 for fast testing [limit=5]
@@ -190,6 +192,7 @@ Example: ./zot.py --group 160464 DTDTV2EP
 --full               output full html                 [write_full_html_header=True]
 --apikey KEY         set Zotero API key               [api_key]
 --test               implies --full and uses site/ directory
+--cache              load and update cache            [no_cache]
 
 These and additional settings can be loaded from settings.py.
 """)
@@ -219,6 +222,10 @@ if "--test" in sys.argv:
     copy_button_path = "site/clippy.svg"
     sys.argv.remove('--test')
     print("Test mode.  Forcing settings for local testing.")
+
+if "--cache" in sys.argv:
+    no_cache = False
+    sys.argv.remove('--cache')
 
 if "-i" in sys.argv:
     interactive_debugging = True
@@ -1015,15 +1022,17 @@ from datetime import datetime, timedelta
 import pickle
 def retrieve_all_items(sortedkeys):
 
-    global toplevelfilter, limit
-    try:
-        sklen, date, tlc, l, items = pickle.load(open("retrieve.cache", 'rb'))
-        if date > datetime.now()-timedelta(days=1):
-            if sklen == hash(str(sortedkeys)) and tlc==toplevelfilter and l==limit:
-                print("Using cached Zotero items (retrieve.cache).")
-                return items
-    except IOError:
-        pass
+    global toplevelfilter, limit, no_cache
+
+    if not no_cache:
+        try:
+            sklen, date, tlc, l, items = pickle.load(open("retrieve.cache", 'rb'))
+            if date > datetime.now()-timedelta(days=1):
+                if sklen == hash(str(sortedkeys)) and tlc==toplevelfilter and l==limit:
+                    print("Using cached Zotero items (retrieve.cache).")
+                    return items
+        except IOError:
+            pass
 
     all_items = []
     for key,depth,collection_name,collection_parents in sortedkeys:
@@ -1053,8 +1062,8 @@ def retrieve_all_items(sortedkeys):
         if len(i2)>0:
             all_items += i2
 
-
-    pickle.dump((hash(str(sortedkeys)), datetime.now(), toplevelfilter, limit, all_items), open("retrieve.cache", 'wb'))
+    if not no_cache:
+        pickle.dump((hash(str(sortedkeys)), datetime.now(), toplevelfilter, limit, all_items), open("retrieve.cache", 'wb'))
 
     return all_items
 

@@ -95,6 +95,9 @@ limit=None
 #### SPECIAL OPTIONS: HTML AND FILE CONFIGURATION ##############################
 # Special settings - configure only if needed.
 
+
+no_cache = True  # Do not use cache; retrieve items from Zotero database every time (slow)
+
 write_full_html_header = True   # False to not output HTML headers.  In this case, expect a file in UTF-8 encoding.
 stylesheet_url = "style.css"  # If set and write_full_html_header is True, link to this style sheet (a URL)
 
