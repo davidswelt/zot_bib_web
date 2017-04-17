@@ -800,6 +800,7 @@ def make_header_htmls(all_items):
                     allyears = set([i.access('year') for i in all_items])
                     allyears = filter(lambda y: (y>=fromyear and y<=toyear), allyears)
                     last_section_id = map(lambda y: "year__%s"%y, allyears)
+                    section_print_title = "%s&ndash;%s"%(m.group(1),m.group(2))
                 else:
                     # Currently, we're only filtering for the years, because that is were it is practically relevant
                     allyears = list(filter(lambda y: (str(y) == str(last_section_id)), [i.access(crit) for i in all_items]))
