@@ -475,11 +475,7 @@ def sortkeyname(field, value):
 
     if field == "collection":
         name = collection_names[value] # value is an ID
-        m = re.match(r'([0-9]+)[\s*\-!]*\s(.*)', name)
-        if m:
-            sort_prefix,value = m.group(1),m.group(2)
-        else:
-            sort_prefix,value = "", name
+        sort_prefix,value = collname_split(name)
 
     if field in sortkeyname_dict:
         if value in sortkeyname_dict[field]:
@@ -748,8 +744,8 @@ def is_short_collection(section_code):
     "Show abbreviated entries for items in this collection"
     return is_special_collection(section_code, "*")
 # def is_exclusive_collection(section_code):
-#     "Show item in this collection, and do not show them in regular collections"
-#     return is_special_collection(section_code, "-")
+#     "Show item in this collection, and do not show it in regular collections"
+#     return is_special_collection(section_code, "^")
 def is_featured_collection(section_code):
     """Regardless of sort_criteria, show this collection
 at the top of the bibliography"""
@@ -763,7 +759,7 @@ def is_special_collection(section_code, special):
         return any([is_special_collection(x, special) for x in section_code])
     if section_code in collection_names:  # it's a collection key
         name = collection_names[section_code] # value is an ID
-        return special in name.partition(' ')[0]
+        return special in collname_split(name)[0]
     # if it's not a section key, then it doesn't indicate a short section
     return False
 
@@ -1122,6 +1118,18 @@ def compile_data(all_items, section_code, crits, exclude={}, shorten=False):
     # write_some_html(html, category_outputfile_prefix+"-%s.html"%last_section_id)
     return html
 
+def collname(c):
+    global collection_names
+    c = last(c)
+    if c in collection_names:
+        return collection_names[c]
+    return "?"
+def collname_split(name):  # returns sort_prefix,value
+    m = re.match(r'([0-9]+)[\s*\-!]*\s(.*)', name)
+    if m:
+        return m.group(1),m.group(2)
+    return "", name
+
 def show_double_warnings ():
     global item_ids
 
@@ -1138,20 +1146,25 @@ def show_double_warnings ():
                 # This only applies to different items with the same title
                 warning("%s items sharing the same title included:"%len(itemcolls))
                 for i,c in itemcolls:
-                    warn(" %s [%s] (collection: %s)"%(itemref(i), i.key, c))
+                    warn(" %s [%s] (collection: %s)"%(itemref(i), i.key, collname(c)))
             else:
                 # if item is the same, it may still be included in several collections:
                 uniquecolls = set([c for _i,c in itemcolls])
                 if len(uniquecolls)>1:
                     # we know that every item here has the same ID (because of the previous check)
                     # itemcolls is a list
-                    warning('Item "%s" included in %s collections:\n %s'%(itemref(itemcolls[0][0]), len(uniquecolls), "\n ".join(uniquecolls)))
+                    warning('Item "%s" included in %s collections:\n %s'%(itemref(itemcolls[0][0]), len(uniquecolls), "\n ".join(map(collname, uniquecolls))))
 
 
 from collections import defaultdict
 def pull_up_featured_remove_hidden_items (all_items):
     # split up into featured and other sections
     visible_items = list(filter(lambda it: not is_hidden_collection(it.collection), all_items))
+
+    if len(visible_items)<len(all_items):
+        warning("Out of %s items, only %s will be visible due to hidden collections."%(len(all_items), len(visible_items)))
+        warning("The following collections are hidden: ", map(collname, filter(lambda c: is_hidden_collection(c), set(map(lambda it:it.collection, all_items)))))
+
     featured_items = filter(lambda it: is_featured_collection(it.collection), visible_items)
     other_items = filter(lambda it: not is_featured_collection(it.collection), visible_items)
 
@@ -1279,7 +1292,6 @@ def main():
 
     all_items = retrieve_all_items(sortedkeys)
 
-
     if 'collection' in sort_criteria:
         show_double_warnings()
         # If collection doesn't feature in sort criteria,
@@ -1296,11 +1308,18 @@ def main():
 
     headerhtmls = make_header_htmls(all_items)
 
+    itemids = set() # For statistics
+
     fullhtml = u""
     for section_code, crits, items in list(section_generator(all_items, sort_criteria)):
         # remove double entries within one section
         items = list(merge_doubles(items))
         fullhtml += compile_data(items, section_code, crits, shorten=is_short_collection(section_code))
+
+        # Keep track of IDs so we can show statistics
+        itemids.update(map(lambda i:i.key, items))
+
+    print("The bibliography contains %s entries (%s unique keys)."%(len(all_items), len(itemids)))
 
 
     headerhtml = '<div id="bib-preamble">'
