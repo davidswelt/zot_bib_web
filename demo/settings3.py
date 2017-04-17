@@ -58,7 +58,7 @@ copy_button_path = "site/clippy.svg" # path to file on server
 
 show_links = ['abstract', 'pdf', 'bib','ris']   # unconditionally show these items if they are available.
 
-show_shortcuts = ['collection', 'year', 'type']
+show_shortcuts = ['collection', ('year', [2019,2018,2017,2016,2015,2014,'2010-2013','2000-2009','-1999']), 'type']
 
 stylesheet_url = "style3.css"
 

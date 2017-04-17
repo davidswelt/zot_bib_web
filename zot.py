@@ -789,6 +789,7 @@ def make_header_htmls(all_items):
         html = ""
         for _,section_print_title,section_code in l:
             last_section_id=last(section_code) if crit=="collection" else str(section_code)  # if collection, get its ID
+            allyears = True # keep by default
             if crit == 'year':
                 # Allow for range specification in years
                 # We will search for all appropriate years using the JS search function.
@@ -797,13 +798,22 @@ def make_header_htmls(all_items):
                     fromyear = m.group(1) or 0
                     toyear = m.group(2) or 3000
                     allyears = set([i.access('year') for i in all_items])
-                    last_section_id = map(lambda y: "year__%s"%y, filter(lambda y: (y>=fromyear and y<=toyear), allyears))
+                    allyears = filter(lambda y: (y>=fromyear and y<=toyear), allyears)
+                    last_section_id = map(lambda y: "year__%s"%y, allyears)
                 else:
+                    # Currently, we're only filtering for the years, because that is were it is practically relevant
+                    allyears = list(filter(lambda y: (str(y) == str(last_section_id)), [i.access(crit) for i in all_items]))
                     last_section_id = 'year__'+last_section_id
+
             if crit == 'type':
+                allyears = list(filter(lambda y: (str(y) == str(last_section_id)), [i.access(crit) for i in all_items]))
                 last_section_id = 'type__'+last_section_id
-            # collection does not need to be marked
-            html += "   <li class='link'><a style='white-space: nowrap;' href='#' onclick='searchF([%s],\"%s\",1);return false;'>%s</a></li>\n"%(js_strings(last_section_id), section_print_title,section_print_title)
+
+            if not allyears:  # empty result set (no items for this search, if type or year search)
+                print("Warning: %s %s not found, but mentioned in shortcuts. Skipping."%(crit,last_section_id))
+            else:
+                # collection does not need to be marked
+                html += "   <li class='link'><a style='white-space: nowrap;' href='#' onclick='searchF([%s],\"%s\",1);return false;'>%s</a></li>\n"%(js_strings(last_section_id), section_print_title,section_print_title)
         headerhtmls += [html]
 
     return headerhtmls

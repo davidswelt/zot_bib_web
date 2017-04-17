@@ -103,7 +103,7 @@ function searchF(searchTerms, shown, disjunctive) {
   var i=document.pubSearchBox.keyword.value;
   searchTerms = searchTerms || (i!=""&&i.split(" "));
   shown = shown || searchTerms;
-  jQuery( ".bib-item").css( "display", "none" );
+  jQuery(".bib-item").css("display", "none");
   var q = ".bib-item";
   if (disjunctive)
   { for (x in searchTerms) {jQuery(".bib-item:icontains('"+searchTerms[x]+"')").css("display", "block");}
@@ -112,6 +112,11 @@ function searchF(searchTerms, shown, disjunctive) {
   { jQuery.each(searchTerms, function(i,x) {q = q + ":icontains('"+x+"')";});
     jQuery(q).css("display", "block");}
   jQuery("#searchTermSectionTitle").html(searchTerms.length>0?"<a href='#' onclick='searchF([]);'>&#x2715;</a> "+shown:"");
+  jQuery(".collectiontitle").parent(".full-bib-section,.short-bib-section").css("display", "block");
+  jQuery(".collectiontitle").parent(".full-bib-section,.short-bib-section").each(function(){
+    var y = jQuery(this).find(".bib-item:visible");
+    if (y.length==0) {jQuery(this).css("display","none");}
+  });
 }
   jQuery(function() {    // <== Doc ready
   // stackoverflow q 3971524
