@@ -61,9 +61,3 @@ show_links = ['abstract', 'pdf', 'bib','ris']   # unconditionally show these ite
 show_shortcuts = ['collection', ('year', [2019,2018,2017,2016,2015,2014,'2010-2013','2000-2009','-1999']), 'type']
 
 stylesheet_url = "style3.css"
-
-
-
-no_cache = False  # speed up generation.  Warning - zot_bib_web may fail to pick up changes (for one day).
-
-

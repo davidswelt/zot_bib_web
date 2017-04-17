@@ -65,5 +65,3 @@ show_shortcuts += [('year', [2017,2016,2015,2014,2013,"2008-2012","2005-2008","-
 
 
 stylesheet_url = "style2.css"
-
-no_cache = False  # speed up generation.  Warning - zot_bib_web may fail to pick up changes (for one day).

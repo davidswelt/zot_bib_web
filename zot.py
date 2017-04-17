@@ -67,7 +67,7 @@ content_filter = {'bib' : 'fix_bibtex_reference'}  # currently, only this functi
 sort_criteria = ['collection', '-year', 'type']
 show_top_section_headings = 1
 
-no_cache = True
+no_cache = False
 
 language_code = 'en'
 sortkeyname_order = {}
@@ -192,7 +192,7 @@ OPTIONS:
 --full               output full html                 [write_full_html_header=True]
 --apikey KEY         set Zotero API key               [api_key]
 --test               implies --full and uses site/ directory
---cache              load and update cache            [no_cache]
+--nocache            do not load nor update cache     [no_cache]
 
 These and additional settings can be loaded from settings.py.
 """)
@@ -223,8 +223,8 @@ if "--test" in sys.argv:
     sys.argv.remove('--test')
     print("Test mode.  Forcing settings for local testing.")
 
-if "--cache" in sys.argv:
-    no_cache = False
+if "--nocache" in sys.argv:
+    no_cache = True
     sys.argv.remove('--cache')
 
 if "-i" in sys.argv:
@@ -1024,14 +1024,16 @@ def retrieve_all_items(sortedkeys):
 
     global toplevelfilter, limit, no_cache
 
+    lastmod = zot.last_modified_version()
+
     if not no_cache:
         try:
-            sklen, date, tlc, l, items = pickle.load(open("retrieve.cache", 'rb'))
-            if date > datetime.now()-timedelta(days=1):
-                if sklen == hash(str(sortedkeys)) and tlc==toplevelfilter and l==limit:
+            sklen, date, tlc, l, lm, items = pickle.load(open("retrieve.cache", 'rb'))
+            if date > datetime.now()-timedelta(days=7):  # cache expires after 7 days
+                if lastmod == lm and sklen == hash(str(sortedkeys)) and tlc==toplevelfilter and l==limit:
                     print("Using cached Zotero items (retrieve.cache).")
                     return items
-        except IOError:
+        except (IOError, ValueError, pickle.PicklingError):
             pass
 
     all_items = []
@@ -1063,7 +1065,7 @@ def retrieve_all_items(sortedkeys):
             all_items += i2
 
     if not no_cache:
-        pickle.dump((hash(str(sortedkeys)), datetime.now(), toplevelfilter, limit, all_items), open("retrieve.cache", 'wb'))
+        pickle.dump((hash(str(sortedkeys)), datetime.now(), toplevelfilter, limit, lastmod, all_items), open("retrieve.cache", 'wb'))
 
     return all_items
 
