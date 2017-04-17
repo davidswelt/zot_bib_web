@@ -20,8 +20,7 @@ from __future__ import print_function
 
 # zot.py
 # zot.py TOPLEVELFILTER
-# zot.py TOPLEVELFILTER CATCHALLCOLLECTION
-# zot.py TOPLEVELFILTER CATCHALLCOLLECTION OUTPUTFILE
+# zot.py TOPLEVELFILTER OUTPUTFILE
 
 #############################################################################
 
@@ -44,9 +43,8 @@ library_type ='group'
 api_key = None
 toplevelfilter = None
 limit=None   # None, or set a limit (integer<100) for each collection for debugging
-catchallcollection = None
+additional_collections = []
 titlestring = 'Bibliography'
-catchall_title = 'Miscellanous'
 bib_style =  'apa'
 write_full_html_header = True
 stylesheet_url = "site/style.css"
@@ -119,6 +117,7 @@ order_by = None   # order in each category: e.g., 'dateAdded', 'dateModified', '
 # Note: this does not seem to work with current the Zotero API.
 # If set, overrides sort_criteria
 sort_order = 'desc'   # "desc" or "asc"
+catchallcollection = None
 
 
 #############################################################################
@@ -182,7 +181,7 @@ def fetch_tag (tag, default=None):
     return result
 
 def print_usage ():
-    print("""Usage:   zot.py {OPTIONS} [TOPLEVEL_COLLECTION_ID] [CATCHALL_COLLECTION_ID [OUTPUTFILE]]
+    print("""Usage:   zot.py {OPTIONS} [TOPLEVEL_COLLECTION_ID] [OUTPUTFILE]
 Example: ./zot.py --group 160464 DTDTV2EP
 
 OPTIONS:
@@ -249,15 +248,13 @@ if x:
     library_id = x
     library_type = 'user'
     # When a different user library is set, we expect new collections
-    toplevelcollection=None
-    catchallcollection=None
+    toplevelfilter=None
 
 x = fetch_tag ("--group")
 if x:
     library_id = x
     library_type = 'group'
-    toplevelcollection=None
-    catchallcollection=None
+    toplevelfilter=None
 
 api_key = fetch_tag ("--apikey", api_key)
 
@@ -265,11 +262,8 @@ if len(sys.argv)>1:
     if not sys.argv[1] == "None":
         toplevelfilter = sys.argv[1]
 if len(sys.argv)>2:
-    if not sys.argv[2] == "None":
-        catchallcollection =sys.argv[2]
-if len(sys.argv)>3:
     if not sys.argv[3] == "None":
-        outputfile =sys.argv[3]
+        outputfile =sys.argv[2]
 
 ###########
 
@@ -475,7 +469,7 @@ def sortkeyname(field, value):
 
     if field == "collection":
         name = collection_names[value] # value is an ID
-        sort_prefix,value = collname_split(name)
+        sort_prefix,_,value = collname_split(name)
 
     if field in sortkeyname_dict:
         if value in sortkeyname_dict[field]:
@@ -490,6 +484,9 @@ def import_legacy_configuration():
     global order_by
     global sort_criteria
     global sort_reverse
+    global additional_collections
+    global catchallcollection
+    
     if order_by:  # set by user (legacy setting)
         sort_critera = ['collection', order_by]
     else:
@@ -503,6 +500,9 @@ def import_legacy_configuration():
             sort_reverse += [True]
         else:
             sort_reverse += [False]
+
+    if catchallcollection:
+        additional_collections += [catchallcollection]
 
 def sort_crit_in_reversed_order(field):
     global sort_criteria
@@ -585,7 +585,6 @@ class ZotItem:
 
 def retrieve_data(collection_id, exclude=None):
 
-    global item_ids
 
     def check_show(s):
         global show_links
@@ -622,14 +621,6 @@ def retrieve_data(collection_id, exclude=None):
         w = cfilter(a, 'wikipedia', retrieve_wikipedia(collection_id))
     else:
         w = [None for _x in h]
-
-    for i in a:
-        # we store by key (ID) and also by title hash
-        for key in [i.key, hash(i.title.lower())]:
-            if key not in item_ids:
-                item_ids[key] = []
-            # if not shorten:
-            item_ids[key] += [(i, collection_id)]
 
     for bi,hi,ri,ci,wi,ai in zip(b,h,r,c,w,a):
 
@@ -740,11 +731,24 @@ def coll_name(c):
     return coll_data(c)[u'name']
 
 
+def collname(code):
+    global collection_names
+    c = last(code)
+    if c in collection_names:
+        return collection_names[c]
+    return "?"
+
+def collname_split(name):  # returns sort_prefix,modifiers,value
+    m = re.match(r'([0-9]*)([\s*\-!\^&]*)\s(.*)', name)
+    if m:
+        return m.group(1),m.group(2),m.group(3)
+    return "", "", name
+
 def is_short_collection(section_code):
     "Show abbreviated entries for items in this collection"
     return is_special_collection(section_code, "*")
 # def is_exclusive_collection(section_code):
-#     "Show item in this collection, and do not show it in regular collections"
+#     "Show items in this collection, and do not show them in regular collections"
 #     return is_special_collection(section_code, "^")
 def is_featured_collection(section_code):
     """Regardless of sort_criteria, show this collection
@@ -753,13 +757,22 @@ at the top of the bibliography"""
 def is_hidden_collection(section_code):
     "Hide items in this collection."
     return is_special_collection(section_code, "-")
+def is_misc_collection(section_code):
+    "Show only those items in this collection that are not contained elsewhere"
+    return is_special_collection(section_code, "&")
+def is_regular_collection(s):
+    "Regular collection: not featured, short, hidden or misc"
+    return not (is_short_collection(s) or is_featured_collection(s)
+                    or is_hidden_collection(s) or is_misc_collection(s))
+
 
 def is_special_collection(section_code, special):
+    global collection_names
     if not is_string(section_code):
         return any([is_special_collection(x, special) for x in section_code])
     if section_code in collection_names:  # it's a collection key
         name = collection_names[section_code] # value is an ID
-        return special in collname_split(name)[0]
+        return special in collname_split(name)[1]
     # if it's not a section key, then it doesn't indicate a short section
     return False
 
@@ -970,23 +983,30 @@ def init_db ():
 
 def get_collections ():
     global zot
-    global catchallcollection
+    global collection_names
+    additional_collections = []
+    if catchallcollection:
+        additional_collections += [catchallcollection]
+
     try:
         if toplevelfilter:
-            items= traverse (zot.collections_sub(toplevelfilter))
+            colls= traverse (zot.collections_sub(toplevelfilter))
         else:
             print("Fetching all collections:")
-            items= traverse (zot.collections())
+            colls= traverse (zot.collections())
 
-        if catchallcollection:
-            # move catchallcollection to the end
-            at_end = [e for e in items if e[0]==catchallcollection]
-            if len(at_end)==0:
-                at_end += [(catchallcollection, 0, catchall_title, [])]
-            items = [e for e in items if e[0]!=catchallcollection] + at_end
+        cacoll = [zot.collection(c) for c in additional_collections]
+        colls += traverse(cacoll)
 
-        return items
+        collection_names = {key:name for key,_,name,_ in colls}
 
+        # move catchallcollection items to the end
+        at_end = [e for e in colls if is_misc_collection(e[0])]
+    #           if len(at_end)>0:
+    #                at_end += [(catchallcollection, 0, catchall_title, [])]
+        colls = [e for e in colls if not is_misc_collection(e[0])] + at_end
+
+        return colls
 
     except zotero_errors.UserNotAuthorised:
         print("UserNotAuthorised: Set correct Zotero API key in settings.py and allow access.", file=sys.stderr)
@@ -997,17 +1017,16 @@ def traverse(agenda, depth=0, parents=[]):
     result = []
     # sort agenda by name
     for collitem in sorted(agenda, key=coll_name):
-        c = zot.collections_sub(coll_key(collitem))
-        result += [(coll_key(collitem), depth, coll_data(collitem)[u'name'], parents)]
-        result += traverse(c, depth+1, parents+[coll_key(collitem)])
+        key = coll_key(collitem)
+        name = coll_data(collitem)[u'name']
+        c = zot.collections_sub(key)
+        result += [(key, depth, name, parents)]
+        result += traverse(c, depth+1, parents+[key])
     return result
 
 
-
 def filter_items(quaditems, exclude):
-    def fil(a):
-        return not (a.key in item_ids)
-    return filter(fil, quaditems)
+    return filter(lambda a: not (a.key in exclude), quaditems)
 
 def merge_doubles(items):
     iids = {}
@@ -1034,6 +1053,7 @@ import pickle
 def retrieve_all_items(sortedkeys):
 
     global toplevelfilter, limit, no_cache
+    global item_ids
 
     lastmod = zot.last_modified_version()
 
@@ -1053,12 +1073,24 @@ def retrieve_all_items(sortedkeys):
         print(" "+" "*len(collection_parents) + collection_name + "...")
 
         i2 = retrieve_data(key)
-        if key == catchallcollection:  # Miscellaneous
+        if is_misc_collection(key):  # Miscellaneous type collection
             # This has everything that isn't mentioned above
             # so we'll filter what's in item_ids
-            i2 = filter_items(i2, item_ids)
+            # print("Miscellaneous collection: %s items initially"%len(i2))
+            i2 = list(filter_items(i2, item_ids))
+            # print("Miscellaneous collection: %s items left"%len(i2))
 
         i2 = list(i2)
+        
+        # add to item_ids
+        for i in i2:
+            if is_regular_collection(key):
+                # we store by key (ID) and also by title hash
+                for k in [i.key, hash(i.title.lower())]:
+                    if k not in item_ids:
+                        item_ids[k] = []
+                    item_ids[k] += [(i, key)]  # tuple is item and collectionkey
+
         # add IDs to the list with the collection name
         #### collect_ids(i2, collection_name, item_ids)
 
@@ -1070,7 +1102,7 @@ def retrieve_all_items(sortedkeys):
 
         # if sort_criteria[0] != 'collection':
         for atuple in i2:
-            atuple.section_keyword = " ".join(collection_parents + [key]) # will be added HTML so the entry can be found
+            atuple.section_keyword = " ".join(parent_path) # will be added HTML so the entry can be found
 
         if len(i2)>0:
             all_items += i2
@@ -1118,18 +1150,6 @@ def compile_data(all_items, section_code, crits, exclude={}, shorten=False):
     # write_some_html(html, category_outputfile_prefix+"-%s.html"%last_section_id)
     return html
 
-def collname(c):
-    global collection_names
-    c = last(c)
-    if c in collection_names:
-        return collection_names[c]
-    return "?"
-def collname_split(name):  # returns sort_prefix,value
-    m = re.match(r'([0-9]+)[\s*\-!]*\s(.*)', name)
-    if m:
-        return m.group(1),m.group(2)
-    return "", name
-
 def show_double_warnings ():
     global item_ids
 
@@ -1150,10 +1170,11 @@ def show_double_warnings ():
             else:
                 # if item is the same, it may still be included in several collections:
                 uniquecolls = set([c for _i,c in itemcolls])
-                if len(uniquecolls)>1:
+                uniquecolls = filter (is_regular_collection, list(uniquecolls))
+                if len(list(uniquecolls))>1:
                     # we know that every item here has the same ID (because of the previous check)
                     # itemcolls is a list
-                    warning('Item "%s" included in %s collections:\n %s'%(itemref(itemcolls[0][0]), len(uniquecolls), "\n ".join(map(collname, uniquecolls))))
+                    warning('Item "%s" included in %s collections:\n %s'%(itemref(itemcolls[0][0]), len(uniquecolls), ", ".join(map(collname, uniquecolls))))
 
 
 from collections import defaultdict
@@ -1273,15 +1294,11 @@ def section_generator (items, crits):
 def main():
 
     global item_ids
-    global catchallcollection
-    global collection_names
 
     import_legacy_configuration()
     index_configuration()
 
     sortedkeys = get_collections()
-    item_ids = {}
-    collection_names = {key:name for key,_,name,_ in sortedkeys}
     fullhtml = ""
 
     if limit:
@@ -1289,6 +1306,7 @@ def main():
 
     all_items = []
     section_items = []
+    item_ids = {}
 
     all_items = retrieve_all_items(sortedkeys)
 

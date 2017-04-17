@@ -129,12 +129,18 @@ conference titles can be kept short.  Specify the "journal abbr or
 want to copy bibliographic items from other parts of the bibliography
 into this sub-collection.
 
-"!"  Extract this sub-collection and show at the beginning of the
+"!"  Feature this:  Extract this sub-collection and show at the beginning of the
 bibliography, regardless of whether the rest of the bibliography is
 sorted by, e.g., year, and ignores the collections otherwise. In the
 collection shown below, it prevents "in review" articles to show up as
 regular journal articles (which might give the impression you're
 taking credit for not-yet-reviewed/published material!)
+
+"&"  Show the items in this collection, but exclude those items that
+are already included in another regular collection.  A regular
+collection is one that is not hidden, not short, and not featured.
+This is usefull to add a "Miscellaneous" category at the end for
+additional items without duplicating anything.
 
 Here's an example of a bibliography structure:
 
@@ -149,7 +155,7 @@ Here's an example of a bibliography structure:
 		30 Theses
 		40 Talks (Without Paper)
 
-To see this, set toplevelfilter and catchallcollection to MGID90AT in settings.py.
+To see this, use the provided settings.py as an example.
 
 
 

@@ -18,6 +18,14 @@ zot_bib_web 3.0.0
 - Added several worked examples with output in the demo folder.
   Run make-demo.sh to generate them.
 
+- Program arguments have changed.  Catchallcollection is no longer
+available.  Specify a "catch-all collection" via the & modifier
+directly in the name of the respective collection, e.g. "9999&
+Miscellaneous"  (9999 if sorting at the end is desired).
+
+- Additional settings have become available.  See settings.example.py.
+
+
 
 
 zot_bib_web 2.0.0

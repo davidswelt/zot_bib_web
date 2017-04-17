@@ -60,6 +60,7 @@ api_key = None  # secret key (from Zotero)
 # otherwise, all collections available will be displayed.
 toplevelfilter = None # e.g., 'MGID93AS'
 
+additional_collections = []  # additional collections to be added from outside of the toplevelfilter
 
 #### SPECIAL OPTIONS: STYLE ####################################################
 # Special settings - configure only if needed.
