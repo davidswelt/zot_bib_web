@@ -391,7 +391,7 @@ if show_search_box or show_shortcuts:
     if jquery_path:
         search_box = ''
         if show_search_box:
-            search_box += '<form id="pubSearchBox" name="pubSearchBox"><input id="pubSearchInputBox" type="text" name="keyword">&nbsp;<input id="pubSearchButton" type="button" value="Search" onClick="searchFunction()"></form><h2 id="searchTermSectionTitle" class="collectiontitle"></h2>'
+            search_box += '<form id="pubSearchBox" name="pubSearchBox"><input id="pubSearchInputBox" type="text" name="keyword">&nbsp;<input id="pubSearchButton" type="button" value="Search" onClick="searchF()"></form><h2 id="searchTermSectionTitle" class="collectiontitle"></h2>'
 
         if show_search_box or show_shortcuts:
             search_box += """<script type="text/javascript">
@@ -402,22 +402,26 @@ if show_search_box or show_shortcuts:
     var kw = getURLParameter("keyword");
     if (kw) {
         jQuery('#pubSearchInputBox').val(kw);
-        searchFunction([kw]);
+        searchF([kw]);
     }
   });
   jQuery.expr[":"].icontains = jQuery.expr.createPseudo(function(arg) {
     return function( elem ) {
         return jQuery(elem).text().toUpperCase().indexOf(arg.toUpperCase()) >= 0;
     };});
-function searchFunction(searchTerms, shown) {
+function searchF(searchTerms, shown, disjunctive) {
   var i=document.pubSearchBox.keyword.value;
   searchTerms = searchTerms || (i!=""&&i.split(" "));
   shown = shown || searchTerms;
   jQuery( ".bib-item").css( "display", "none" );
   var q = ".bib-item";
-  jQuery.each(searchTerms, function(i,x) {q = q + ":icontains('"+x+"')";});
-  jQuery(q).css("display", "block");
-  jQuery("#searchTermSectionTitle").html(searchTerms.length>0?"<a href='#' onclick='searchFunction([]);'>&#x2715;</a> "+shown:"");
+  if (disjunctive)
+  { for (x in searchTerms) {jQuery(".bib-item:icontains('"+searchTerms[x]+"')").css("display", "block");}
+  }
+  else
+  { jQuery.each(searchTerms, function(i,x) {q = q + ":icontains('"+x+"')";});
+    jQuery(q).css("display", "block");}
+  jQuery("#searchTermSectionTitle").html(searchTerms.length>0?"<a href='#' onclick='searchF([]);'>&#x2715;</a> "+shown:"");
 }
   jQuery(function() {    // <== Doc ready
   // stackoverflow q 3971524
@@ -429,7 +433,7 @@ function searchFunction(searchTerms, shown) {
             // check for change of the text field after each key up
             timer = setTimeout(function() {
                 if(self.value != inputVal) {
-                    searchFunction();
+                    searchF();
                     inputVal = self.value
                 }
             }, 250);
@@ -446,7 +450,7 @@ def sortkeyname(field, value):
 
     sort_prefix = ""
 
-    if not is_string(value):
+    if not is_string(value):  #isinstance(value, list):
         # it's a path of something
         # sorting by all the numbers (if available).
         # e.g., 10.13, and displaying the last entry
@@ -752,6 +756,10 @@ def last(string_or_list):
         return string_or_list[-1]
     return string_or_list
 
+def js_strings(string_or_list):
+    if is_string(string_or_list):
+        return '"%s"'%string_or_list
+    return ",".join(map(js_strings, string_or_list))
 
 
 def make_header_htmls(all_items):
@@ -760,20 +768,38 @@ def make_header_htmls(all_items):
     # ordering:
     # sort collections as they are normally sorted (sortkeyname)
 
-    headerhtmls = {'collection':u"", 'year':u"", 'type':u""}
-    for crit in show_shortcuts:
+    headerhtmls = [] # {'collection':u"", 'year':u"", 'type':u""}
+    for complex_crit in show_shortcuts:
+        vals = None
+        crit = complex_crit
         if crit == 'date':
             crit = 'year'
-        l = [sortkeyname(crit, value) + (value,) for value in set([i.access(crit) for i in all_items])]
+        if isinstance(crit, tuple):  # e.g., ('type', [v1,v2,v3])
+            crit, vals = crit
+            l = [(sortkeyname(crit, str(value))[0], str(value), value) for value in vals]
+        else:
+            l = [sortkeyname(crit, value) + (value,) for value in (vals or set([i.access(crit) for i in all_items]))]
         l.sort(key=lambda x: x[0], reverse=sort_crit_in_reversed_order(crit))
+
+        html = ""
         for _,section_print_title,section_code in l:
-            last_section_id=last(section_code)  # if collection, get its ID
+            last_section_id=last(section_code) if crit=="collection" else str(section_code)  # if collection, get its ID
             if crit == 'year':
-                last_section_id = 'year__'+last_section_id
+                # Allow for range specification in years
+                # We will search for all appropriate years using the JS search function.
+                m = re.match(r'([0-9]*)-([0-9]*)', last_section_id)
+                if m and (m.group(1) or m.group(2)):
+                    fromyear = m.group(1) or 0
+                    toyear = m.group(2) or 3000
+                    allyears = set([i.access('year') for i in all_items])
+                    last_section_id = map(lambda y: "year__%s"%y, filter(lambda y: (y>=fromyear and y<=toyear), allyears))
+                else:
+                    last_section_id = 'year__'+last_section_id
             if crit == 'type':
                 last_section_id = 'type__'+last_section_id
             # collection does not need to be marked
-            headerhtmls[crit] += "   <li class='link'><a style='white-space: nowrap;' href='#' onclick='searchFunction([\"%s\"],\"%s\");return false;'>%s</a></li>\n"%(last_section_id, section_print_title,section_print_title)
+            html += "   <li class='link'><a style='white-space: nowrap;' href='#' onclick='searchF([%s],\"%s\",1);return false;'>%s</a></li>\n"%(js_strings(last_section_id), section_print_title,section_print_title)
+        headerhtmls += [html]
 
     return headerhtmls
 
@@ -834,6 +860,7 @@ def make_html (all_items, exclude={}, shorten=False):
                 else:
                     htmlitem = tryreplacing(htmlitem, t_to_replace, u"<span class=\"doctitle\">%s</span>"%("\\0"))
 
+                # Insert searchable keywords (not displayed)
                 search_tags = ''
                 if item.section_keyword:
                     search_tags += item.section_keyword  # no special tag for collections
@@ -1235,8 +1262,10 @@ def main():
 
 
     headerhtml = '<div id="bib-preamble">'
-    for t in show_shortcuts:
-        headerhtml += '<ul id="bib-cat-%s" class="bib-cat">'%t + headerhtmls[t] + "</ul>"
+    for crit,h in zip(show_shortcuts, headerhtmls):
+        if isinstance(crit,tuple):
+            crit = crit[0]
+        headerhtml += '<ul id="bib-cat-%s" class="bib-cat">'%crit + h + "</ul>"
     headerhtml += search_box + "</div>" #preamble
 
     write_some_html(headerhtml+fullhtml, outputfile)

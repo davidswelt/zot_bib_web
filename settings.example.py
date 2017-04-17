@@ -114,7 +114,12 @@ jquery_path = "site/jquery.min.js"  # path to jquery file on the server
 
 # Show categories at the top of the bibliography for quick filtering
 # 'collection', 'type', 'year' are supported
-show_shortcuts = ['collection', 'year']
+show_shortcuts = ['collection']
+# To add specific rather than all available values for a field, use a tuple as follows.
+# Note that for year, we support ranges. 
+show_shortcuts += [('year', [2017,2016,2015,2014,2013,"2008-2012","2005-2008","-2004"])]
+# To add arbitrary search terms:
+show_shortcuts += [('keyword', ["model", "language", "entropy"])]  # define some search terms
 
 number_bib_items = False  # show bibliographic items as numbered, ordered list
 show_copy_button = True  # show clipbaord copy button.  Must define jquery_path.

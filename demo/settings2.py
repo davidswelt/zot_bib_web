@@ -58,7 +58,11 @@ copy_button_path = "site/clippy.svg" # path to file on server
 
 show_links = ['abstract', 'pdf', 'bib','ris']   # unconditionally show these items if they are available.
 
-show_shortcuts = ['collection', 'year', 'type']
+show_shortcuts = ['collection', 'type']
+# To add specific rather than all available values for a field, use a tuple as follows.
+# Note that for year, we support ranges. 
+show_shortcuts += [('year', [2017,2016,2015,2014,2013,"2008-2012","2005-2008","-2004"])]
+
 
 stylesheet_url = "style2.css"
 
