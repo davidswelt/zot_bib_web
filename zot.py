@@ -394,7 +394,7 @@ if show_search_box or show_shortcuts:
     if jquery_path:
         search_box = ''
         if show_search_box:
-            search_box += '<form id="pubSearchBox" name="pubSearchBox"><input id="pubSearchInputBox" type="text" name="keyword">&nbsp;<input id="pubSearchButton" type="button" value="Search" onClick="searchF()"></form><h2 id="searchTermSectionTitle" class="collectiontitle"></h2>'
+            search_box += '<form id="pubSearchBox" name="pubSearchBox" style="visibility:hidden;"><input id="pubSearchInputBox" type="text" name="keyword" placeholder="keywords">&nbsp;<input id="pubSearchButton" type="button" value="Search" onClick="searchF()"></form><h2 id="searchTermSectionTitle" class="collectiontitle"></h2>'
 
         if show_search_box or show_shortcuts:
             search_box += """<script type="text/javascript">
@@ -402,6 +402,7 @@ if show_search_box or show_shortcuts:
     return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null;
   }
   jQuery( document ).ready(function() {
+    jQuery('#pubSearchBox').css("visibility","visible");
     var kw = getURLParameter("keyword");
     if (kw) {
         jQuery('#pubSearchInputBox').val(kw);
