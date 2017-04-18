@@ -1069,7 +1069,7 @@ def retrieve_all_items(sortedkeys):
     all_items = []
     for key,depth,collection_name,collection_parents in sortedkeys:
         c = 0
-        print(" "+" "*len(collection_parents) + collection_name + "...")
+        print(" "+" "*len(collection_parents) + collection_name + "...", end="")
 
         i2 = retrieve_data(key)
         if is_misc_collection(key):  # Miscellaneous type collection
@@ -1096,12 +1096,9 @@ def retrieve_all_items(sortedkeys):
         print("%s Items."%len(list(i2)))
 
         parent_path = tuple(collection_parents + [key])
-        for atuple in i2:  # for sorting by collection
-            atuple.collection = parent_path
-
-        # if sort_criteria[0] != 'collection':
-        for atuple in i2:
-            atuple.section_keyword = " ".join(parent_path) # will be added HTML so the entry can be found
+        for item in i2:  # for sorting by collection
+            item.collection = parent_path
+            item.section_keyword = " ".join(parent_path) # will be added HTML so the entry can be found
 
         if len(i2)>0:
             all_items += i2
@@ -1131,7 +1128,6 @@ def compile_data(all_items, section_code, crits, exclude={}, shorten=False):
         section_code=['A']
         print(all_items)
         raise RuntimeException("compile_data called with empty section_code")
-
 
     if last_section_id:
 
