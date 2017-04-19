@@ -850,7 +850,7 @@ def make_header_htmls(all_items):
                 print("Warning: %s %s not found, but mentioned in shortcuts. Skipping."%(crit,last_section_id))
             else:
                 # collection does not need to be marked
-                html += "   <li class='link'><a style='white-space: nowrap;' href='#' onclick='searchF([%s],\"%s\",1);return false;'>%s</a></li>\n"%(js_strings(last_section_id), section_print_title,section_print_title)
+                html += "<li class='link'><a style='white-space: nowrap;' href='#' onclick='searchF([%s],\"%s\",1);return false;'>%s</a></li>\n"%(js_strings(last_section_id), section_print_title,section_print_title)
         headerhtmls += [html]
 
     return headerhtmls
