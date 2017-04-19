@@ -402,7 +402,7 @@ if show_search_box or show_shortcuts:
     return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null;
   }
   jQuery( document ).ready(function() {
-    jQuery('#pubSearchBox').css("visibility","visible");
+    jQuery('#pubSearchBox,#bib-preamble').css("visibility","visible");
     var kw = getURLParameter("keyword");
     if (kw) {
         jQuery('#pubSearchInputBox').val(kw);
@@ -1334,7 +1334,7 @@ def main():
     print("The bibliography contains %s entries (%s unique keys)."%(len(all_items), len(itemids)))
 
 
-    headerhtml = '<div id="bib-preamble">'
+    headerhtml = '<div id="bib-preamble" style="visibility:hidden;">'
     for crit,h in zip(show_shortcuts, headerhtmls):
         if isinstance(crit,tuple):
             crit = crit[0]
