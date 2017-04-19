@@ -1,0 +1,181 @@
+#pubSearchButton {
+	border: 0 solid #d4d0ba;
+	font-family: inherit;
+	padding: 0;
+}
+#pubSearchBox {
+ position:absolute; 
+ right:10px; top:100px;
+ display:block;
+}
+
+.bib-cat {
+  list-style: none;
+  text-indent: 0;
+  margin: 0; padding: 0; 
+  margin-right: 300px;
+}
+
+.bib-cat li {
+  display: inline;
+}
+.bib-cat li:after {
+  content: " | ";
+}
+.bib-cat li:last-child:after {
+    content: ""
+}
+
+#bib-preamble {
+    margin-left:50px;
+}
+
+#bib-cat-year:before, #bib-cat-type:before, #bib-cat-collection:before {
+    /* font-weight: bold; */
+    font-style: italic;
+    display:inline-block;
+    margin-left: -50px;
+    width: 50px;
+    padding: 0;
+    margin-right:0px;
+}
+#bib-cat-year:before {
+    content: "Year";
+}
+#bib-cat-type:before {
+    content: "Type";
+}
+#bib-cat-collection:before {
+    content: "Topic";
+}
+#bib-cat-keyword:before {
+    content: "Keywords";
+}
+
+#bib-cat-type {
+    font-style:italic;
+}
+
+/* The entire bibliographic item */
+div.bib-item {
+font-family:Arial,sans-serif;
+font-size:80%;
+margin-top:20px;
+}
+
+/* The actual BibTeX record (when visible) */
+div.bib {
+font-family:Menlo,Courier,monospaced;
+color:brown;
+padding-left:30px;
+padding-bottom:10px;
+}
+
+/* Text "bib" or "abstract" */
+.blink a {
+font-variant: small-caps;
+xxxdisplay:inline-block;
+clear: both;
+padding:0;
+margin:0;
+margin-bottom:-30px;
+}
+
+/* The actual abstract (when visible) */
+div.abstract {
+color:black;
+padding-left:30px;
+padding-bottom:10px;
+}
+
+/* Document titles */
+.doctitle {
+font-weight:700;
+}
+
+/* Document titles linking to a PDF or somewhere else */
+a.doctitle:link,a.doctitle:visited,a.doctitle,a.doctitle:hover,a.doctitle.active {
+color:blue;
+font-weight:700;
+}
+
+
+
+body {
+	color: #141412;
+	line-height: 1.5;
+	margin: 20px;
+}
+
+a {
+	color: #ca3c08;
+	text-decoration: none;
+}
+
+a:visited {
+	color: #ac0404;
+}
+
+a:focus {
+	outline: thin dotted;
+}
+
+a:active,
+a:hover {
+	color: #ea9629;
+	outline: 0;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	clear: both;
+	font-family: Bitter, Georgia, serif;
+	line-height: 1.3;
+}
+
+h1 {
+	font-size: 48px;
+	margin: 33px 0;
+}
+
+h2 {
+	font-size: 30px;
+	margin: 25px 0;
+}
+
+h3 {
+	font-size: 22px;
+	margin: 22px 0;
+}
+
+h4 {
+	font-size: 20px;
+	margin: 25px 0;
+}
+
+h5 {
+	font-size: 18px;
+	margin: 30px 0;
+}
+
+h6 {
+	font-size: 16px;
+	margin: 36px 0;
+}
+
+
+html,
+button,
+input,
+select,
+textarea {
+	font-family: "Source Sans Pro", Helvetica, sans-serif;
+}
