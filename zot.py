@@ -58,7 +58,8 @@ clipboard_js_path = "site/clipboard.min.js"
 copy_button_path = "site/clippy.svg"
 show_search_box = True
 show_shortcuts = ['collection']
-show_links = ['abstract', 'PDF', 'BIB', 'Wikipedia', 'EndNote', 'COINS']
+show_links = ['abstract', 'PDF', 'BIB', 'Wikipedia', 'EndNote']
+omit_COinS = False
 smart_selections = True
 content_filter = {'bib' : 'fix_bibtex_reference'}  # currently, only this function is supported.
 
@@ -614,8 +615,9 @@ def retrieve_data(collection_id, exclude=None):
         r = cfilter(a, 'ris', retrieve_bib(collection_id,'ris', ''))
     else:
         r = [None for _x in h]
-    if check_show('coins'):
+    if not omit_COinS:
         c = cfilter(a, 'coins', retrieve_coins(collection_id))
+        print("coins retrieved", len(c))
     else:
         c = [None for _x in h]
     if check_show('wikipedia'):
@@ -949,8 +951,9 @@ def make_html (all_items, exclude={}, shorten=False):
                             blinkitem += u'<div class="blink">'+a_button(show,url=u)+u'</div>'
                         elif ('ris' == show.lower() or 'endnote' == show.lower()) and item.ris:
                             blinkitem += u'<div class="blink">'+'<a class="%s" title="Download EndNote record" onclick="dwnD(\'%s\');return false;"></a></div>'%(show,base64.b64encode(item.ris.encode('utf-8')).decode('utf-8'))
-                        elif 'coins' == show.lower() and item.coins:
-                            blinkitem += str(item.coins).strip()
+
+                    if not omit_COinS and item.coins:
+                        blinkitem += str(item.coins).strip()
 
                     if shorten: # to do - consider moving this to the CSS
                         blinkitem = u'<div style="padding-left:20px;">' + blinkitem + u'</div>'

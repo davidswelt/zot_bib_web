@@ -125,7 +125,9 @@ copy_button_path = "site/clippy.svg" # path to file on server
 
 # unconditionally show these items if they are available for the item
 # (don't set to obtain defaults)
-# show_links = ['abstract', 'pdf', 'bib', 'wikipedia', 'ris', 'coins']
+# show_links = ['abstract', 'pdf', 'bib', 'wikipedia', 'ris']
+
+# omit_COinS = False  # True to omit COINS metadata; useful to save space, but not recommended.
 
 # Prevent viewers from selecting "bib", "pdf" etc for easier copy/paste of bibliography
 # (don't set to obtain default)
