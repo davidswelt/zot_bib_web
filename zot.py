@@ -154,6 +154,7 @@ import codecs
 from texconv import tex2unicode
 import base64
 
+import os
 
 def load_settings(file="settings.py"):
     try:
@@ -166,7 +167,7 @@ def load_settings(file="settings.py"):
             if k in globals() and not "__" in k:  # only if default is defined
                 globals()[k]=v
                 # print(k,v)
-        print("Loaded settings from %s."%file)
+        print("Loaded settings from %s."%os.path.abspath(file))
 
     except ImportError:
         pass
@@ -295,21 +296,23 @@ def cleanup_lines (string):
     return re.sub(r'\n\s*\n', '\n', string, flags=re.DOTALL)
 
 
-# smart selections prevents viewers from copying certain buttons
-# this way, a nice, clean bibliography can be copied right from a browser window
-# this is achieved by displaying the buttons dynamically.
-# caveat - are there accessibility implications?
-if smart_selections:
-    blinkitem_css = "".join(["a.%s::before {content:\"%s\"}\n"%(i,i) for i in show_links])
-    blinkitem_css += "a.shortened::before {content:\"\\229E\"}\n"  # hex(8862)
-else:
-    blinkitem_css = "".join(["a.%s::before {}\n"%(i) for i in show_links])
-    blinkitem_css += "a.shortened::before {}\n"
+def generate_base_html():
 
-# Set some (default) styles
-# note - the final style in the style sheet is manipulated by changeCSS
-# this is selected (hack, hack) by index
-script_html = """<style type="text/css" id="zoterostylesheet" scoped>
+    # smart selections prevents viewers from copying certain buttons
+    # this way, a nice, clean bibliography can be copied right from a browser window
+    # this is achieved by displaying the buttons dynamically.
+    # caveat - are there accessibility implications?
+    if smart_selections:
+        blinkitem_css = "".join(["a.%s::before {content:\"%s\"}\n"%(i,i) for i in show_links])
+        blinkitem_css += "a.shortened::before {content:\"\\229E\"}\n"  # hex(8862)
+    else:
+        blinkitem_css = "".join(["a.%s::before {}\n"%(i) for i in show_links])
+        blinkitem_css += "a.shortened::before {}\n"
+
+    # Set some (default) styles
+    # note - the final style in the style sheet is manipulated by changeCSS
+    # this is selected (hack, hack) by index
+    script_html = """<style type="text/css" id="zoterostylesheet" scoped>
 .bibshowhide {display:none;}
 .bib-venue-short, .bib-venue {display:none;}
 """+ blinkitem_css + """
@@ -360,9 +363,9 @@ function changeCSS() {
 changeCSS();</script>"""
 
 
-if show_copy_button:
-    if jquery_path and clipboard_js_path and copy_button_path:
-        script_html += """<script type="text/javascript" src="%s"></script>
+    if show_copy_button:
+        if jquery_path and clipboard_js_path and copy_button_path:
+            script_html += """<script type="text/javascript" src="%s"></script>
     <script type="text/javascript" src="%s"></script>
     <script type="text/javascript">
     jQuery(document).ready(function () {
@@ -373,40 +376,40 @@ var prevCol = trigger.parentNode.style.color;
 trigger.parentNode.style.color="grey";
 setTimeout(function(){trigger.parentNode.style.color=prevCol;}, 200);
 return trigger.parentNode.childNodes[0].textContent;}});});</script>"""%(jquery_path,clipboard_js_path,copy_button_path)
+        else:
+            warning("show_search_box set, but jquery_path, clipboard_js_path or copy_button_path undefined.")
+
+    credits_html = u'<div id="zbw_credits" style="text-align:right;">A <a href="https://github.com/davidswelt/zot_bib_web">zot_bib_web</a> bibliography.</div>'
+
+    script_html = cleanup_lines(script_html)
+
+    html_header = u''
+    html_footer = u''
+    if write_full_html_header:
+        style_html = u''
+        if stylesheet_url:
+            style_html = u"<link rel=\"stylesheet\" type=\"text/css\" href=\"%s\">"%stylesheet_url
+        html_header += u'<!DOCTYPE HTML><html><head><meta charset="UTF-8"><title>'+titlestring+u'</title>'+style_html+u'</head><body>'
+        html_header += u'<div class="bibliography">'+script_html
+        html_footer += credits_html + u'</div>'
+        html_header += '<h1 class="title">'+titlestring+"</h1>\n";
+        html_footer += u'</body></html>'
     else:
-        warning("show_search_box set, but jquery_path, clipboard_js_path or copy_button_path undefined.")
+        html_header += u'<div class="bibliography">'+script_html
+        html_footer += credits_html + u'</div>'
 
-credits_html = u'<div id="zbw_credits" style="text-align:right;">A <a href="https://github.com/davidswelt/zot_bib_web">zot_bib_web</a> bibliography.</div>'
+    search_box = ""
+    if show_search_box or show_shortcuts or show_copy_button:
+        search_box += '<script type="text/javascript" src="'+jquery_path+'</script>'
 
-script_html = cleanup_lines(script_html)
+    if show_search_box or show_shortcuts:
+        if jquery_path:
+            search_box = ''
+            if show_search_box:
+                search_box += '<form id="pubSearchBox" name="pubSearchBox" style="visibility:hidden;"><input id="pubSearchInputBox" type="text" name="keyword" placeholder="keywords">&nbsp;<input id="pubSearchButton" type="button" value="Search" onClick="searchF()"></form><h2 id="searchTermSectionTitle" class="collectiontitle"></h2>'
 
-html_header = u''
-html_footer = u''
-if write_full_html_header:
-    style_html = u''
-    if stylesheet_url:
-        style_html = u"<link rel=\"stylesheet\" type=\"text/css\" href=\"%s\">"%stylesheet_url
-    html_header += u'<!DOCTYPE HTML><html><head><meta charset="UTF-8"><title>'+titlestring+u'</title>'+style_html+u'</head><body>'
-    html_header += u'<div class="bibliography">'+script_html
-    html_footer += credits_html + u'</div>'
-    html_header += '<h1 class="title">'+titlestring+"</h1>\n";
-    html_footer += u'</body></html>'
-else:
-    html_header += u'<div class="bibliography">'+script_html
-    html_footer += credits_html + u'</div>'
-
-search_box = ""
-if show_search_box or show_shortcuts or show_copy_button:
-    search_box += '<script type="text/javascript" src="'+jquery_path+'</script>'
-
-if show_search_box or show_shortcuts:
-    if jquery_path:
-        search_box = ''
-        if show_search_box:
-            search_box += '<form id="pubSearchBox" name="pubSearchBox" style="visibility:hidden;"><input id="pubSearchInputBox" type="text" name="keyword" placeholder="keywords">&nbsp;<input id="pubSearchButton" type="button" value="Search" onClick="searchF()"></form><h2 id="searchTermSectionTitle" class="collectiontitle"></h2>'
-
-        if show_search_box or show_shortcuts:
-            search_box += """<script type="text/javascript">
+            if show_search_box or show_shortcuts:
+                search_box += """<script type="text/javascript">
   function getURLParameter(name) {
     return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null;
   }
@@ -458,8 +461,10 @@ function searchF(searchTerms, shown, disjunctive) {
         };
     jQuery("#pubSearchInputBox").bind('keyup paste cut', checkForChange);
 });</script>"""
-    else:
-        warning("show_search_box or show_shortcut are True, but jquery_path undefined.")
+        else:
+            warning("show_search_box or show_shortcut are True, but jquery_path undefined.")
+    return html_header, search_box, html_footer
+
 
 def sortkeyname(field, value):
     global sortkeyname_dict
@@ -468,6 +473,7 @@ def sortkeyname(field, value):
 
     sort_prefix = ""
 
+
     if not is_string(value):  #isinstance(value, list):
         # it's a path of something
         # sorting by all the numbers (if available).
@@ -475,6 +481,7 @@ def sortkeyname(field, value):
         if 'collection'==field:
             return ".".join([str(sortkeyname(field, value2)[0]) for value2 in value]), sortkeyname(field, value[-1])[1]
         else:
+
             return ".".join([str(sortkeyname(field2, value2)[0]) for field2,value2 in zip(field,value)]), sortkeyname(field[-1], value[-1])[1]
 
     if field == "collection":
@@ -650,7 +657,6 @@ def retrieve_data(collection_id, exclude=None):
         r = [None for _x in h]
     if not omit_COinS:
         c = cfilter(a, 'coins', retrieve_coins(collection_id))
-        print("coins retrieved", len(c))
     else:
         c = [None for _x in h]
     if check_show('wikipedia'):
@@ -859,9 +865,9 @@ def make_header_htmls(all_items):
             crit = 'year'
         if isinstance(crit, tuple):  # e.g., ('type', [v1,v2,v3])
             crit, vals = crit
-            l = [(sortkeyname(crit, str(value))[0], str(value), value) for value in vals]
+            l = [(sortkeyname(crit, str(value))[0], str(value), value) for value in vals if value]
         else:
-            l = [sortkeyname(crit, value) + (value,) for value in (vals or set([i.access(crit) for i in all_items]))]
+            l = [sortkeyname(crit, value) + (value,) for value in (vals or set([i.access(crit) for i in all_items])) if value]
         l.sort(key=lambda x: x[0], reverse=sort_crit_in_reversed_order(crit))
 
         html = ""
@@ -1027,7 +1033,7 @@ def make_html (all_items, exclude={}, shorten=False):
 
                 tag = "li" if number_bib_items else "div"
                 htmlitem = u'<%s class="bib-item">'%tag + htmlitem + u'</%s>'%tag
-
+                string += htmlitem
 
     if len(string)==0:
         return "",0  # avoid adding title for section later on
@@ -1414,6 +1420,7 @@ def main():
 
 
 read_args_and_init()
+html_header, search_box, html_footer = generate_base_html()
 
 init_db()
 
