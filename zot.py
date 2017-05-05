@@ -15,6 +15,7 @@
 # Released under the GNU General Public License, V.3 or later.
 
 from __future__ import print_function
+from __future__ import unicode_literals
 
 ####  Program arguments
 
