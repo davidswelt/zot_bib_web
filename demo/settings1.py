@@ -40,7 +40,7 @@ bib_style =  'apa'     # bibliography style format (e.g., 'apa' or 'mla') - Any 
 
 show_top_section_headings = 1  # show section headings for the first N sort criteria
 
-catchallcollection = toplevelfilter  # include "Miscellaneous" category at end containing all items not mentioend anywhere else
+additional_collections = [toplevelfilter]  # include "Miscellaneous" category at end containing all items not mentioend anywhere else
 
 
 write_full_html_header = True   # False to not output HTML headers.  In this case, expect a file in UTF-8 encoding.
