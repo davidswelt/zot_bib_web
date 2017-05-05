@@ -73,6 +73,31 @@ div.short-bib-section li {
 div.short-bib-section .containertitle {
     font-style:italic;
 }
+
+/* details (e.g., collection, editors, years, pages, etc.) of a bib item */
+div.bib-details{
+}
+
+
+
+/* Rendering the "extra" field */
+div.bib-details div.bib-extra {
+    display: inline;
+    font-weight: bold;
+}
+
+/* Venue, where published (e.g., proceedings title, journal */
+div.bib-item div.bib-venue {
+    display:none;
+}
+
+/* Short venue (e.g., conference acronym, journal abbreviation)
+Is hidden by default.  CSS specificity is used to override default. */
+div.bib-item div.bib-venue-short {
+    display:none;  /* change to block or inline to display */
+    /* See demo/style3.css for an example on formatting this. */
+}
+
 /* The actual BibTeX record (when visible) */
 div.bib {
     font-family:Menlo,Courier,monospaced;
@@ -81,8 +106,6 @@ div.bib {
     white-space: pre;
     margin:20px 60px 60px 10px;
 }
-
-/* Text "bib" or "abstract" */
 
 /* Text "bib" or "abstract" */
 .blink a {

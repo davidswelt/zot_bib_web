@@ -217,9 +217,23 @@ span.doctitle {
     display: block;
 }
 
-#year {
+#bib-cat-year {
     max-width:20%;
 }
-#year li {
+#bib-cat-year li {
+    display:block; /* inline */ 
+}
+
+#bib-cat-venue_short {
+    display:block;
+    margin-top:20px;
+}
+#bib-cat-venue_short li {
     display:inline;
+    margin-left: 10px;
+}
+
+.bib-cat span.cat_count {
+    font-style:italic;
+    opacity: 0.5;
 }

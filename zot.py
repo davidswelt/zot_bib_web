@@ -305,10 +305,12 @@ else:
     blinkitem_css = "".join(["a.%s::before {}\n"%(i) for i in show_links])
     blinkitem_css += "a.shortened::before {}\n"
 
+# Set some (default) styles
 # note - the final style in the style sheet is manipulated by changeCSS
 # this is selected (hack, hack) by index
 script_html = """<style type="text/css" id="zoterostylesheet" scoped>
 .bibshowhide {display:none;}
+.bib-venue-short, .bib-venue {display:none;}
 """+ blinkitem_css + """
 .blink {margin:0;margin-right:15px;padding:0;display:none;}
 </style>
@@ -555,8 +557,7 @@ def retrieve_wikipedia (collection):
 
 class ZotItem:
     def __init__(self, entries):
-        self.publicationTitle = None
-        self.journalAbbreviation = None
+        self.id = None
         self.event = None
         self.section_keyword = None
         self.url = None
@@ -564,7 +565,13 @@ class ZotItem:
         self.type = None
         self.libraryCatalog = None  # special setting, overrides u'itemType' for our purposes
         self.note = None
-
+        self.journalAbbreviation = None
+        self.conferenceName = None
+        self.meetingName = None
+        self.publicationTitle = None
+        self.extra = None
+        self.series = None
+        
         self.__dict__.update(entries)
 
         # Will be set later - None is a good default
@@ -585,10 +592,30 @@ class ZotItem:
             if m:
                 return m.group(0)
             return self.date  # fallback
-
+        if key=='venue':
+            return self.venue()
+        if key=='venue_short':
+            return self.venue_short()
         return default  # default
         # raise RuntimeError("access: field %s not found."%key)
 
+    def venue(self):
+        return self.publicationTitle or self.conferenceName
+
+    def venue_short(self):
+        def maybeshorten(txt):
+            if txt:
+                m = re.search(r'\(\s*([A-Za-z/]+(\-[A-Za-z]+)?)\s*\-?\s*[0-9]*\s*\)', txt)
+                if m:
+                    return m.group(1)
+                m = re.match(r'^([A-Za-z/]+(\-[A-Za-z]+)?)\s*\-?\s*[0-9]*$', txt)
+                if m and len(m.group(1))<11:
+                    return m.group(1)
+                if len(txt)<11:
+                    return txt # return whole conference if short
+        # print(pprint.pformat(self.__dict__))
+        return self.journalAbbreviation or maybeshorten(self.conferenceName) or maybeshorten(self.meetingName) or maybeshorten(self.publicationTitle) or maybeshorten(self.shortTitle) or maybeshorten(self.series)
+    #or self.shortTitle or self.series
 
 def retrieve_data(collection_id, exclude=None):
 
@@ -814,7 +841,11 @@ def js_strings(string_or_list):
 
 
 def make_header_htmls(all_items):
-    # filters for criteria
+
+    def access_for_unique (crit):
+        u = set([(i.access(crit),i.key) for i in all_items])
+        return list([v for v,_id in u])
+
 
     # ordering:
     # sort collections as they are normally sorted (sortkeyname)
@@ -833,34 +864,43 @@ def make_header_htmls(all_items):
         l.sort(key=lambda x: x[0], reverse=sort_crit_in_reversed_order(crit))
 
         html = ""
-        for _,section_print_title,section_code in l:
-            last_section_id=last(section_code) if crit=="collection" else str(section_code)  # if collection, get its ID
-            allyears = True # keep by default
+        for _,section_print_title,feature_value in l:
+            feature_value=last(feature_value) if crit=="collection" else str(feature_value)  # if collection, get its ID
+            allvalues = [True] # keep by default
+            counter = None
             if crit == 'year':
                 # Allow for range specification in years
                 # We will search for all appropriate years using the JS search function.
-                m = re.match(r'([0-9]*)-([0-9]*)', last_section_id)
+                m = re.match(r'([0-9]*)-([0-9]*)', feature_value)
                 if m and (m.group(1) or m.group(2)):
-                    fromyear = m.group(1) or 0
-                    toyear = m.group(2) or 3000
-                    allyears = set([i.access('year') for i in all_items])
-                    allyears = filter(lambda y: (y>=fromyear and y<=toyear), allyears)
-                    last_section_id = map(lambda y: "year__%s"%y, allyears)
+                    fromyear = int(m.group(1) or 0)
+                    toyear = int(m.group(2) or 3000)
+                    allvalues = access_for_unique('year')
+                    def inrange(y):
+                        try:
+                            return (int(y)>=fromyear and int(y)<=toyear)
+                        except ValueError:
+                            return False
+                    allvalues = list(filter(inrange, allvalues))
+                    feature_value = map(lambda y: "year__%s"%y, set(allvalues))
                     section_print_title = "%s&ndash;%s"%(m.group(1),m.group(2))
                 else:
                     # Currently, we're only filtering for the years, because that is were it is practically relevant
-                    allyears = list(filter(lambda y: (str(y) == str(last_section_id)), [i.access(crit) for i in all_items]))
-                    last_section_id = 'year__'+last_section_id
+                    allvalues = list(filter(lambda y: (str(y) == str(feature_value)), access_for_unique(crit)))
+                    feature_value = 'year__'+feature_value
+            elif crit == 'collection':
+                allvalues = list(filter(lambda y: (feature_value in y), access_for_unique(crit)))
+            elif crit in ['type', 'venue_short']:
+                allvalues = list(filter(lambda y: (str(y) == str(feature_value)), access_for_unique(crit)))
+                feature_value = crit+'__'+feature_value
 
-            if crit == 'type':
-                allyears = list(filter(lambda y: (str(y) == str(last_section_id)), [i.access(crit) for i in all_items]))
-                last_section_id = 'type__'+last_section_id
-
-            if not allyears:  # empty result set (no items for this search, if type or year search)
-                print("Warning: %s %s not found, but mentioned in shortcuts. Skipping."%(crit,last_section_id))
+            if not allvalues:  # empty result set (no items for this search, if type or year search)
+                print("Warning: %s %s not found, but mentioned in shortcuts. Skipping."%(crit,feature_value))
             else:
                 # collection does not need to be marked
-                html += "<li class='link'><a style='white-space: nowrap;' href='#' onclick='searchF([%s],\"%s\",1);return false;'>%s</a></li>\n"%(js_strings(last_section_id), section_print_title,section_print_title)
+                counter = len(allvalues) if hasattr(allvalues, '__iter__') else None
+                counterStr = " (%s)"%counter if counter else ""
+                html += "<li class='link'><a style='white-space: nowrap;' href='#' onclick='searchF([%s],\"%s\",1);return false;'>%s<span class='cat_count'>%s</a></li>\n"%(js_strings(feature_value), section_print_title,section_print_title,counterStr)
         headerhtmls += [html]
 
     return headerhtmls
@@ -921,17 +961,29 @@ def make_html (all_items, exclude={}, shorten=False):
                         htmlitem = new
                 else:
                     htmlitem = tryreplacing(htmlitem, t_to_replace, u"<span class=\"doctitle\">%s</span>"%("\\0"))
+                
+                if item.extra:
+                    htmlitem += u'<div class="bib-extra">' + item.extra + u'</div>'
 
                 # Insert searchable keywords (not displayed)
                 search_tags = ''
                 if item.section_keyword:
                     search_tags += item.section_keyword  # no special tag for collections
                 search_tags += " year__" + item.access('year')  # no search by date
+                if item.venue_short():
+                    search_tags += " venue_short__" + item.venue_short()
                 if item.type:
                     search_tags += " type__" + item.type
                 htmlitem += "<span class='bib-kw' style='display:none;'>%s</span>"%search_tags
 
                 htmlitem = u'<div class="bib-details">' + htmlitem + u'</div>'
+
+                venue = item.venue()
+                if venue:
+                    htmlitem += u'<div class="bib-venue">' + venue + u'</div>'
+                venue_short = item.venue_short()
+                if venue_short:
+                    htmlitem += u'<div class="bib-venue-short">' + venue_short + u'</div>'
 
                 if shorten:
 
@@ -973,7 +1025,8 @@ def make_html (all_items, exclude={}, shorten=False):
                     htmlitem = u"<div>" + htmlitem + "</div>" # to limit was is being expanded
 
                 tag = "li" if number_bib_items else "div"
-                string += u'<%s class="bib-item">'%tag + htmlitem + u'</%s>'%tag
+                htmlitem = u'<%s class="bib-item">'%tag + htmlitem + u'</%s>'%tag
+
 
     if len(string)==0:
         return "",0  # avoid adding title for section later on
