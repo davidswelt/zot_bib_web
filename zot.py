@@ -460,6 +460,32 @@ function searchF(searchTerms, shown, disjunctive) {
     else:
         warning("show_search_box or show_shortcut are True, but jquery_path undefined.")
 
+from functools import reduce
+from modules import *
+modules = []
+modules_enabled = []  # ["modules.VenueStats"]
+def init_modules():
+    global modules
+    for m in zotbibweb_modules:
+        if "%s"%m in modules_enabled:
+            modules += [m()]
+def modules_bibAdded(items):
+    for o in modules:
+        map(o.bibAdded, items)
+def modules_transformBibHtml(item, html):
+    return reduce(lambda h, m: m.transformBibHtml(item, h), modules, html)
+def modules_makePreBibliography():
+    html = ''
+    for o in modules:
+        html += o.makePreBibliography() + '\n'
+    return html
+def modules_makePostBibliography():
+    html = ''
+    for o in modules:
+        html += o.makePostBibliography() + '\n'
+    return html
+
+
 def sortkeyname(field, value):
     global sortkeyname_dict
     # field may be a single field, or a list of fields
@@ -555,6 +581,7 @@ def retrieve_coins (collection):
 def retrieve_wikipedia (collection):
     return retrieve_x(collection, content='wikipedia')
 
+import pprint
 class ZotItem:
     def __init__(self, entries):
         self.id = None
@@ -637,7 +664,7 @@ def retrieve_data(collection_id, exclude=None):
     ii = retrieve_x(collection_id)
 
     a = [ZotItem(i['data']) for i in ii]
-
+    # print(pprint.pformat(ii))
     # PyZotero can retrieve different formats at once,
     # but this does not seem to work with current versions of the library or API
 
@@ -649,7 +676,6 @@ def retrieve_data(collection_id, exclude=None):
         r = [None for _x in h]
     if not omit_COinS:
         c = cfilter(a, 'coins', retrieve_coins(collection_id))
-        print("coins retrieved", len(c))
     else:
         c = [None for _x in h]
     if check_show('wikipedia'):
@@ -1027,6 +1053,7 @@ def make_html (all_items, exclude={}, shorten=False):
                 tag = "li" if number_bib_items else "div"
                 htmlitem = u'<%s class="bib-item">'%tag + htmlitem + u'</%s>'%tag
 
+                string += modules_transformBibHtml(item, htmlitem)
 
     if len(string)==0:
         return "",0  # avoid adding title for section later on
@@ -1361,6 +1388,8 @@ def main():
     import_legacy_configuration()
     index_configuration()
 
+    init_modules()
+    
     sortedkeys = get_collections()
     fullhtml = ""
 
@@ -1386,8 +1415,9 @@ def main():
     # we need a list
     all_items = list(featured_items) + list(regular_items)
 
+    modules_bibAdded(all_items)
+    
     headerhtmls = make_header_htmls(all_items)
-
     itemids = set() # For statistics
 
     fullhtml = u""
@@ -1408,7 +1438,8 @@ def main():
             crit = crit[0]
         headerhtml += '<ul id="bib-cat-%s" class="bib-cat">'%crit + h + "</ul>"
     headerhtml += search_box + "</div>" #preamble
-
+    headerhtml += modules_makePreBibliography()
+    fullhtml += modules_makePostBibliography()
     write_some_html(headerhtml+fullhtml, outputfile)
 
 
