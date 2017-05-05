@@ -199,85 +199,90 @@ OPTIONS:
 These and additional settings can be loaded from settings.py.
 """)
 
-print_usage_and_exit = False
+def read_args_and_init():
+    global api_key,library_id,library_type, interactive_debugging
+    global write_full_html_header, stylesheet_url, outputfile, jquery_path
+    global clipboard_js_path, copy_button_path, no_cache, toplevelfilter
+    
+    print_usage_and_exit = False
 
-x = fetch_tag ("--settings")
-if x:
-    load_settings(x)
-else:
-    load_settings()
+    x = fetch_tag ("--settings")
+    if x:
+        load_settings(x)
+    else:
+        load_settings()
 
-# Parase remaining arguments
+    # Parase remaining arguments
 
-if "--div" in sys.argv:
-    write_full_html_header = False
-    sys.argv.remove('--div')
-if "--full" in sys.argv:
-    write_full_html_header = True
-    sys.argv.remove('--full')
-if "--test" in sys.argv:
-    write_full_html_header = True
-    stylesheet_url = "site/style.css"
-    outputfile = 'zotero-bib.html'
-    jquery_path = "site/jquery.min.js"
-    clipboard_js_path = "site/clipboard.min.js"
-    copy_button_path = "site/clippy.svg"
-    sys.argv.remove('--test')
-    print("Test mode.  Forcing settings for local testing.")
+    if "--div" in sys.argv:
+        write_full_html_header = False
+        sys.argv.remove('--div')
+    if "--full" in sys.argv:
+        write_full_html_header = True
+        sys.argv.remove('--full')
+    if "--test" in sys.argv:
+        write_full_html_header = True
+        stylesheet_url = "site/style.css"
+        outputfile = 'zotero-bib.html'
+        jquery_path = "site/jquery.min.js"
+        clipboard_js_path = "site/clipboard.min.js"
+        copy_button_path = "site/clippy.svg"
+        sys.argv.remove('--test')
+        print("Test mode.  Forcing settings for local testing.")
 
-if "--nocache" in sys.argv:
-    no_cache = True
-    sys.argv.remove('--cache')
+    if "--nocache" in sys.argv:
+        no_cache = True
+        sys.argv.remove('--cache')
 
-if "-i" in sys.argv:
-    interactive_debugging = True
-    sys.argv.remove('-i')
-else:
-    interactive_debugging = False
-if "--limit" in sys.argv:
-    limit=5
-    sys.argv.remove('--limit')
-if "-h" in sys.argv:
-    sys.argv.remove('-h')
-    print_usage()
-if "--help" in sys.argv:
-    sys.argv.remove('--help')
-    print_usage()
+    if "-i" in sys.argv:
+        interactive_debugging = True
+        sys.argv.remove('-i')
+    else:
+        interactive_debugging = False
+    if "--limit" in sys.argv:
+        limit=5
+        sys.argv.remove('--limit')
+    if "-h" in sys.argv:
+        sys.argv.remove('-h')
+        print_usage()
+    if "--help" in sys.argv:
+        sys.argv.remove('--help')
+        print_usage()
 
-x = fetch_tag ("--user")
-if x:
-    library_id = x
-    library_type = 'user'
-    # When a different user library is set, we expect new collections
-    toplevelfilter=None
+    x = fetch_tag ("--user")
+    if x:
+        library_id = x
+        library_type = 'user'
+        # When a different user library is set, we expect new collections
+        toplevelfilter=None
 
-x = fetch_tag ("--group")
-if x:
-    library_id = x
-    library_type = 'group'
-    toplevelfilter=None
+    x = fetch_tag ("--group")
+    if x:
+        library_id = x
+        library_type = 'group'
+        toplevelfilter=None
 
-api_key = fetch_tag ("--apikey", api_key)
+    api_key = fetch_tag ("--apikey", api_key)
 
-if len(sys.argv)>1:
-    if not sys.argv[1] == "None":
-        toplevelfilter = sys.argv[1]
-if len(sys.argv)>2:
-    if not sys.argv[3] == "None":
-        outputfile =sys.argv[2]
+    if len(sys.argv)>1:
+        if not sys.argv[1] == "None":
+            toplevelfilter = sys.argv[1]
+    if len(sys.argv)>2:
+        if not sys.argv[3] == "None":
+            outputfile =sys.argv[2]
 
-###########
+    ###########
 
-if len(sys.argv)<=1 and not library_id:  # if no settings file loaded and no args given
-    print_usage_and_exit = True
+    if len(sys.argv)<=1 and not library_id:  # if no settings file loaded and no args given
+        print_usage_and_exit = True
 
-if not library_id:
-    warn("You must give --user or --group, or set library_id and library_type in settings.py.")
-    print_usage_and_exit = True
+    if not library_id:
+        warn("You must give --user or --group, or set library_id and library_type in settings.py.")
+        print_usage_and_exit = True
 
-if print_usage_and_exit:
-    print_usage()
-    sys.exit(1)
+    if print_usage_and_exit:
+        print_usage()
+        sys.exit(1)
 
 
 
@@ -1349,6 +1354,8 @@ def main():
 
     write_some_html(headerhtml+fullhtml, outputfile)
 
+
+read_args_and_init()
 
 init_db()
 
