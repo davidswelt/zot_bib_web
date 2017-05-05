@@ -700,7 +700,7 @@ def flexible_html_regex (r):  # To Do: request non-HTML output from Zotero inste
     r = r.replace("<",r"(&lt;|<)")
     r = r.replace(">",r"(&gt;|>)")
     r = r.replace(" ",r"\s+")
-    r = r.replace(u" ",ur"[\s ]+")
+    r = r.replace(u" ",r"[\s ]+")  # repl string was "ur" - todo: check
     return r
 
 def tryreplacing (source, strings, repl):
@@ -715,9 +715,12 @@ def tryreplacing (source, strings, repl):
     # print("not successful: ", source, strings)
     return source
 
-from six import string_types
+try:  # python 2/3 compatibility
+  basestring
+except NameError:
+  basestring = str
 def is_string (s):
-    return isinstance(s, string_types)
+    return isinstance(s, basestring)
 
 
 def coll_data(c):
@@ -1169,8 +1172,8 @@ def show_double_warnings ():
             else:
                 # if item is the same, it may still be included in several collections:
                 uniquecolls = set([c for _i,c in itemcolls])
-                uniquecolls = filter (is_regular_collection, list(uniquecolls))
-                if len(list(uniquecolls))>1:
+                uniquecolls = list(filter (is_regular_collection, list(uniquecolls)))
+                if len(uniquecolls)>1:
                     # we know that every item here has the same ID (because of the previous check)
                     # itemcolls is a list
                     warning('Item "%s" included in %s collections:\n %s'%(itemref(itemcolls[0][0]), len(uniquecolls), ", ".join(map(collname, uniquecolls))))
