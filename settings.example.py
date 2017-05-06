@@ -110,13 +110,24 @@ jquery_path = "site/jquery.min.js"  # path to jquery file on the server
 # jquery_path = "../wp-includes/js/jquery/jquery.js"  # wordpress location
 
 # Show categories at the top of the bibliography for quick filtering
-# 'collection', 'type', 'year' are supported
+# 'collection', 'type', 'year', 'venue', 'venue_short' are supported
 show_shortcuts = ['collection']
-# To add specific rather than all available values for a field, use a tuple as follows.
-# Note that for year, we support ranges. 
-show_shortcuts += [('year', [2017,2016,2015,2014,2013,"2008-2012","2005-2008","-2004"])]
+# To add specific rather than all available values for a field, use the shortcut function as follows.
+# Note that for year, we support ranges.
+# In the following, we tell the program to display despific entries for "year"
+show_shortcuts += [shortcut('year', [2017,2016,2015,2014,2013,"2008-2012","2005-2008","-2004"])]
+# Show the venues (conferences, journals) where we've published.
+# the "shortcut" function offers some options:
+# sort="asc" or "desc" instructs the program to sort the entries.  (Default is automatic.)
+# sortBy indicates that we'd like to sort by how many items there are in each category
+#   (Default is to sort by name.  'count' is the only other value possible at this time.)
+# topN says to display only the 5 biggest categories.
+# If there are several categories ranked 5, we're showing all of them.
+# E.g.  topN=3 shows:  WIFN(8) FJJ(8) CLAM(5) CLEE(5)
+# (Default is to show all for which bibliographic entries exist in the data.)
+show_shortcuts += [shortcut('venue_short', sort='desc', sortBy='count', topN=5)]
 # To add arbitrary search terms:
-show_shortcuts += [('keyword', ["model", "language", "entropy"])]  # define some search terms
+show_shortcuts += [shortcut('keyword', values=["model", "language", "entropy"])]  # define some search terms
 
 number_bib_items = False  # show bibliographic items as numbered, ordered list
 show_copy_button = True  # show clipbaord copy button.  Must define jquery_path.

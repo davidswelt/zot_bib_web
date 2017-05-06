@@ -61,7 +61,7 @@ show_links = ['abstract', 'pdf', 'bib','ris']   # unconditionally show these ite
 show_shortcuts = ['collection', 'type']
 # To add specific rather than all available values for a field, use a tuple as follows.
 # Note that for year, we support ranges. 
-show_shortcuts += [('year', [2017,2016,2015,2014,2013,"2008-2012","2005-2008","-2004"])]
+show_shortcuts += [shortcut('year', [2017,2016,2015,2014,2013,"2008-2012","2005-2008","-2004"])]
 
 
 stylesheet_url = "style2.css"

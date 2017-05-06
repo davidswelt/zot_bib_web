@@ -847,60 +847,138 @@ def js_strings(string_or_list):
     return ",".join(map(js_strings, string_or_list))
 
 
+class Shortcut:
+    def __init__(self, crit, values=None, sort='auto', topN=None, sortby=None):
+        self.crit = crit
+        self.values = values
+        if sort=='auto':
+            if values:
+                self.sort = False
+            else:
+                self.sort = 'desc' if sort_crit_in_reversed_order(self.crit) else 'asc'
+        else:
+            self.sort = sort
+        self.topN = topN
+        self.itemTuples = None
+        self.sortby = sortby
+
+    def setAllItems (self, all_items):
+        self.all_items = all_items
+
+    def getValueForUniqueItems (self):
+        u = set([(i.access(self.crit),i.key) for i in self.all_items])
+        return list([v for v,_id in u if v])
+
+    def compile(self):
+        self.itemTuples = []
+        l = self.getItems()
+        for sortname,section_print_title,feature_value in l:
+            val, title, items = self.getBibItems(feature_value, section_print_title)
+            self.itemTuples += [(val, sortname, title, items)]
+        if self.sort or self.sortby:
+            if self.sortby=='count':
+                k = lambda x: len(x[3])
+            else:
+                k = lambda x: x[1]  # sort by sort name (as given by sortkeyname)
+            self.itemTuples.sort(key=k, reverse=(self.sort == 'desc'))
+
+    def getBibItemTuples(self):
+        if self.topN:
+            lens = sorted([len(items) for _,_,_,items in self.itemTuples])
+            if len(lens)>self.topN:
+                cutoff = lens[-self.topN]
+                return [(val, sortname, title, items) for val, sortname, title, items in self.itemTuples if len(items) >= cutoff]
+        return self.itemTuples
+
+    @staticmethod
+    def uniquify(seq, idfun=None):
+        # order preserving
+        if idfun is None:
+            def idfun(x): return x
+        seen = {}
+        result = []
+        for item in seq:
+            marker = idfun(item)
+            # in old Python versions:
+            # if seen.has_key(marker)
+            # but in new ones:
+            if marker in seen: continue
+            seen[marker] = 1
+            result.append(item)
+        return result
+
+    def getItems(self):
+        if self.values:  # e.g., ('type', [v1,v2,v3])
+            l = [(sortkeyname(self.crit, str(value))[0], str(value), value) for value in self.values if value]
+        else:
+            l = [sortkeyname(self.crit, value) + (value,) for value in self.getValueForUniqueItems()]
+        l = self.uniquify(l)
+        return l
+
+    def getBibItems(self, crit_val, section_print_title):
+        crit_val = last(crit_val) if self.crit == "collection" else str(crit_val)  # if collection, get its ID
+        allvalues = [True]  # keep by default
+        counter = None
+        if self.crit == 'year':
+            # Allow for range specification in years
+            # We will search for all appropriate years using the JS search function.
+            m = re.match(r'([0-9]*)-([0-9]*)', crit_val)
+            if m and (m.group(1) or m.group(2)):
+                fromyear = int(m.group(1) or 0)
+                toyear = int(m.group(2) or 3000)
+
+                allvalues = list(self.getValueForUniqueItems())
+
+                def inrange(y):
+                    try:
+                        return (int(y) >= fromyear and int(y) <= toyear)
+                    except ValueError:
+                        return False
+
+                allvalues = list(filter(inrange, allvalues))
+                crit_val = map(lambda y: "year__%s" % y, set(allvalues))
+                section_print_title = "%s&ndash;%s" % (m.group(1), m.group(2))
+            else:
+                # Currently, we're only filtering for the years, because that is were it is practically relevant
+                allvalues = list(
+                    filter(lambda y: (str(y) == str(crit_val)), self.getValueForUniqueItems()))
+                crit_val = 'year__' + crit_val
+        elif self.crit == 'collection':
+            allvalues = list(filter(lambda y: (crit_val in y), self.getValueForUniqueItems()))
+        elif self.crit in ['type', 'venue_short']:
+            allvalues = list(filter(lambda y: (str(y) == str(crit_val)), self.getValueForUniqueItems()))
+            crit_val = self.crit + '__' + crit_val
+        return crit_val, section_print_title, allvalues
+
+
+def shortcut(crit, values=None, sort='auto', topN=None, sortBy=None):
+    return Shortcut(crit, values=values, sort=sort, topN=topN, sortby=sortBy)
+
+__builtins__.shortcut = shortcut
+
+
 def make_header_htmls(all_items):
-
-    def access_for_unique (crit):
-        u = set([(i.access(crit),i.key) for i in all_items])
-        return list([v for v,_id in u])
-
 
     # ordering:
     # sort collections as they are normally sorted (sortkeyname)
 
     headerhtmls = [] # {'collection':u"", 'year':u"", 'type':u""}
     for complex_crit in show_shortcuts:
+
+        if is_string(complex_crit):
+            complex_crit = Shortcut(complex_crit)
+
         vals = None
-        crit = complex_crit
+        crit = complex_crit.crit
         if crit == 'date':
             crit = 'year'
-        if isinstance(crit, tuple):  # e.g., ('type', [v1,v2,v3])
-            crit, vals = crit
-            l = [(sortkeyname(crit, str(value))[0], str(value), value) for value in vals if value]
-        else:
-            l = [sortkeyname(crit, value) + (value,) for value in (vals or set([i.access(crit) for i in all_items])) if value]
-        l.sort(key=lambda x: x[0], reverse=sort_crit_in_reversed_order(crit))
+
+        complex_crit.setAllItems(all_items)
+        complex_crit.compile()
+
 
         html = ""
-        for _,section_print_title,feature_value in l:
-            feature_value=last(feature_value) if crit=="collection" else str(feature_value)  # if collection, get its ID
-            allvalues = [True] # keep by default
-            counter = None
-            if crit == 'year':
-                # Allow for range specification in years
-                # We will search for all appropriate years using the JS search function.
-                m = re.match(r'([0-9]*)-([0-9]*)', feature_value)
-                if m and (m.group(1) or m.group(2)):
-                    fromyear = int(m.group(1) or 0)
-                    toyear = int(m.group(2) or 3000)
-                    allvalues = access_for_unique('year')
-                    def inrange(y):
-                        try:
-                            return (int(y)>=fromyear and int(y)<=toyear)
-                        except ValueError:
-                            return False
-                    allvalues = list(filter(inrange, allvalues))
-                    feature_value = map(lambda y: "year__%s"%y, set(allvalues))
-                    section_print_title = "%s&ndash;%s"%(m.group(1),m.group(2))
-                else:
-                    # Currently, we're only filtering for the years, because that is were it is practically relevant
-                    allvalues = list(filter(lambda y: (str(y) == str(feature_value)), access_for_unique(crit)))
-                    feature_value = 'year__'+feature_value
-            elif crit == 'collection':
-                allvalues = list(filter(lambda y: (feature_value in y), access_for_unique(crit)))
-            elif crit in ['type', 'venue_short']:
-                allvalues = list(filter(lambda y: (str(y) == str(feature_value)), access_for_unique(crit)))
-                feature_value = crit+'__'+feature_value
-
+        for feature_value, _sortname, section_print_title, allvalues in complex_crit.getBibItemTuples():
             if not allvalues:  # empty result set (no items for this search, if type or year search)
                 print("Warning: %s %s not found, but mentioned in shortcuts. Skipping."%(crit,feature_value))
             else:
