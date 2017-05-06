@@ -140,7 +140,7 @@ from pyzotero import zotero,zotero_errors
 
 try:
     v = float("%d.%02d%02d"%tuple(map(int,zotero.__version__.split(r'.'))))
-    if v<1.01.03:
+    if v<1.0103:
         warning("Pyzotero version is incompatible.  Upgrade to 1.1.3 or later.")
         sys.exit(1)
 except:
