@@ -140,10 +140,11 @@ from pyzotero import zotero,zotero_errors
 
 try:
     v = float("%d.%02d%02d"%tuple(map(int,zotero.__version__.split(r'.'))))
-    if v>=1 and v<1.0103:
-        warning("Pyzotero version may be incompatible.  Upgrade to 1.1.3 or later.")
+    if v<1.01.03:
+        warning("Pyzotero version is incompatible.  Upgrade to 1.1.3 or later.")
+        sys.exit(1)
 except:
-        warning("Pyzotero version could not be validated. 1.1.3 or later recommended.")
+        warning("Pyzotero version could not be validated. 1.1.3 or later required.")
 
 # redirect warnings (needed for InsecurePlatformWarning on Macs with standard Python)
 import logging
@@ -1231,7 +1232,7 @@ def retrieve_all_items(sortedkeys):
     global toplevelfilter, limit, no_cache
     global item_ids
 
-    lastmod = zot.last_modified_version()
+    lastmod = zot.last_modified_version()  # v1.1.1
 
     if not no_cache:
         try:
