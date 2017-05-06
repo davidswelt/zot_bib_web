@@ -462,7 +462,7 @@ function searchF(searchTerms, shown, disjunctive) {
     jQuery("#pubSearchInputBox").bind('keyup paste cut', checkForChange);
 });</script>"""
         else:
-            warning("show_search_box or show_shortcut are True, but jquery_path undefined.")
+            warning("show_search_box or show_shortcut are set, but jquery_path undefined.")
     return html_header, search_box, html_footer
 
 
@@ -473,17 +473,17 @@ def sortkeyname(field, value):
 
     sort_prefix = ""
 
+    # value may be none (e.g., for venue)
+    # In that case, we will resort to the default entry in sortkeyname
 
-    if not is_string(value):  #isinstance(value, list):
+    if value and not is_string(value):  #isinstance(value, list):
         # it's a path of something
         # sorting by all the numbers (if available).
         # e.g., 10.13, and displaying the last entry
         if 'collection'==field:
             return ".".join([str(sortkeyname(field, value2)[0]) for value2 in value]), sortkeyname(field, value[-1])[1]
         else:
-
             return ".".join([str(sortkeyname(field2, value2)[0]) for field2,value2 in zip(field,value)]), sortkeyname(field[-1], value[-1])[1]
-
     if field == "collection":
         name = collection_names[value] # value is an ID
         sort_prefix,_,value = collname_split(name)
@@ -494,6 +494,9 @@ def sortkeyname(field, value):
             sort_prefix = str(s) + " " + sort_prefix
         elif None in sortkeyname_dict[field]:  # default for unknown values
             sort_prefix = str(sortkeyname_dict[field][None][0]) + " " + sort_prefix
+
+    sort_prefix = sort_prefix or ""
+    value = value or ""
 
     return " ".join([sort_prefix,value.lower()]),value  # sort by value
 
@@ -990,6 +993,8 @@ def make_header_htmls(all_items):
 
     return headerhtmls
 
+
+
 entry_count=0
 def make_html (all_items, exclude={}, shorten=False):
     def a_button (name,url=None,js=None,title=None,cls=None):
@@ -1277,11 +1282,11 @@ def compile_data(all_items, section_code, crits, exclude={}, shorten=False):
         last_section_id=last(section_code)  # if collection, get its ID
         last_crit=last(crits)
     else:
-        section_print_title = "Empty"
+        section_print_title = "Other"
         last_section_id = last_crit = None
-        section_code=['A']
-        print(all_items)
-        raise RuntimeException("compile_data called with empty section_code")
+        section_code=['Other']
+        #print(all_items)
+        #raise RuntimeError("compile_data called with empty section_code")
 
     if last_section_id:
 
@@ -1414,7 +1419,7 @@ def section_generator (items, crits):
                 if is_string(val):  # basic fields
                     section += [val]
                     crits_sec += [crit]
-                else: # collection paths (val is a list)
+                elif hasattr(val, '__iter__'): # collection paths (val is a list)
                     section += val # flat concat
                     crits_sec += [crit] * len(val)
 
