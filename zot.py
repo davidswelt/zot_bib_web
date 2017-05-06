@@ -522,7 +522,10 @@ def import_legacy_configuration():
             sort_reverse += [False]
 
     if catchallcollection:
-        warn('catchallcollection setting no longer available. Ignoring.\nUse & modifier for collection name (e.g., "& Miscellaenous") and, if necessary, the new additional_collections setting.')
+        warn('catchallcollection setting no longer available. Ignoring.'
+             'Use & modifier for collection name (e.g., "& Miscellaenous") and, '
+             'if necessary, the new additional_collections setting as follows:'
+             'additional_collections = ["%s"]'%catchallcollection)
 
 def sort_crit_in_reversed_order(field):
     global sort_criteria
