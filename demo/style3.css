@@ -103,6 +103,14 @@ div.blink  {
     display:inline-block;
 }
 
+div.blinkitems .bibshowhide {
+    background: white;
+    border: 2px solid grey;
+    padding: 10px;
+    z-index: 5;
+    position: absolute;
+}
+
 .bib-item {
     position:relative;
 }
@@ -110,7 +118,7 @@ div.blink  {
     display:none;
 }
 div.bib-venue-short {
-    display:block !important;  /* override default */
+    display:none !important;  /* not displaying it */
     text-align:left;
     max-width:15%;
     position:absolute;
@@ -143,9 +151,7 @@ div.bib-details{
 div.bib {
     font-family:Menlo,Courier,monospaced;
     color:brown;
-    padding-left:30px;
     white-space: pre;
-    margin:20px 60px 60px 10px;
 }
 
 /* Text "bib" or "abstract" */
@@ -181,8 +187,7 @@ div.short-bib-section .blink {
 div.abstract {
     color:black;
     margin:20px 60px 60px 10px;
-    padding:10px;
-    border:1px solid black;
+    min-width: 450px;
 }
 
 /* Document titles */
