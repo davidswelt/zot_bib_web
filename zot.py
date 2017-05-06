@@ -628,6 +628,11 @@ class ZotItem:
         return self.journalAbbreviation or maybeshorten(self.conferenceName) or maybeshorten(self.meetingName) or maybeshorten(self.publicationTitle) or maybeshorten(self.shortTitle) or maybeshorten(self.series)
     #or self.shortTitle or self.series
 
+    def addSectionKeyword (self,s):
+        if not s in self.section_keyword:
+            self.section_keyword += s + " "
+            # to do: store a list
+
 def retrieve_data(collection_id, exclude=None):
 
 
@@ -876,8 +881,18 @@ class Shortcut:
         self.itemTuples = []
         l = self.getItems()
         for sortname,section_print_title,feature_value in l:
-            val, title, items = self.getBibItems(feature_value, section_print_title)
-            self.itemTuples += [(val, sortname, title, items)]
+            # if multiple items are listed in feature_value because it's a list,
+            # we need to retrieve items for these separately
+            fvs = feature_value if isinstance(feature_value, list) else [feature_value]
+            items = []
+            vals = []
+            title = None
+            for f in fvs:
+                val1, title1, items1 = self.getBibItems(f, section_print_title)
+                items += items1
+                vals += [val1]
+                title = title or title1  # use the first title
+            self.itemTuples += [(vals, sortname, title, items)]
         if self.sort or self.sortby:
             if self.sortby=='count':
                 k = lambda x: len(x[3])
@@ -885,7 +900,7 @@ class Shortcut:
                 k = lambda x: x[1]  # sort by sort name (as given by sortkeyname)
             self.itemTuples.sort(key=k, reverse=(self.sort == 'desc'))
 
-    def getBibItemTuples(self):
+    def getCatValueInfo(self):
         if self.topN:
             lens = sorted([len(items) for _,_,_,items in self.itemTuples])
             if len(lens)>self.topN:
@@ -911,11 +926,15 @@ class Shortcut:
         return result
 
     def getItems(self):
+        def fit (v): # first if tuple
+            if isinstance(v, list):  # multiple items listed - use first for label
+                return str(v[0])
+            return str(v)
         if self.values:  # e.g., ('type', [v1,v2,v3])
-            l = [(sortkeyname(self.crit, str(value))[0], str(value), value) for value in self.values if value]
+            l = [(sortkeyname(self.crit, fit(value))[0], fit(value), value) for value in self.values if value]
         else:
             l = [sortkeyname(self.crit, value) + (value,) for value in self.getValueForUniqueItems()]
-        l = self.uniquify(l)
+        l = self.uniquify(l, idfun=lambda x:x[0])
         return l
 
     def getBibItems(self, crit_val, section_print_title):
@@ -981,7 +1000,7 @@ def make_header_htmls(all_items):
 
 
         html = ""
-        for feature_value, _sortname, section_print_title, allvalues in complex_crit.getBibItemTuples():
+        for feature_value, _sortname, section_print_title, allvalues in complex_crit.getCatValueInfo():
             if not allvalues:  # empty result set (no items for this search, if type or year search)
                 print("Warning: %s %s not found, but mentioned in shortcuts. Skipping."%(crit,feature_value))
             else:
@@ -1354,7 +1373,7 @@ def pull_up_featured_remove_hidden_items (all_items):
     for it in visible_items:
         id = it.key
         if id in hidden_item_categories:
-            it.section_keyword += " " + hidden_item_categories[id]
+            it.addSectionKeyword(str(hidden_item_categories[id]))
 
     return list(featured_items), list(other_items)
 

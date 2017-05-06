@@ -170,7 +170,12 @@ Configuration options
 
 - You can choose a different formatting convention.  Default is APA format.
 
-- Several more options.  See settings.example.py.
+- At the top, a search box and a set of shortcuts may be displayed:
+  for example, several years or spans of years, publication types, or
+  subcollections that indicate topic areas.  A visitor may click on
+  these to quickly filter the bibliography.
+
+- There are several more options.  See settings.example.py.
 
 
 
