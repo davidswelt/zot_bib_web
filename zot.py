@@ -73,11 +73,11 @@ language_code = 'en'
 sortkeyname_order = {}
 # Define label for article types and their ordering
 # types may occur in libraryCatalog or itemType
-# use libraryCatalog to override it in special cases (e.g., archival Conference papers)
+# use libraryCatalog to override it in special cases (e.g., archival Conference publications)
 sortkeyname_order['en']={}
 sortkeyname_order['en']['type'] = [
     ('journalArticle', 'Journal Articles'),
-    ('archivalConferencePaper', 'Archival Conference Papers'),
+    ('archivalConferencePaper', 'Archival Conference Publications'),
     ('conferencePaper', 'Conference and Workshop Papers'),
     ('book', 'Books'),
     ('bookSection', 'Book Chapters'),
