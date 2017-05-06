@@ -273,7 +273,7 @@ def read_args_and_init():
         if not sys.argv[1] == "None":
             toplevelfilter = sys.argv[1]
     if len(sys.argv)>2:
-        if not sys.argv[3] == "None":
+        if not sys.argv[2] == "None":
             outputfile =sys.argv[2]
 
     ###########
@@ -525,9 +525,9 @@ def import_legacy_configuration():
             sort_reverse += [False]
 
     if catchallcollection:
-        warn('catchallcollection setting no longer available. Ignoring.'
-             'Use & modifier for collection name (e.g., "& Miscellaenous") and, '
-             'if necessary, the new additional_collections setting as follows:'
+        warn('catchallcollection setting no longer available. Ignoring.\n'
+             'Use & modifier for collection name (e.g., "& Miscellaenous") and,\n'
+             'if necessary, the new additional_collections setting as follows:\n'
              'additional_collections = ["%s"]'%catchallcollection)
 
 def sort_crit_in_reversed_order(field):
