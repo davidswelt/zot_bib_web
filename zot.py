@@ -1515,6 +1515,8 @@ def main():
     for crit,h in zip(show_shortcuts, headerhtmls):
         if isinstance(crit,tuple):
             crit = crit[0]
+        if isinstance(crit,Shortcut):
+            crit = crit.crit
         headerhtml += '<ul id="bib-cat-%s" class="bib-cat">'%crit + h + "</ul>"
     headerhtml += search_box + "</div>" #preamble
 
