@@ -1232,9 +1232,9 @@ def retrieve_all_items(sortedkeys):
 
     if not no_cache:
         try:
-            date, tlc, l, lm, items = pickle.load(open("retrieve.cache", 'rb'))
+            date, tlc, adc, l, lm, items = pickle.load(open("retrieve.cache", 'rb'))
             if date > datetime.now()-timedelta(days=7):  # cache expires after 7 days
-                if lastmod == lm and tlc==toplevelfilter and l==limit:
+                if lastmod == lm and tlc==toplevelfilter and adc==additional_collections and l==limit:
                     print("Using cached Zotero items (retrieve.cache).")
                     return items
                 else:
@@ -1282,7 +1282,7 @@ def retrieve_all_items(sortedkeys):
             all_items += i2
 
     if not no_cache:
-        pickle.dump((datetime.now(), toplevelfilter, limit, lastmod, all_items), open("retrieve.cache", 'wb'))
+        pickle.dump((datetime.now(), toplevelfilter, additional_collections, limit, lastmod, all_items), open("retrieve.cache", 'wb'))
 
     return all_items
 
