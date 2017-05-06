@@ -143,6 +143,8 @@ try:
     if v<1.0103:
         warning("Pyzotero version is incompatible.  Upgrade to 1.1.3 or later.")
         sys.exit(1)
+except SystemExit as e:
+    raise e
 except:
         warning("Pyzotero version could not be validated. 1.1.3 or later required.")
 
