@@ -7,7 +7,7 @@ library_type ='group'  # or 'group' # group or userm
 api_key = ""  # library is public
 
 toplevelfilter = 'MGID93AS'   # collection where to start retrieving
-catchallcollection = '4KATF6MA'  # include "Miscellaneous" category at end containing all items not mentioend anywhere else
+additional_collections = ['4KATF6MA']  # include "Miscellaneous" category at end containing all items not mentioend anywhere else
 
 
 
