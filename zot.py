@@ -468,6 +468,34 @@ function searchF(searchTerms, shown, disjunctive) {
             warning("show_search_box or show_shortcut are set, but jquery_path undefined.")
     return html_header, search_box, html_footer
 
+try:
+    from dateutil.parser import parse
+except ImportError:
+    parse=False
+    pass
+
+def basicparse(value):
+    "Parse a date.  Cheap substitute for dateutil.parser. Returns a sortable string."
+    value = re.sub(r'(\s|\.|st|nd|rd|th|,)', '-', value)
+    value = value.replace('--', '-')
+    year = value
+    m = re.match(r'\s*(.*)\s*([0-9][0-9][0-9][0-9])\s*(.*)', value)
+    if m:
+        year = m.group(2)
+        if not m.group(1) == '':  # year not already at beginning of string?
+            value = m.group(2) + '-' + m.group(1) + m.group(3)  # rough approximation
+    else:
+        nums = re.split(r'[\s/\.]', value)
+        if len(nums) > 1:
+            value = "-".join(reversed(nums))
+        if len(nums) > 0:
+            year = nums[0]
+    for i, mo in enumerate(re.split(r' ', "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec")):
+        value = value.replace(mo, str(i + 1))
+    value = re.sub(r'\b([0-9])\b', r'0\1', value)
+    value = re.sub(r'-$', '', value)
+    return value, year
+
 
 def sortkeyname(field, value):
     global sortkeyname_dict
@@ -490,6 +518,16 @@ def sortkeyname(field, value):
     if field == "collection":
         name = collection_names[value] # value is an ID
         sort_prefix,_,value = collname_split(name)
+    if field == "date":
+        if parse:
+            try:
+                dt = parse(value, fuzzy=True)
+                sort_prefix = dt.isoformat()
+                value = str(dt.year)
+            except ValueError:  # dateutil couldn't do it
+                sort_prefix,value = basicparse(value)
+        else:
+            sort_prefix, value = basicparse(value)
 
     if field in sortkeyname_dict:
         if value in sortkeyname_dict[field]:

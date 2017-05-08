@@ -70,7 +70,7 @@ License
 Requirements
 ----------------------------------------
 - Python 2.7 or 3
-- Pyzotero.  
+- Pyzotero.
 To install Pyzotero, a library for python:
 
 		sudo pip install pyzotero
@@ -80,6 +80,9 @@ To install Pyzotero, a library for python:
 		sudo easy_install pyzotero
 
 - A Zotero collection with your bibliography (as user or as group)
+
+Optional:
+- dateutils package for Python (improves date parsing if present)
 
 
 Setup
