@@ -1546,6 +1546,10 @@ def section_generator(items, crits):
             # Then, everything is organized according to the sort criteria
             for crit in crits[:show_top_section_headings]:
                 val = item.access(crit)
+                if not crit=='collection':  # for collections, need to preserve ID (will be converted later)
+                    # for everything else we want to aggregate bib items based on the display title of the section
+                    # that way, some sections can be unified via sortkeyname, or years can be used for dates
+                    _sortkey, val = sortkeyname(crit,val)
                 if is_string(val):  # basic fields
                     section += [val]
                     crits_sec += [crit]
