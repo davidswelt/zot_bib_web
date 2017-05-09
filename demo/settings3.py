@@ -21,10 +21,10 @@ toplevelfilter = 'MGID93AS'   # collection where to start retrieving
 
 # Two typical variants are shown:
 # Thematic, by collection
-sort_criteria = ['collection','-date']   # First by collection, then type, then by date, latest first.
+sort_criteria = ['-date','collection']   # First by collection, then type, then by date, latest first.
 # By type (journal, conference, etc.), then chronologically
 # sort_criteria = ['type','-date']   # we have date and type: First by date ("issued"), then by type.
-# By year, then with journal articles first
+# By year, then with journal articles first,'-date'
 # sort_criteria = ['-year']   # we have date and type: First by date ("issued"), then by type.
 # By date only, newest first
 #sort_criteria = ['-date']   # we have date and type: First by date ("issued"), then by type.
