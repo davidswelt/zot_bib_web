@@ -1,45 +1,63 @@
-zot_bib_web 3.0.0
+zot_bib_web 2.0.0
 -----------------------------------------
 
-- New interface to allow sorting of the bibliographic items not just
+The program's configuration has been redesigned, and many more
+options for displaying and sorting the interactive bibliography are available.
+
+
+- Much simplified installation and setup.  Improved documentation.
+  Settings files can now load multiple collections from different
+  libraries.  Use user_collection(...) and group_collection(...)
+  statements.  See settings.example.py for documentation.
+  Previous settings file are imported (with exception of the next item).
+
+- Additional settings have become available.  See settings.example.py.
+
+- Sorting of the bibliographic items not just
   by collection as in the Zotero library, but also by year or by
   publication type (e.g., journal article, conference paper), and
   arbitrary hierarchies thereof.  Extracting "selected works" or "in
   review" papers is possible.  Even if ordering chronologically,
   without showing thematic collections, the bibliography can be
   filtered according to area with the collection shortcuts at the top.
-  
+
+- Shortcuts at the top of the generated webpage can filter by years,
+  collections, venues, publication type.
+
 - Bibliographic entries can be numbered within their sections now.
   See the number_bib_items variable.
-  
-- full-bib-section and short-bib-section divs now contain their
-  respective section headings.
 
 - Added several worked examples with output in the demo folder.
-  Run make-demo.sh to generate them.
+  Run make-demo.sh to re-generate them.
 
-- Program arguments have changed.  Catchallcollection is no longer
-available.  Specify a "catch-all collection" via the & modifier
-directly in the name of the respective collection, e.g. "9999&
-Miscellaneous"  (9999 if sorting at the end is desired).
-
-- Additional settings have become available.  See settings.example.py.
-
-
-
-
-zot_bib_web 2.0.0
------------------------------------------
-- Much simplified installation and setup.  Improved documentation.
-- Items in top-level collection are no longer excluded
-- Fix problem with nested collections that did not show in the correct location
-- Improved warning messages for double entries
-- More flexibility with the "catch-all collection", which can now be
-under the top-level collection
-- Nested collections can be indented or otherwise styled using CSS
-  (new div.collection tags)
 - Tested with Pyzotero 0.10.1 and Pyzotero 1.2.0
 - Now compatible with Python 2.7 or Python 3.
+
+Compatibility-breaking Changes:
+
+- Catchallcollection is no longer available in program arguments or
+the settings file.  Specify a "catch-all collection" via the &
+modifier directly in the name of the respective collection,
+e.g. "9999& Miscellaneous" (9999 if sorting at the end is desired).
+- Items in top-level collection are no longer excluded
+
+
+CSS  and HTML Changes:
+
+- Search keywords are now prominently displayed when active
+
+- full-bib-section and short-bib-section divs now contain their
+respective section headings.
+
+- Nested collections can be indented or otherwise styled using CSS
+  (new div.collection tags)
+
+- Several new class and id attributes to allow for more styling.
+
+Selected bug fixes:
+
+- Fix problem with nested collections that did not show in the correct location
+- Improved warning messages for double entries
 
 
 zot_bib_web 1.2.2
