@@ -2,34 +2,53 @@
 
 ## You must configure the authentication settings and one collection key.
 
-#### AUTHENTICATION ############################################################
+#### AUTHENTICATION AND COLLECTIONS #############################################
 
-# Group/User:  You may either display a library for a Zotero user,
-# or for a group.
 
-# User:
-# You may find your user ID for the library_id setting under
-# "Settings -> Feeds/API":
-#    https://www.zotero.org/settings/keys
-# library_type is 'user'.
 
-# Group:
-# Find your library_id by selecting the group on the Zotero website,
-# and then choose "Group Settings".  The URL in your browser
-# window will then show you a six-digit number,
-# e.g.,  .../groups/110233/settings
-# library_type is 'group'.
+group_collection(id='160464')
+
+# user_collection(id='1366640', api_key='Y4oUU2c7P1nQWNPO3hvuEwzP')
+
+# group_collection(id, api_key=None, collection=None, top_level=False)
+# user_collection(id, api_key=None, collection=None, top_level=False)
+#
+#   Use group_collection for a group library, user_collection for a (private) user library.
+#   ID specifies the group or user ID.
+#
+#   You may find your user ID for the library_id setting under
+#   "Settings -> Feeds/API":
+#        https://www.zotero.org/settings/keys
+#
+#   You may find your library ID by selecting the group on the Zotero website,
+#   and then choose "Group Settings".  The URL in your browser
+#   window will then show you a six-digit number,
+#   e.g.,  .../groups/110233/settings
+#
+#   api_key
+#       The secret key provided by Zotero.
+#       If you want to retrieve non-public data from Zotero, you’ll need a
+#       Zotero account (or group) at zotero.org.  Log into your account,
+#       access the Settings page on the Zotero site and create an private
+#       API key (under "Settings -> Feeds/API").  For the key, check "Allow
+#       library access".  This key is used in the api_key setting.
+#
+#   collection
+#       ID of the top-level collection to be included.
+#       All sub-collections under this collection will be imported.
+#       If not given (None), all available collections will be included.
+#
+#   top_level
+#       If true, then the collection given be included as a level.
+#       Otherwise (default, False), sub-collections will be included directly.
+
+
 
 library_id = '160464' # your group or user ID (e.g., six numeric digits)
 library_type ='group'  # 'group' or 'user'
 
 # Data from private Zotero accounts:
 
-# If you want to retrieve non-public data from Zotero, you’ll need a
-# Zotero account (or group) at zotero.org.  Log into your account,
-# access the Settings page on the Zotero site and create an private
-# API key (under "Settings -> Feeds/API").  For the key, check "Allow
-# library access".  This key is used in the api_key setting.
 
 api_key = None  # secret key (from Zotero)
 

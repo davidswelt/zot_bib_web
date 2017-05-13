@@ -3,11 +3,20 @@
 
 #### You must configure the following items
 
-library_id = '160464' # your group or user ID (e.g., six numeric digits)
-library_type ='group'  # or 'group' # group or userm
-api_key = None
+group_collection(160464, collection='MGID93AS')
+group_collection(160464, collection='4KATF6MA')  # Miscellaneous collection is kept outside the tree
 
-toplevelfilter = 'MGID93AS'   # collection where to start retrieving
+# Also merge a private collection:
+user_collection('1366641', api_key = 'X4iUU2a7P5mQWNTO7hvuQwzB', collection='FCQK6PT6')
+
+# Exclude some collections out of the 1366641 library
+# Give either the collection name or the key
+exclude_collection('Selected Works') # Selected Works ZJFRZTCB
+exclude_collection('AWMEXUV2') # In Review and to appear
+exclude_collection('HZHSMP74') # Theses
+
+rename_collection('BQUUP5PR', "Language")
+
 
 # The sort_criteria determine the structure of the bibliography.
 # Allowable values: 'type' (category of publication, e.g., journal article),
@@ -40,7 +49,6 @@ bib_style =  'apa'     # bibliography style format (e.g., 'apa' or 'mla') - Any 
 
 show_top_section_headings = 1  # show section headings for the first N sort criteria
 
-additional_collections = ['4KATF6MA']  # include "Miscellaneous" category at end containing all items not mentioend anywhere else
 
 write_full_html_header = True   # False to not output HTML headers.  In this case, expect a file in UTF-8 encoding.
 
@@ -58,13 +66,9 @@ copy_button_path = "site/clippy.svg" # path to file on server
 
 show_links = ['abstract', 'pdf', 'bib','ris']   # unconditionally show these items if they are available.
 
-show_shortcuts = ['collection']
+show_shortcuts = [shortcut('collection', sortBy='name')]
 show_shortcuts += [shortcut('year', [2019,2018,2017,2016,2015,2014,'2010-2013','2000-2009','-1999'])]
 show_shortcuts += ['type']
 
 stylesheet_url = "style3.css"
 
-
-
-
-print("Link to this group library on Zotero: https://www.zotero.org/groups/%s/items"%library_id)
