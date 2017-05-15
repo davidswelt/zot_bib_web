@@ -30,6 +30,8 @@ options for displaying and sorting the interactive bibliography are available.
 - Added several worked examples with output in the demo folder.
   Run make-demo.sh to re-generate them.
 
+- Caching of Zotero retrieval makes repeated runs much faster.
+
 - Tested with Pyzotero 0.10.1 and Pyzotero 1.2.0
 - Now compatible with Python 2.7 or Python 3.
 
@@ -40,7 +42,7 @@ the settings file.  Specify a "catch-all collection" via the &
 modifier directly in the name of the respective collection,
 e.g. "9999& Miscellaneous" (9999 if sorting at the end is desired).
 - Items in top-level collection are no longer excluded
-
+- Limit has been removed (replaced with caching)
 
 CSS  and HTML Changes:
 

@@ -255,9 +255,6 @@ def read_args_and_init():
         sys.argv.remove('-i')
     else:
         interactive_debugging = False
-    if "--limit" in sys.argv:
-        limit = 5
-        sys.argv.remove('--limit')
     if "-h" in sys.argv:
         sys.argv.remove('-h')
         print_usage()
@@ -1263,7 +1260,7 @@ class DBInstance:
 
     dbInstanceCache = {}
     @staticmethod  # factory method
-    def create(library_id, library_type, api_key, limit=None):
+    def create(library_id, library_type, api_key):
 
         self = DBInstance()
         try:
@@ -1273,7 +1270,6 @@ class DBInstance:
 
         self.zot=None
         self.zotLastMod = None
-        self.setLimit(limit)
         try:
             self.zot = zotero.Zotero(library_id, library_type, api_key)
             self.zotLastMod = self.zot.last_modified_version()  # v1.1.1
@@ -1290,9 +1286,6 @@ class DBInstance:
             raise SystemExit(1)
 
         return self
-
-    def setLimit(self, limit):
-        self.limit=limit
 
     # Interface to external database
 
@@ -1329,13 +1322,9 @@ class DBInstance:
 
 
     def retrieve_x(self, collection, **args):
-        if self.limit:
-            items = self.zot.collection_items(collection, limit=limit, order=order_by, sort=sort_order,
-                                         itemType='-attachment || note', **args)
-        else:
-            items = self.zot.everything(
-                self.zot.collection_items(collection, order=order_by, sort=sort_order, itemType='-attachment || note',
-                                     **args))
+        items = self.zot.everything(
+            self.zot.collection_items(collection, order=order_by, sort=sort_order, itemType='-attachment || note',
+                                    **args))
         return items
 
     def retrieve_bib(self, collection, content, style):
@@ -1370,13 +1359,13 @@ class DBInstance:
         if not no_cache:
             cache_name = ".cache/%s.cache" % collection_id
             try:
-                date, l, lm, items = pickle.load(open(cache_name, 'rb'))
-                if date > datetime.now() - timedelta(days=7):  # cache expires after 7 days
-                    if self.zotLastMod == lm and l == limit:
+                date, lm, bs, items = pickle.load(open(cache_name, 'rb'))
+                if date > datetime.now() - timedelta(days=14):  # cache expires after 14 days
+                    if self.zotLastMod == lm and bs == bib_style:
                         #print("Using %s."%cache_name)
                         return items
                     #else:
-                        #print("Not using cache %s (library or limit modified)"%cache_name)
+                        #print("Not using cache %s (library modified)"%cache_name)
             except (IOError, ValueError, pickle.PicklingError) as e:
                 # print("Not using cache - some error ", e)
                 pass
@@ -1420,14 +1409,11 @@ class DBInstance:
                     if exception.errno != errno.EEXIST:
                         raise
             make_sure_path_exists(os.path.dirname(cache_name))
-            pickle.dump((datetime.now(), limit, self.zotLastMod, a),
+            pickle.dump((datetime.now(), self.zotLastMod, bib_style, a),
                         open(cache_name, 'wb'))
 
         return a
 
-
-def filter_items(quaditems, exclude):
-    return filter(lambda a: not (a.key in exclude), quaditems)
 
 import pprint
 def detect_and_merge_doubles(items):
