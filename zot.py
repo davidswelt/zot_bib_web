@@ -309,16 +309,23 @@ def cleanup_lines(string):
 
 
 def generate_base_html():
+    global language_code
     # smart selections prevents viewers from copying certain buttons
     # this way, a nice, clean bibliography can be copied right from a browser window
     # this is achieved by displaying the buttons dynamically.
     # caveat - are there accessibility implications?
-    if smart_selections:
-        blinkitem_css = "".join(["a.%s::before {content:\"%s\"}\n" % (i, i) for i in show_links])
-        blinkitem_css += "a.shortened::before {content:\"\\229E\"}\n"  # hex(8862)
-    else:
-        blinkitem_css = "".join(["a.%s::before {}\n" % (i) for i in show_links])
-        blinkitem_css += "a.shortened::before {}\n"
+    possible_items = set(['pdf','ps','doc','link'] + show_links)
+    blinkitem_css = ""
+    for name in possible_items:
+        if smart_selections:
+            if language_code in link_translations:
+                trans = link_translations[language_code].get(name.lower(), name)
+            else:
+                trans = name
+            blinkitem_css += "a.%s::before {content:\"%s\"}\n" % (name, trans)
+        else:
+            blinkitem_css += "a.%s::before {}\n" % (name)
+    blinkitem_css += "a.shortened::before {%s}\n"%('content:"\\229E"' if smart_selections else "")  # hex(8862)
 
     # Set some (default) styles
     # note - the final style in the style sheet is manipulated by changeCSS
@@ -1050,6 +1057,11 @@ def make_header_htmls(all_items):
 
 entry_count = 0
 
+def div(cls=None, content="", style=None):
+    "Helper that creates a HTML DIV element."
+    s = u' style="%s"'%style if style else u''
+    c = u' class="%s"' % cls if cls else u''
+    return u'<div%s%s>%s</div>'%(c,s,content)
 
 def make_html(all_items, exclude={}, shorten=False):
     def a_button(name, url=None, js=None, title=None, cls=None):
@@ -1114,7 +1126,7 @@ def make_html(all_items, exclude={}, shorten=False):
                     htmlitem = tryreplacing(htmlitem, t_to_replace, u"<span class=\"doctitle\">%s</span>" % ("\\0"))
 
                 if item.extra:
-                    htmlitem += u'<div class="bib-extra">' + item.extra + u'</div>'
+                    htmlitem += div('bib-extra', item.extra)
 
                 # Insert searchable keywords (not displayed)
                 search_tags = ''
@@ -1127,14 +1139,14 @@ def make_html(all_items, exclude={}, shorten=False):
                     search_tags += " type__" + item.type
                 htmlitem += "<span class='bib-kw' style='display:none;'>%s</span>" % search_tags
 
-                htmlitem = u'<div class="bib-details">' + htmlitem + u'</div>'
+                htmlitem = div('bib-details', htmlitem)
 
                 venue = item.venue()
                 if venue:
-                    htmlitem += u'<div class="bib-venue">' + venue + u'</div>'
+                    htmlitem += div('bib-venue', venue)
                 venue_short = item.venue_short()
                 if venue_short:
-                    htmlitem += u'<div class="bib-venue-short">' + venue_short + u'</div>'
+                    htmlitem += div('bib-venue-short', venue_short)
 
                 if shorten:
 
@@ -1151,36 +1163,44 @@ def make_html(all_items, exclude={}, shorten=False):
                     blinkitem = u""
                     # we print the original item name as label so that capitalization may be chosen via the items list
                     for show in show_items:
-
-                        if 'abstract' == show.lower() and abstract:
-                            blinkitem += u'<div class="blink">' + a_button(
-                                show) + u'<div class="bibshowhide"><div class="abstract">%s</div></div></div>' % (
-                            abstract)
-                        elif 'wikipedia' == show.lower() and item.wikipedia:
-                            blinkitem += u'<div class="blink">' + a_button(
-                                show) + u'<div class="bibshowhide"><div class="bib" style="white-space:pre-wrap;">%s</div></div></div>' % (
-                            item.wikipedia)
-                        elif 'bib' == show.lower() and bibitem2:
-                            blinkitem += u'<div class="blink">' + a_button(
-                                show) + u'<div class="bibshowhide"><div class="bib">%s</div></div></div>' % (bibitem2)
-                        elif 'pdf' == show.lower() and u:
-                            blinkitem += u'<div class="blink">' + a_button(show, url=u) + u'</div>'
-                        elif ('ris' == show.lower() or 'endnote' == show.lower()) and item.ris:
-                            blinkitem += u'<div class="blink">' + '<a class="%s" title="Download EndNote record" onclick="dwnD(\'%s\');return false;"></a></div>' % (
+                        sl = show.lower()
+                        bi = ""
+                        if 'abstract' == sl and abstract:
+                            bi = a_button(show) + div('bibshowhide', div('abstract', abstract))
+                        elif 'wikipedia' == sl and item.wikipedia:
+                            bi = a_button(show) + div('bibshowhide', div('bib', item.wikipedia, style='white-space:pre-wrap;'))
+                        elif 'bib' == sl and bibitem2:
+                            bi = a_button(show) + div('bibshowhide', div('bib', bibitem2))
+                        elif sl == 'pdf' and u:
+                            # automatically detect what the link points to
+                            if re.search(r'\.pdf$', u, re.IGNORECASE):
+                                n = 'PDF'
+                            elif re.search(r'\.docx?$', u, re.IGNORECASE):
+                                n = 'DOC'
+                            elif re.search(r'\.ps$', u, re.IGNORECASE):
+                                n = 'PS'
+                            else:
+                                n = 'LINK'
+                            bi = a_button(n, url=u, cls=n.lower())
+                        elif ('ris' == sl or 'endnote' == sl) and item.ris:
+                            bi = '<a class="%s" title="Download EndNote record" onclick="dwnD(\'%s\');return false;"></a>' % (
                             show, base64.b64encode(item.ris.encode('utf-8')).decode('utf-8'))
+                        else:
+                            continue
+                        blinkitem += div('blink', bi)
 
                     if not omit_COinS and item.coins:
                         blinkitem += str(item.coins).strip()
 
                     if shorten:  # to do - consider moving this to the CSS
-                        blinkitem = u'<div style="padding-left:20px;">' + blinkitem + u'</div>'
+                        blinkitem = div(None, blinkitem, style="padding-left:20px;")
 
-                    htmlitem += u'<div class="blinkitems">' + blinkitem + u'</div>'
+                    htmlitem += div('blinkitems', blinkitem)
 
                 if shorten:
                     htmlitem = u"<a href=\"#\" onclick=\"show(this);\">&#8862;</a> <span class=\"doctitle-short\">%s</span> <span class=\"containertitle\">%s</span> %s" % (
                     t, ct, y) + "<div class=\"bibshowhide\" style=\"padding-left:20px;\">" + htmlitem + "</div>"
-                    htmlitem = u"<div>" + htmlitem + "</div>"  # to limit was is being expanded
+                    htmlitem = div(None, htmlitem)  # to limit what is being expanded
 
                 tag = "li" if number_bib_items else "div"
                 htmlitem = u'<%s class="bib-item">' % tag + htmlitem + u'</%s>' % tag
