@@ -751,9 +751,10 @@ def write_some_html(body, outfile, title=None):
 
 
 def flexible_html_regex(r):  # To Do: request non-HTML output from Zotero instead
-    r = r.replace("&", r"(&amp;|&)")
-    r = r.replace("<", r"(&lt;|<)")
-    r = r.replace(">", r"(&gt;|>)")
+    r = re.escape(r)
+    r = r.replace("\\&", r"(&amp;|\\&)")
+    r = r.replace("\\<", r"(&lt;|\\<)")
+    r = r.replace("\\>", r"(&gt;|\\>)")
     r = r.replace(" ", r"\s+")
     r = r.replace(u" ", r"[\s ]+")  # repl string was "ur" - todo: check
     return r
