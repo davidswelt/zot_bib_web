@@ -1358,7 +1358,7 @@ class DBInstance:
         return self.retrieve_x(collection, content='coins')
 
     def retrieve_wikipedia(self, collection):
-        return self.retrieve_x(self, collection, content='wikipedia')
+        return self.retrieve_x(collection, content='wikipedia')
 
     # public
     def retrieve_data(self, collection_id, exclude=None):
