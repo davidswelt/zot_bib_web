@@ -637,7 +637,7 @@ class ZotItem:
         self.id = None
         self.creators = None
         self.event = None
-        self.section_keyword = None
+        self.section_keyword = set()
         self.url = None
         self.collection = []
         self.type = None
@@ -709,8 +709,7 @@ class ZotItem:
 
     def addSectionKeyword(self, s):
         if not s in self.section_keyword:
-            self.section_keyword += s + " "
-            # to do: store a list
+            self.section_keyword.add(s)
 
 
 
@@ -861,8 +860,6 @@ class Coll:   # To do: make collection an object
         c = Coll(code, name, depth, parents, db)
         Coll.collection_info[code] = c
         return c
-
-
 
 
     @staticmethod
@@ -1108,10 +1105,10 @@ def shortcut(crit, values=None, topN=None, sortDir='auto', sortBy=None):
 
     TOPN     If given, only show the TOPN values with the most bibliographic entries.
 
-    SORTDIR  Direction of sorting.  If given, 'asc' or 'desc'.
+    SORTDIR  Direction of sorting.  If given, 'asc' or 'desc', or None (to turn off sorting).
 
     SORTBY   May be given as 'count', which indicates sorting by the number of bibliographic entries
-             covered by each value.
+             covered by each value, or 'name', to sort by name.  The canonical order is default.
     """
     return Shortcut(crit, values=values, sortDir=sortDir, topN=topN, sortBy=sortBy)
 
@@ -1241,7 +1238,7 @@ def make_html(all_items, exclude={}, shorten=False):
                 # Insert searchable keywords (not displayed)
                 search_tags = ''
                 if item.section_keyword:
-                    search_tags += item.section_keyword  # no special tag for collections
+                    search_tags += " ".join(item.section_keyword)  # no special tag for collections
                 search_tags += " year__" + item.access('year')  # no search by date
                 if item.venue_short():
                     search_tags += " venue_short__" + item.venue_short()
@@ -1536,7 +1533,7 @@ def detect_and_merge_doubles(items):
 
     def merge(a, b):
         if a.section_keyword and not a.section_keyword in b.section_keyword:
-            b.section_keyword += " " + a.section_keyword
+            b.section_keyword.update(a.section_keyword)
         a.uniqueID = b.uniqueID
 
     # get last names of all creators.  exclude editors unless editors is all we have
@@ -1632,7 +1629,7 @@ def retrieve_all_items(collections):
         parent_path = tuple(e.parents + [key])
         for item in i2:  # for sorting by collection
             item.collection = parent_path
-            item.section_keyword = " ".join(parent_path)  # will be added HTML so the entry can be found
+            item.section_keyword = set(parent_path)  # will be added HTML so the entry can be found.  Create individual set.
 
         if len(i2) > 0:
             all_items += i2
@@ -1706,31 +1703,30 @@ def show_double_warnings(item_ids):
 
 
 
-def pull_up_featured_remove_hidden_items(all_items):
+def pull_up_featured_remove_hidden_colls(all_items):
     # split up into featured and other sections
-    visible_items = list(filter(lambda it: not Coll.is_hidden_collection(it.collection), all_items))
+    visible = list(filter(lambda it: not Coll.is_hidden_collection(it.collection), all_items))
 
-    # if len(visible_items)<len(all_items):
-    #     warning("Out of %s items, only %s will be visible due to hidden collections."%(len(all_items), len(visible_items)))
+    # if len(visible)<len(all_items):
+    #     warning("Out of %s items, only %s will be visible due to hidden collections."%(len(all_items), len(visible)))
     #     warning("The following collections are hidden: ", map(Collection.collname, filter(lambda c: Coll.is_hidden_collection(c), set(map(lambda it:it.collection, all_items)))))
 
-    featured_items = filter(lambda it: Coll.is_featured_collection(it.collection), visible_items)
-    other_items = filter(lambda it: not Coll.is_featured_collection(it.collection), visible_items)
+    featured = filter(lambda it: Coll.is_featured_collection(it.collection), visible)
+    other = filter(lambda it: not Coll.is_featured_collection(it.collection), visible)
     # if a hidden item is available elsewhere, transfer its category so that it
     # can be searched for using the category shortcuts.
     # E.g., "selected works" might not be shown at the top of the bibliography,
     # but you still might filter for it.
 
-    hidden_item_categories = defaultdict(str)
+    hidden_categories = defaultdict(set)  # to do, use multi dict
     for it in all_items:
-        if Coll.is_hidden_collection(it.collection):
-            hidden_item_categories[it.key] += it.section_keyword + " "
-    for it in visible_items:
-        id = it.key
-        if id in hidden_item_categories:
-            it.addSectionKeyword(str(hidden_item_categories[id]))
+        if Coll.is_hidden_collection(it.collection) and not it.section_keyword in hidden_categories[it.key]:
+            hidden_categories[it.key].add(it.section_keyword)
+    for it in visible:
+        if it.key in hidden_categories:
+            it.section_keyword.update(hidden_categories[it.key])
 
-    return list(featured_items), list(other_items)
+    return list(featured), list(other)
 
 
 def sort_items(all_items, sort_criteria, sort_reverse):
@@ -1871,7 +1867,7 @@ def main(include, item_filters=[]):
                 for i in all_items:
                     if last(i.collection) == collobj.key:
                         i.collection = tuple(c.parents + [c.key])
-                        i.section_keyword += " ".join(i.collection)
+                        i.section_keyword.update(set(i.collection))
 
     detect_and_merge_doubles(all_items)
 
@@ -1881,7 +1877,7 @@ def main(include, item_filters=[]):
         # double entries are likely to get filtered out anyway,
         # or they are desired (e.g., Selected Works)
 
-    featured_items, regular_items = pull_up_featured_remove_hidden_items(all_items)
+    featured_items, regular_items = pull_up_featured_remove_hidden_colls(all_items)
     featured_items = sort_items(featured_items, ['collection'] + sort_criteria, [False] + sort_reverse)
     regular_items = sort_items(regular_items, sort_criteria, sort_reverse)
     # don't use chain - we will iterate over all_items several times, so
