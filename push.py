@@ -1,43 +1,58 @@
 #!/usr/bin/env python
 
-# This tool updates a given Page on your Wordpress site.
+# This tool updates a given Page on your Wordpress site with
+# a bibliography produced by zot_bib_web.
 
-# insert <!--zot_bib_web  COLLID1 COLLID2 --> into your page where you would like the
+# insert <!--zot_bib_web  COLLID1 --> into your page where you would like the
 # bibliography to be inserted.
 # COLLID1 is the ID (hex, 8 digits) of the top-level collection.
 #     All sub-collections to this will be rendered.
-# COLLID2 is the ID of a collection containing all records;
-#     All records contained in COLLID2 minus the ones present
-#     under COLLID1 will be rendered under a "Miscellaneous" heading.
 
-# (C) 2013 David Reitter, The Pennsylvania State University
+# To use a more complex configuration, define settings.py.
+
+# (C) 2013, 2017 David Reitter, The Pennsylvania State University
 # Released under the GNU General Public License, V.3 or later.
 
 
 
-wp_url = 'http://example.com/wp/xmlrpc.php'   # Wordpress XMLRPC URL
-wp_username = 'pubpushuser'   # create a user.  Insert name here.
-wp_password = 'xxxxxxxxxxxxxxx'   # password
-wp_blogid = "0"  # typically 0, unless you have other blogs on the site
+# Configuration
+push_wordpress(url='https://example.com/wp/xmlrpc.php', blogID=0, user='pubpushername', password='pass', postID=200)
 
-post_id = 225   # set the post_id to the page number (see page's URL)
-
-infile = "zotero-bib.html"  # input file
-
-
-
-
-
-
-
-
-
+# If no collection is given, we read from what is specified as outfile in settings.py, or fro mzotero-bib.html
 
 
 
 
 
 #############################################################################
+
+def noop(*args,**kwargs):
+    pass
+
+def push_wordpress(url, blogID, user, password, postID):
+    global wp_url, wp_username, wp_password, wp_blogid, post_id
+    wp_url = url
+    wp_username = user
+    wp_password = password
+    wp_blogid = blogID
+    post_id = postID
+
+
+
+try:
+    import __builtin__
+except ImportError:
+    # Python 3
+    import builtins as __builtin__
+
+__builtin__.shortcut = noop
+__builtin__.user_collection = noop
+__builtin__.group_collection = noop
+__builtin__.exclude_collection = noop
+__builtin__.rename_collection = noop
+__builtin__.exclude_items = noop
+__builtin__.push_wordpress = push_wordpress
+
 try:
     from settings import *
 except ImportError:
@@ -57,15 +72,15 @@ server = xmlrpclib.ServerProxy(wp_url)
 from subprocess import call
 
 def get_bibliography (coll):
-    global infile
+    global outputfile
 
     if coll:
-        infile = 'zotero-bib.html'
+        outputfile = 'zotero-bib.html'
         # to do: why call as a sub-process when we can just import it?
-        call(["./zot.py", coll, infile, '--div'])
+        call(["./zot.py", coll, outputfile, '--div'])
 
-    if infile:
-        file = codecs.open(infile, "r", "utf-8")
+    if outputfile:
+        file = codecs.open(outputfile, "r", "utf-8")
         if file:
             return file.read()
     return ""
@@ -82,7 +97,7 @@ if m:
     newpost = m.group(1) + m.group(2)
 
     coll = m.group(3)
-    #  catchall = m.group(4)  (legacy)
+    #  catchall = m.group(4)  (legacy - ignored)
 
     contents = get_bibliography(coll)
     if contents:

@@ -170,11 +170,6 @@ sortkeyname_order['en']['type'] = [('journalArticle', 'Journal Articles'),
 # Special settings - configure only if needed.
 # These settings are used by push.py
 
-wp_url = 'https://example.com/wp/xmlrpc.php'   # Wordpress XMLRPC URL
-wp_username = 'pubpusherusername'
-wp_password = 'password'
-wp_blogid = "0"
-
-post_id = 225
+push_wordpress(url='https://example.com/wp/xmlrpc.php', blogID=0, user='pubpushername', password='pass', postID=200)
 
 infile = "zotero-bib.html"
