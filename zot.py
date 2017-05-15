@@ -178,6 +178,8 @@ def load_settings(file="settings.py"):
 
     except ImportError:
         pass
+    except IOError:  # no settings file
+        pass
 
 
 def fetch_tag(tag, default=None):
