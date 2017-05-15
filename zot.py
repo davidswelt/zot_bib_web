@@ -1119,7 +1119,10 @@ except ImportError:
     # Python 3
     import builtins as __builtin__
 
-__builtin__.push_wordpress = lambda *args: None
+
+__builtin__.sortkeyname_order = sortkeyname_order
+
+__builtin__.push_wordpress = lambda *args,**kwargs: None
 
 __builtin__.shortcut = shortcut
 __all__ += ['shortcut']
