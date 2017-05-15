@@ -54,6 +54,6 @@ copy_button_path = "site/clippy.svg" # path to file on server
 
 show_links = ['abstract', 'pdf', 'bib', 'wikipedia', 'endnote', 'coins']
 
-show_shortcuts = ['type','collection']
+show_shortcuts = ['type',shortcut('collection', sortBy='name')]
 
 stylesheet_url = "style4.css"
