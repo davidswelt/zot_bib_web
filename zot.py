@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
-
-# zot_bib_web
-
-# The simple way to add a fast, interactive Zotero bibiography in your website.
+"""
+# A simple way to add a fast, interactive Zotero bibiography in your website.
 
 # This tool will retrieve a set of collections and format an interactive
 # bibliography in HTML5.  The bibliography contains BibTeX records and
@@ -11,11 +9,36 @@
 # to be included in other websites (there are options), and it can be
 # easily styles using CSS (see style.css).
 
+# The primary way to configure a web bibliography is via a settings file.
+# The file settings.py is loaded by default, if present.
+# See settings.example.py for documentation.
+
 # (C) 2014,2015,2016,2017 David Reitter, The Pennsylvania State University
 # Released under the GNU General Public License, V.3 or later.
 
+Usage:   zot.py {OPTIONS} [TOPLEVEL_COLLECTION_ID] [OUTPUTFILE]
+Example: ./zot.py --group 160464 DTDTV2EP
+
+OPTIONS:
+--settings FILE.py   load settings from FILE.  See settings.example.py.
+--group GID          set a group library              [library_id; library_type='group']
+--user UID           set a user library               [library_id; library_type='user']
+--apikey KEY         set Zotero API key               [api_key]
+--div                output an HTML fragment          [write_full_html_header=False]
+--full               output full html                 [write_full_html_header=True]
+--test               implies --full and uses site/ directory
+--nocache            do not load nor update cache     [no_cache]
+
+These and additional settings can be loaded from settings.py.
+
+"""
+
+
+# zot_bib_web
+
 from __future__ import print_function
 from __future__ import unicode_literals
+
 
 ####  Program arguments
 
@@ -38,7 +61,13 @@ from __future__ import unicode_literals
 
 ## The following items are defaults.
 
-limit = None  # None, or set a limit (integer<100) for each collection for debugging
+__all__ = ['titlestring','bib_style','write_full_html_header', 'stylesheet_url',
+           'outputfile', 'category_outputfile_prefix', 'jquery_path', 'number_bib_items',
+           'show_copy_button', 'clipboard_js_path', 'copy_button_path', 'show_search_box',
+           'show_shortcuts', 'show_links', 'omit_COinS', 'smart_selections',
+           'content_filter', 'sort_criteria', 'show_top_section_headings', 'no_cache',
+           'language_code', 'sortkeyname_order', 'link_translations']
+
 titlestring = 'Bibliography'
 bib_style = 'apa'
 write_full_html_header = True
@@ -195,24 +224,10 @@ def fetch_tag(tag, default=None):
 
 
 def print_usage():
-    print("""Usage:   zot.py {OPTIONS} [TOPLEVEL_COLLECTION_ID] [OUTPUTFILE]
-Example: ./zot.py --group 160464 DTDTV2EP
-
-OPTIONS:
---settings FILE.py   load settings from FILE
---group GID          set a group library              [library_id; library_type='group']
---user UID           set a user library               [library_id; library_type='user']
---limit              sets limit to 5 for fast testing [limit=5]
---div                output an HTML fragment          [write_full_html_header=False]
---full               output full html                 [write_full_html_header=True]
---apikey KEY         set Zotero API key               [api_key]
---test               implies --full and uses site/ directory
---nocache            do not load nor update cache     [no_cache]
-
-These and additional settings can be loaded from settings.py.
-""")
+    print(__doc__)
 
 
+# import argparse
 def read_args_and_init():
     global interactive_debugging
     global write_full_html_header, stylesheet_url, outputfile, jquery_path
@@ -230,7 +245,9 @@ def read_args_and_init():
 
     import_legacy_configuration()
 
-    # Parase remaining arguments
+    # To Do: use argparse
+
+    # Parse remaining arguments
 
     if "--div" in sys.argv:
         write_full_html_header = False
@@ -538,8 +555,11 @@ def sortkeyname(field, value):
             return SortAndValue(".".join([str(sortkeyname(field2, value2).sort) for field2, value2 in zip(field, value)]), \
                    sortkeyname(field[-1], value[-1]).value)
     if field == "collection":
-        name = Collection.findName(value)  # value is an ID
-        sort_prefix, _, value = collname_split(name)
+        if  Coll.hideSectionTitle(value):
+            sort_prefix, name, value = "","",value
+        else:
+            name = Coll.findName(value)  # value is an ID
+            sort_prefix, _, value = collname_split(name)
     if field == "date":
         if parse:
             try:
@@ -564,6 +584,7 @@ def sortkeyname(field, value):
     return SortAndValue(" ".join([sort_prefix, value.lower()]), value) # sort by value
 
 
+sort_reverse=[]
 def import_legacy_configuration():
     global order_by
     global sort_criteria
@@ -577,7 +598,7 @@ def import_legacy_configuration():
             user_collection(library_id, api_key=api_key, collection=toplevelfilter, top_level=False)
     if catchallcollection:
         warn('catchallcollection setting no longer available. Ignoring.\n'
-             'Use & modifier for collection name (e.g., "& Miscellaenous") and,\n'
+             'Use & modifier for collection name (e.g., "& Miscellaneous") and,\n'
              'if necessary, the new group_collection or user_collection statement, e.g.:\n'
              'user_collection(library_id, collection = ["%s"])' % catchallcollection)
 
@@ -595,17 +616,6 @@ def import_legacy_configuration():
         else:
             sort_reverse += [False]
 
-
-sort_reverse=[]
-def sort_crit_in_reversed_order(field):
-    global sort_criteria, sort_reverse
-    if field in sort_criteria:
-        return sort_reverse[sort_criteria.index(field)]
-    if field == 'date' and 'year' in sort_criteria:
-        return sort_reverse[sort_criteria.index('year')]
-    if field == 'year' and 'date' in sort_criteria:
-        return sort_reverse[sort_criteria.index('date')]
-    return False
 
 
 def index_configuration():
@@ -649,23 +659,31 @@ class ZotItem:
         self.coins = None
         self.wikipedia = None
 
+        # populate calculated values
+        self.year = self.getYear()
         # allow libraryCatalog to override itemType
         self.type = self.libraryCatalog or self.itemType
 
     def access(self, key, default=""):
-        if key in self.__dict__:
-            return self.__dict__[key]
-        if key == 'year' and self.date:
-            m = re.search('[0-9][0-9][0-9][0-9]', self.date)
-            if m:
-                return m.group(0)
-            return self.date  # fallback
+        if key == 'year':
+            if self.year:
+                return str(self.year)
+            if self.date:
+                return self.date
         if key == 'venue':
             return self.venue()
         if key == 'venue_short':
             return self.venue_short()
+        if key in self.__dict__ and self.__dict__[key]:
+            return self.__dict__[key]
         return default  # default
         # raise RuntimeError("access: field %s not found."%key)
+
+    def getYear(self):
+        m = re.search('[0-9][0-9][0-9][0-9]', self.date)
+        if m:
+            return int(m.group(0))
+        return None
 
     def venue(self):
         return self.publicationTitle or self.conferenceName
@@ -815,49 +833,98 @@ def collname_split(name):  # returns sort_prefix,modifiers,value
     return "", "", name
 
 
-def is_short_collection(section_code):
-    "Show abbreviated entries for items in this collection"
-    return is_special_collection(section_code, "*")
+class Coll:   # To do: make collection an object
+    collection_info = {}
+
+    @staticmethod
+    def findName(key):
+        return Coll.find(key).name  # error out if unsuccessful!
+
+    @staticmethod
+    def find(key):
+        if key in Coll.collection_info:
+            return Coll.collection_info[key]
+        return None
+
+    @staticmethod
+    def findSimilar(keyword):
+        if keyword in Coll.collection_info:
+            return [Coll.find(keyword)]
+        sims = []
+        for k, c in Coll.collection_info.items():
+            if keyword == c.name or keyword == sortkeyname('collection', k).value:
+                sims += [c]
+        return sims
+
+    @staticmethod
+    def add(code, name, depth, parents, db):
+        c = Coll(code, name, depth, parents, db)
+        Coll.collection_info[code] = c
+        return c
 
 
-# def is_exclusive_collection(section_code):
-#     "Show items in this collection, and do not show them in regular collections"
-#     return is_special_collection(section_code, "^")
-
-def is_featured_collection(section_code):
-    """Regardless of sort_criteria, show this collection
-at the top of the bibliography"""
-    return is_special_collection(section_code, "!")
 
 
-def is_hidden_collection(section_code):
-    "Hide items in this collection."
-    return is_special_collection(section_code, "-")
+    @staticmethod
+    def is_short_collection(section_code):
+        "Show abbreviated entries for items in this collection"
+        return Coll.is_special_collection(section_code, "*")
 
 
-def is_misc_collection(section_code):
-    "Show only those items in this collection that are not contained elsewhere"
-    return is_special_collection(section_code, "&")
+    # def is_exclusive_collection(section_code):
+    #     "Show items in this collection, and do not show them in regular collections"
+    #     return is_special_collection(section_code, "^")
 
+    @staticmethod
+    def is_featured_collection(section_code):
+        """Regardless of sort_criteria, show this collection
+    at the top of the bibliography"""
+        return Coll.is_special_collection(section_code, "!")
 
-def is_regular_collection(s):
-    "Regular collection: not featured, short, hidden or misc"
-    return not (is_short_collection(s) or is_featured_collection(s)
-                or is_hidden_collection(s) or is_misc_collection(s))
+    @staticmethod
+    def is_hidden_collection(section_code):
+        "Hide items in this collection."
+        return Coll.is_special_collection(section_code, "-")
 
+    @staticmethod
+    def is_misc_collection(section_code):
+        "Show only those items in this collection that are not contained elsewhere"
+        return Coll.is_special_collection(section_code, "&")
 
-def is_special_collection(section_code, special):
-    if not is_string(section_code):
-        return any([is_special_collection(x, special) for x in section_code])
-    c = Collection.find(section_code)
-    if c:  # it's a collection key
-        return special in collname_split(c.name)[1]
-    # if it's not a section key, then it doesn't indicate a short section
-    return False
+    @staticmethod
+    def is_regular_collection(s):
+        "Regular collection: not featured, short, hidden or misc"
+        return not (Coll.is_short_collection(s) or Coll.is_featured_collection(s)
+                    or Coll.is_hidden_collection(s) or Coll.is_misc_collection(s))
 
+    @staticmethod
+    def is_special_collection(section_code, special):
+        if not is_string(section_code):
+            return any([Coll.is_special_collection(x, special) for x in section_code])
+        c = Coll.find(section_code)
+        if c:  # it's a collection key
+            return special in collname_split(c.name)[1]
+        # if it's not a section key, then it doesn't indicate a short section
+        return False
 
-def get_featured_collections(section_code):
-    return filter(lambda x: is_featured_collection(x), section_code)
+    @staticmethod
+    def get_featured_collections(section_code):
+        return filter(lambda x: Coll.is_featured_collection(x), section_code)
+
+    @staticmethod
+    def hideSectionTitle(section_code):
+        c = Coll.find(section_code)
+        if c:  # it's a collection key
+            return c.hideSectionTitle
+        return False
+
+    def __init__(self, key, name, depth, parents, db):
+        self.key = key
+        self.name = name
+        self.depth = depth
+        self.parents = parents
+        self.db = db
+        self.hideSectionTitle = False
 
 
 def strip(string):
@@ -882,7 +949,7 @@ def js_strings(string_or_list):
 class Shortcut:
     def __init__(self, crit, values=None, topN=None, sortBy=None, sortDir='auto'):
         self.crit = crit
-        self.values = values
+        self.levels = values
         self.sortDir = sortDir
 
         self.topN = topN
@@ -903,10 +970,21 @@ class Shortcut:
         #        return list([v for v, _id in u if v])
         return u
 
+    def sort_crit_in_reversed_order(self):
+        "We adopt the same sort order for the short cuts as for the sections and items within sections"
+        global sort_criteria, sort_reverse
+        if self.crit in sort_criteria:
+            return sort_reverse[sort_criteria.index(self.crit)]
+        if self.crit == 'date' and 'year' in sort_criteria:
+            return sort_reverse[sort_criteria.index('year')]
+        if self.crit == 'year' and 'date' in sort_criteria:
+            return sort_reverse[sort_criteria.index('date')]
+        return False
+
     def compile(self):
         Category = namedtuple('Category', ['vals', 'sortname', 'title', 'items'])
         self.catInfo = []
-        l = self.getItems()
+        l = self.getLevels()
         for sortname, section_print_title, feature_value in l:
             # if multiple items are listed in feature_value because it's a list,
             # we need to retrieve items for these separately
@@ -922,20 +1000,22 @@ class Shortcut:
             self.catInfo += [Category(vals, sortname, title, items)]
         if self.sortDir or self.sortBy:
             if self.sortDir == 'auto':
-                if self.values:
-                    sort = False
+                if self.levels:  # if levels are given explicitly
+                    sort = False  # do not sort at all
                 else:
-                    sort = 'desc' if sort_crit_in_reversed_order(self.crit) else 'asc'
+                    sort = 'desc' if self.sort_crit_in_reversed_order() else 'asc'
             else:
                 sort = self.sortDir
 
-            if self.sortBy == 'count':
-                k = lambda x: len(x.items)
-            elif self.sortBy == 'name':
-                    k = lambda x: x.title # by title
-            else: # by sort name
-                k = lambda x: x.sortname  # sort by sort name (as given by sortkeyname)
-            self.catInfo.sort(key=k, reverse=(sort == 'desc'))
+            if sort:  # sort?
+
+                if self.sortBy == 'count':
+                    k = lambda x: len(x.items)
+                elif self.sortBy == 'name':
+                        k = lambda x: x.title # by title
+                else: # by sort name
+                    k = lambda x: x.sortname  # sort by sort name (as given by sortkeyname)
+                self.catInfo.sort(key=k, reverse=(sort == 'desc'))
 
     def getCatValueInfo(self):
         if self.topN:
@@ -963,17 +1043,18 @@ class Shortcut:
             result.append(item)
         return result
 
-    def getItems(self):
+    def getLevels(self):
         def fit(v):  # first if tuple
             if isinstance(v, list):  # multiple items listed - use first for label
                 return str(v[0])
             return str(v)
 
-        if self.values:  # e.g., ('type', [v1,v2,v3])
-            l = [(sortkeyname(self.crit, fit(value)).sort, fit(value), value) for value in self.values if value]
+        if self.levels:  # e.g., ('type', [v1,v2,v3])
+            l = [(sortkeyname(self.crit, fit(lev)).sort, fit(lev), lev) for lev in self.levels if lev]
         else:
-            l = [sortkeyname(self.crit, value) + (value,) for value in self.getValueForUniqueItems()]
-        l = self.uniquify(l, idfun=lambda x: x.sort)
+            l = [sortkeyname(self.crit, lev) + (lev,) for lev in self.getValueForUniqueItems()]
+        l = filter(lambda snv: snv[1], l)
+        l = self.uniquify(l, idfun=lambda x: x[0])
         return l
 
     def getBibItems(self, crit_val, section_print_title):
@@ -995,6 +1076,8 @@ class Shortcut:
                         return (int(y) >= fromyear and int(y) <= toyear)
                     except ValueError:
                         return False
+                    except TypeError:
+                        return False
 
                 allvalues = list(filter(inrange, allvalues))
                 crit_val = map(lambda y: "year__%s" % y, set(allvalues))
@@ -1012,12 +1095,37 @@ class Shortcut:
         return crit_val, section_print_title, allvalues
 
 
-def shortcut(crit, values=None, sortDir='auto', topN=None, sortBy=None):
+def shortcut(crit, values=None, topN=None, sortDir='auto', sortBy=None):
+    """Make a shortcut for Zot/Bib/Web's show_shortcuts variable.
+
+    CRIT     The criterion as a string, selected by the shortcut.
+             Permissible values include 'collection', 'year', 'type', 'venue', and 'venue_short'.
+
+    VALUES   Optional list of values to be show for the criterion.  Each element may be string,
+             or an int (if appropriate, for years).  For numbers, strings may specify a range, e.g.,
+             "2004-2009" (to select the range of years), or "-2004" or "2010-" to select years
+             before or after the given year, respectively.
+
+    TOPN     If given, only show the TOPN values with the most bibliographic entries.
+
+    SORTDIR  Direction of sorting.  If given, 'asc' or 'desc'.
+
+    SORTBY   May be given as 'count', which indicates sorting by the number of bibliographic entries
+             covered by each value.
+    """
     return Shortcut(crit, values=values, sortDir=sortDir, topN=topN, sortBy=sortBy)
 
 
-__builtins__.shortcut = shortcut
+try:
+    import __builtin__
+except ImportError:
+    # Python 3
+    import builtins as __builtin__
 
+__builtin__.zot = [shortcut]
+
+__builtin__.shortcut = shortcut
+__all__ += ['shortcut']
 
 def make_header_htmls(all_items):
     # ordering:
@@ -1045,9 +1153,7 @@ def make_header_htmls(all_items):
             else:
                 # collection does not need to be marked
                 if hasattr(info.items, '__iter__'):
-#                    allvalues_merged = list(merge_doubles(info.items))
-                    counter = len(info.items)
-                    counterStr = " (%s)" % counter
+                    counterStr = " (%s)" % len(info.items)
                 else:
                     counterStr = ""
                 html += "<li class='link'><a style='white-space: nowrap;' href='#' onclick='searchF([%s],\"%s\",1);return false;'>%s<span class='cat_count'>%s</a></li>\n" % (
@@ -1066,6 +1172,10 @@ def div(cls=None, content="", style=None):
     return u'<div%s%s>%s</div>'%(c,s,content)
 
 def make_html(all_items, exclude={}, shorten=False):
+    """Produce the HTML for ALL_ITEMS.
+    EXCLUDE certain items.
+    SHORTEN the produced output for featured collections.
+    """
     def a_button(name, url=None, js=None, title=None, cls=None):
         global smart_selections
         global language_code
@@ -1084,8 +1194,6 @@ def make_html(all_items, exclude={}, shorten=False):
             name = link_translations[language_code].get(name.lower(), name)
         return u"<a class=\"%s\" %s %s onclick=\"%s\">%s</a>" % (
         cls, title2, url, js, ("" if smart_selections else name))
-
-    sort_criteria = None  # [u'page']  # TODO - allow user to set this; document
 
     count = 0
     string = ""
@@ -1221,14 +1329,15 @@ def make_html(all_items, exclude={}, shorten=False):
 
 
 include_collections = []
+item_filters = []
 
 def group_collection(id, api_key=None, collection=None, top_level=False):
     global include_collections
-    include_collections += [(DBInstance.create(id, 'group', api_key), collection, top_level)]
+    include_collections += [('load', DBInstance.create(id, 'group', api_key), collection, top_level)]
 
 def user_collection(id, api_key=None, collection=None, top_level=False):
     global include_collections
-    include_collections += [(DBInstance.create(id, 'user', api_key), collection, top_level)]
+    include_collections += [('load', DBInstance.create(id, 'user', api_key), collection, top_level)]
 
 def exclude_collection(collection, top_level_only=False):
     global include_collections
@@ -1238,46 +1347,23 @@ def rename_collection(collection, newName):
     global include_collections
     include_collections += [('rename', collection, newName)]
 
-__builtins__.user_collection = user_collection
-__builtins__.group_collection = group_collection
-__builtins__.exclude_collection = exclude_collection
-__builtins__.rename_collection = rename_collection
+def exclude_items(filter):
+    """After all items are loaded, filter them using a function.
+    The function given in FILTER takes one argument, ITEM, and
+    returns True for each item to exclude.
+    ITEM is of type ZotItem."""
+    global item_filters
+    item_filters += [filter]
 
-class Collection:
-    collection_info = {}
 
-    @staticmethod
-    def findName(key):
-        return Collection.find(key).name  # error out if unsuccessful!
+__builtin__.user_collection = user_collection
+__builtin__.group_collection = group_collection
+__builtin__.exclude_collection = exclude_collection
+__builtin__.rename_collection = rename_collection
+__builtin__.exclude_items = exclude_items
 
-    @staticmethod
-    def find(key):
-        if key in Collection.collection_info:
-            return Collection.collection_info[key]
-        return None
+__all__ += ['user_collection', 'group_collection', 'exclude_collection', 'rename_collection', 'exclude_items']
 
-    @staticmethod
-    def findSimilar(keyword):
-        if keyword in Collection.collection_info:
-            return [Collection.find(keyword)]
-        sims = []
-        for k, c in Collection.collection_info.items():
-            if keyword == c.name or keyword == sortkeyname('collection', k).value:
-                sims += [c]
-        return sims
-
-    @staticmethod
-    def add(code, name, depth, parents, db):
-        c = Collection(code, name, depth, parents, db)
-        Collection.collection_info[code] = c
-        return c
-
-    def __init__(self, key, name, depth, parents, db):
-        self.key = key
-        self.name = name
-        self.depth = depth
-        self.parents = parents
-        self.db = db
 
 class DBInstance:
 
@@ -1320,7 +1406,7 @@ class DBInstance:
             name = coll_data(collitem)[u'name']
             c = self.zot.collections_sub(key)
 
-            result += [Collection.add(key, name, depth, parents, self)]
+            result += [Coll.add(key, name, depth, parents, self)]
             result += self.traverse(c, depth + 1, parents + [key])
         return result
 
@@ -1328,10 +1414,15 @@ class DBInstance:
     def get_collections(self, topcollection, top_level):
         try:
             if topcollection:
-                if top_level:
-                    colls = self.traverse(self.zot.collection(topcollection))
-                else:
-                    colls = self.traverse(self.zot.collections_sub(topcollection))
+                colls = self.traverse([self.zot.collection(topcollection)])
+
+                if not top_level:
+                    colls[0].hideSectionTitle=True  # the topmost one should be hidden
+
+               # if top_level:
+              #      print("Fetching top-level collection ", topcollection)
+              #  else:
+             #       colls = self.traverse(self.zot.collections_sub(topcollection))
             else:
                 print("Fetching all collections:")
                 colls = self.traverse(self.zot.collections())
@@ -1455,70 +1546,80 @@ def detect_and_merge_doubles(items):
     uniqueID = 0
     for a in items:
         key = a.key
+        atl = a.title.lower()
+
         if key in iids:
             # depending on sort criteria, even the short collection ones
             # can show up elsewhere.
-            #  and not (u'collection' in iids[key] and is_short_collection(iids[key].collection))
+            #  and not (u'collection' in iids[key] and Coll.is_short_collection(iids[key].collection))
             # print("Merging ", a.title)
 
             # merge "section keywords"
 
             merge(a, iids[key])
-            continue
-        elif a.title.lower() in titles:
-            ts = titles[a.title.lower()]
-            for t in ts:
+        elif atl in titles:
+            for t in titles[atl]:
                 if a.date == t.date:
                     if set(lastnames(a.creators)) == set(lastnames(t.creators)):
                         merge(a, iids[t.key])
-                        continue
+                        break
                     # We're showing warnings for almost-equal items later
-        iids[key] = a
-        atl = a.title.lower()
-        titles[atl] = (titles[atl] if atl in titles else []) + [a]
-        uniqueID+=1
-        a.uniqueID = uniqueID
+        if not a.uniqueID:  # wasn't merged
+            iids[key] = a
+            titles[atl] = (titles[atl] if atl in titles else []) + [a]
+            uniqueID+=1
+            a.uniqueID = uniqueID
+
     return uniqueID
 
-def prog1 (*args):
-    return args[0]
-
 def merge_doubles(items):
-    # this assumes that detect_and_merge_doubles was run beforehand.
+    # this assumes that detect_and_merge_doubles has been run.
+
+    result = []
     ids = set()
-    return filter(lambda i: prog1(not i.uniqueID in ids, ids.add(i.uniqueID)), items)
+    for i in items:
+        if not i.uniqueID in ids:
+            ids.add(i.uniqueID)
+            result += [i]
+    return result
+
+    # Equivalend to something like the following:
+    # Conceptually, not used because the lambda function relies on a state variable
+    # return list(filter(lambda i: prog1(not i.uniqueID in ids, ids.add(i.uniqueID)), items))
+
 
 from datetime import datetime, timedelta
 import pickle
 
 
-def retrieve_all_items(sortedkeys):
-    global limit, no_cache
-    global item_ids
+def retrieve_all_items(collections):
+    global no_cache
 
+    item_ids = {}
+
+    # move miscellaneous collections to the end
+    collections = [e for e in collections if not Coll.is_misc_collection(e.key)] + \
+                  [e for e in collections if Coll.is_misc_collection(e.key)]
 
     all_items = []
-    for e in sortedkeys: # key, depth, collection_name, collection_parents, db
+    for e in collections: # key, depth, collection_name, collection_parents, db
         c = 0
         print(" " + " " * len(e.parents) + e.name + "...", end="")
 
         key = e.key
 
-        i2 = e.db.retrieve_data(key)
-        if is_misc_collection(key):  # Miscellaneous type collection
+        i2 = list(e.db.retrieve_data(key))
+        if Coll.is_misc_collection(key):  # Miscellaneous type collection
             # This has everything that isn't mentioned above
             # so we'll filter what's in item_ids
             # print("Miscellaneous collection: %s items initially"%len(i2))
-            i2 = list(filter_items(i2, item_ids))
+            i2 = list(filter(lambda a: not ((a.key in item_ids) or (a.title.lower() in item_ids)), i2))
+
             # print("Miscellaneous collection: %s items left"%len(i2))
-
-        i2 = list(i2)
-
-        # add to item_ids
-        for i in i2:
-            if is_regular_collection(key):
+        elif Coll.is_regular_collection(key):
+            for i in i2:
                 # we store by key (ID) and also by title hash
-                for k in [i.key, hash(i.title.lower())]:
+                for k in [i.key, i.title.lower()]:
                     if k not in item_ids:
                         item_ids[k] = []
                     item_ids[k] += [(i, key)]  # tuple is item and collectionkey
@@ -1536,12 +1637,10 @@ def retrieve_all_items(sortedkeys):
         if len(i2) > 0:
             all_items += i2
 
-    return all_items
+    return all_items, item_ids
 
 
 def compile_data(all_items, section_code, crits, exclude={}, shorten=False):
-    global item_ids
-    global bib_style
     global show_top_section_headings
 
     corehtml, count = make_html(all_items, exclude=exclude, shorten=shorten)
@@ -1563,7 +1662,7 @@ def compile_data(all_items, section_code, crits, exclude={}, shorten=False):
     if last_section_id:
 
         html += "<a id='%s' style='{display: block; position: relative; top: -150px; visibility: hidden;}'></a>" % last_section_id
-        if section_code and show_top_section_headings:
+        if section_code and show_top_section_headings and not Coll.hideSectionTitle(last_section_id):
             depth = 0
             if not is_string(section_code):
                 depth = len(section_code) - 1  # it's a path
@@ -1577,8 +1676,7 @@ def compile_data(all_items, section_code, crits, exclude={}, shorten=False):
     return html
 
 
-def show_double_warnings():
-    global item_ids
+def show_double_warnings(item_ids):
 
     def itemref(i):
         auth = (i.title and i.title[:30]) or u""
@@ -1593,16 +1691,16 @@ def show_double_warnings():
                 # This only applies to different items with the same title
                 warning("%s items sharing the same title included:" % len(itemcolls))
                 for i, c in itemcolls:
-                    warn(" %s [%s] (collection: %s)" % (itemref(i), i.key, Collection.findName(c)))
+                    warn(" %s [%s] (collection: %s)" % (itemref(i), i.key, Coll.findName(c)))
             else:
                 # if item is the same, it may still be included in several collections:
                 uniquecolls = set([c for _i, c in itemcolls])
-                uniquecolls = list(filter(is_regular_collection, list(uniquecolls)))
+                uniquecolls = list(filter(Coll.is_regular_collection, list(uniquecolls)))
                 if len(uniquecolls) > 1:
                     # we know that every item here has the same ID (because of the previous check)
                     # itemcolls is a list
                     warning('Item "%s" included in %s collections:\n %s' % (
-                    itemref(itemcolls[0][0]), len(uniquecolls), ", ".join(map(Collection.findName, uniquecolls))))
+                    itemref(itemcolls[0][0]), len(uniquecolls), ", ".join(map(Coll.findName, uniquecolls))))
 
 
 
@@ -1610,14 +1708,14 @@ def show_double_warnings():
 
 def pull_up_featured_remove_hidden_items(all_items):
     # split up into featured and other sections
-    visible_items = list(filter(lambda it: not is_hidden_collection(it.collection), all_items))
+    visible_items = list(filter(lambda it: not Coll.is_hidden_collection(it.collection), all_items))
 
     # if len(visible_items)<len(all_items):
     #     warning("Out of %s items, only %s will be visible due to hidden collections."%(len(all_items), len(visible_items)))
-    #     warning("The following collections are hidden: ", map(Collection.collname, filter(lambda c: is_hidden_collection(c), set(map(lambda it:it.collection, all_items)))))
+    #     warning("The following collections are hidden: ", map(Collection.collname, filter(lambda c: Coll.is_hidden_collection(c), set(map(lambda it:it.collection, all_items)))))
 
-    featured_items = filter(lambda it: is_featured_collection(it.collection), visible_items)
-    other_items = filter(lambda it: not is_featured_collection(it.collection), visible_items)
+    featured_items = filter(lambda it: Coll.is_featured_collection(it.collection), visible_items)
+    other_items = filter(lambda it: not Coll.is_featured_collection(it.collection), visible_items)
     # if a hidden item is available elsewhere, transfer its category so that it
     # can be searched for using the category shortcuts.
     # E.g., "selected works" might not be shown at the top of the bibliography,
@@ -1625,7 +1723,7 @@ def pull_up_featured_remove_hidden_items(all_items):
 
     hidden_item_categories = defaultdict(str)
     for it in all_items:
-        if is_hidden_collection(it.collection):
+        if Coll.is_hidden_collection(it.collection):
             hidden_item_categories[it.key] += it.section_keyword + " "
     for it in visible_items:
         id = it.key
@@ -1647,7 +1745,7 @@ def sort_items(all_items, sort_criteria, sort_reverse):
             all_items.sort(key=lambda x: sortkeyname(crit, x.access(crit)).sort, reverse=rev)
 
             # prioritize featured collections
-            # all_items.sort(key=lambda x: is_featured_collection(x.collection))
+            # all_items.sort(key=lambda x: Coll.is_featured_collection(x.collection))
     return all_items
 
 
@@ -1685,8 +1783,8 @@ def section_generator(items, crits):
         section = []
         crits_sec = []
 
-        if is_featured_collection(item.collection):
-            section = list(get_featured_collections(item.collection))
+        if Coll.is_featured_collection(item.collection):
+            section = list(Coll.get_featured_collections(item.collection))
             crits_sec += ['collection'] * len(section)
         else:
             # Then, everything is organized according to the sort criteria
@@ -1723,55 +1821,62 @@ def section_generator(items, crits):
     if collect:
         yield prev_section, prev_crits_sec, collect
 
-
-def main(include):
-    global item_ids
+def main(include, item_filters=[]):
 
     index_configuration()
 
-    if limit:
-        print("Output limited to %s per collection." % limit)
-
     all_items = []
     section_items = []
-    item_ids = {}
 
     sortedkeys = []
-    for zot, coll, toplevel in include:
-        if zot == 'exclude':  # handle exclusion of items
+    for entry in include:
+        func, args = entry[0], entry[1:]
+        if func == 'exclude':  # handle exclusion of items
+            coll, top_level_only = args
             # if coll is the name of a collection, turn it into a key
-            collobjs = Collection.findSimilar(coll)
+            collobjs = Coll.findSimilar(coll)
             for collobj in collobjs:
-                sortedkeys = list(filter(lambda e:  (not collobj.key in [e.key]+([] if toplevel else e.parents)), sortedkeys))
-            else:
+                sortedkeys = list(filter(lambda e:  (not collobj.key in [e.key]+([] if top_level_only else e.parents)), sortedkeys))
+            if not collobjs:
                 warn("Exclude: Collection %s not found."%coll)
-        elif zot == 'rename':
-            collobjs = Collection.findSimilar(coll)
+        elif func == 'rename':
+            coll, name = args
+            collobjs = Coll.findSimilar(coll)
             for collobj in collobjs:
-                collobj.name = toplevel # newName
-        else:
-            sortedkeys += zot.get_collections(coll, toplevel)
+                collobj.name = name # newName
+        elif func == 'load': # DB Object
+            db, coll, toplevel = args
+            sortedkeys += db.get_collections(coll, toplevel)
 
-    # move miscellaneous collections to the end
-    at_end = [e for e in sortedkeys if is_misc_collection(e.key)]
-    sortedkeys = [e for e in sortedkeys if not is_misc_collection(e.key)] + at_end
+    all_items, item_ids = retrieve_all_items(sortedkeys)
 
-    all_items = retrieve_all_items(sortedkeys)
+    def apply_exclusion_filter(filter, item):
+        try:
+            r = filter(item)
+            return not r
+        except Exception as e:
+            warn("Error while applying exclude_items filter: ", e)
+        return False
+
+    for f in item_filters:
+        all_items = filter(lambda i: apply_exclusion_filter(f, i), all_items)
+    all_items = list(all_items)
 
     # merge collections with the same name
     for c in sortedkeys:
-        collobjs = Collection.findSimilar(c.name)
+        collobjs = Coll.findSimilar(c.name)
         if len(collobjs)>1:
             print("Merging %s collections into section %s."%(len(collobjs),c.name))
             for collobj in collobjs:
                 for i in all_items:
                     if last(i.collection) == collobj.key:
                         i.collection = tuple(c.parents + [c.key])
+                        i.section_keyword += " ".join(i.collection)
 
     detect_and_merge_doubles(all_items)
 
     if 'collection' in sort_criteria:
-        show_double_warnings()
+        show_double_warnings(item_ids)
         # If collection doesn't feature in sort criteria,
         # double entries are likely to get filtered out anyway,
         # or they are desired (e.g., Selected Works)
@@ -1791,7 +1896,7 @@ def main(include):
     for section_code, crits, items in list(section_generator(all_items, sort_criteria)):
         # remove double entries within one section
         items = list(merge_doubles(items))
-        fullhtml += compile_data(items, section_code, crits, shorten=is_short_collection(section_code))
+        fullhtml += compile_data(items, section_code, crits, shorten=Coll.is_short_collection(section_code))
 
         # Keep track of IDs so we can show statistics
         itemids.update(map(lambda i: i.key, items))
@@ -1810,12 +1915,13 @@ def main(include):
     write_some_html(headerhtml + fullhtml, outputfile)
 
 
-read_args_and_init()
-html_header, search_box, html_footer = generate_base_html()
+if __name__ == '__main__':
+    read_args_and_init()
+    html_header, search_box, html_footer = generate_base_html()
 
-if interactive_debugging:
-    import code
+    if interactive_debugging:
+        import code
 
-    code.interact(local=locals())
-else:
-    main(include_collections)
+        code.interact(local=locals())
+    else:
+        main(include_collections, item_filters)
