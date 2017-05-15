@@ -15,12 +15,6 @@
 
 
 
-# Configuration
-push_wordpress(url='https://example.com/wp/xmlrpc.php', blogID=0, user='pubpushername', password='pass', postID=200)
-
-# If no collection is given, we read from what is specified as outfile in settings.py, or fro mzotero-bib.html
-
-
 
 
 
@@ -36,6 +30,13 @@ def push_wordpress(url, blogID, user, password, postID):
     wp_password = password
     wp_blogid = blogID
     post_id = postID
+
+#############################################################################
+
+# Configuration example
+# push_wordpress(url='https://example.com/wp/xmlrpc.php', blogID=0, user='pubpushername', password='pass', postID=200)
+
+# If no collection is given, we read from what is specified as outfile in settings.py, or fro mzotero-bib.html
 
 
 
