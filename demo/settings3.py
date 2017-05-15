@@ -18,6 +18,10 @@ exclude_collection('HZHSMP74') # Theses
 rename_collection('BQUUP5PR', "Language")
 
 
+#filter_items(lambda i: not 'FCQK6PT6' in i.collections or i.year>2008)  # This is a function that returns True for every item to be included
+exclude_items(lambda i: 'Reitter' in i.html and i.year<2011)  # This is a function that returns True for every item to be included
+
+
 # The sort_criteria determine the structure of the bibliography.
 # Allowable values: 'type' (category of publication, e.g., journal article),
 # 'date' (full date)
@@ -43,8 +47,6 @@ sort_criteria = ['-date','collection']   # First by collection, then type, then 
 ###### Special settings
 
 
-limit=None   # None, or set a limit (integer<100) for each collection for debugging
-    
 bib_style =  'apa'     # bibliography style format (e.g., 'apa' or 'mla') - Any valid CSL style in the Zotero style repository
 
 show_top_section_headings = 1  # show section headings for the first N sort criteria

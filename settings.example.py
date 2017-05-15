@@ -6,7 +6,7 @@
 
 
 
-group_collection(id='160464')
+group_collection(160464, collection='MGID93AS')
 
 # user_collection(id='1366640', api_key='Y4oUU2c7P1nQWNPO3hvuEwzP')
 
@@ -40,17 +40,8 @@ group_collection(id='160464')
 #
 #   top_level
 #       If true, then the collection given be included as a level.
-#       Otherwise (default, False), sub-collections will be included directly.
+#       Otherwise (default, False), sub-collections and items will be included directly.
 
-
-
-library_id = '160464' # your group or user ID (e.g., six numeric digits)
-library_type ='group'  # 'group' or 'user'
-
-# Data from private Zotero accounts:
-
-
-api_key = None  # secret key (from Zotero)
 
 #### COLLECTIONS TO BE RENDERED ################################################
 
@@ -69,17 +60,6 @@ api_key = None  # secret key (from Zotero)
 # When you click on it on the Zotero website, your browser will show you an alphanumeric
 # key in the URL, e.g., items/collectionKey/FCQM2AY6.  The portion 'FCQM2AY6' is what you
 # would use in toplevelfilter.
-
-# To display the whole library with all its collections,
-# leave toplevelfilter set to None.  You may use that to see a list of all collections
-# when zot_bib_web runs.
-
-# ID string of the top-collection that is going to be ignored (as a level), or None
-# If set, we will display the items available underneath this collection.
-# otherwise, all collections available will be displayed.
-toplevelfilter = None # e.g., 'MGID93AS'
-
-additional_collections = []  # additional collections to be added from outside of the toplevelfilter
 
 #### SPECIAL OPTIONS: STYLE ####################################################
 # Special settings - configure only if needed.

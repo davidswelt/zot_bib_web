@@ -1,13 +1,19 @@
 #dr-settings.py
 
 
-#### You must configure the following items
+#### You must configure the following item
 
-library_id = '1366641' # your group or user ID (e.g., six numeric digits)
-library_type ='user'  # or 'group' # group or userm
-api_key = 'X4iUU2a7P5mQWNTO7hvuQwzB'  # not-so-secret key (from Zotero Feeds/API settings)
+user_collection('1366641', api_key = 'X4iUU2a7P5mQWNTO7hvuQwzB', collection='FCQK6PT6')
 
-toplevelfilter = 'FCQK6PT6'   # collection where to start retrieving
+# '1366641' #  user ID (e.g., six numeric digits)
+# 'X4iUU2a7P5mQWNTO7hvuQwzB'  # api_key: not-so-secret key (from Zotero Feeds/API settings)
+# 'FCQK6PT6'  # collection where to find the bibliographic items.
+# (You can load a group collection with group_collection().)
+
+
+#### Optional configuration
+
+sort_criteria = ['-year']   # we have date and type: First by date ("issued"), then by type.
 
 # The sort_criteria determine the structure of the bibliography.
 # Allowable values: 'type' (category of publication, e.g., journal article),
@@ -25,7 +31,7 @@ toplevelfilter = 'FCQK6PT6'   # collection where to start retrieving
 # By type (journal, conference, etc.), then chronologically
 # sort_criteria = ['type','-date']   # we have date and type: First by date ("issued"), then by type.
 # By year, then with journal articles first
-sort_criteria = ['-year']   # we have date and type: First by date ("issued"), then by type.
+# sort_criteria = ['-year']   # we have date and type: First by date ("issued"), then by type.
 # By date only, newest first
 #sort_criteria = ['-date']   # we have date and type: First by date ("issued"), then by type.
 
@@ -33,15 +39,9 @@ sort_criteria = ['-year']   # we have date and type: First by date ("issued"), t
 
 ###### Special settings
 
-
-limit=None   # None, or set a limit (integer<100) for each collection for debugging
-    
 bib_style =  'apa'     # bibliography style format (e.g., 'apa' or 'mla') - Any valid CSL style in the Zotero style repository
 
 show_top_section_headings = 1  # show section headings for the first N sort criteria
-
-additional_collections = [toplevelfilter]  # include "Miscellaneous" category at end containing all items not mentioend anywhere else
-
 
 write_full_html_header = True   # False to not output HTML headers.  In this case, expect a file in UTF-8 encoding.
 
