@@ -84,7 +84,7 @@ clipboard_js_path = "site/clipboard.min.js"
 copy_button_path = "site/clippy.svg"
 show_search_box = True
 show_shortcuts = ['collection']
-show_links = ['abstract', 'PDF', 'BIB', 'Wikipedia', 'EndNote']
+show_links = ['abstract', 'url', 'BIB', 'Wikipedia', 'EndNote']
 omit_COinS = False
 smart_selections = True
 content_filter = {'bib': 'fix_bibtex_reference'}  # currently, only this function is supported.
@@ -335,7 +335,7 @@ def generate_base_html():
     # this way, a nice, clean bibliography can be copied right from a browser window
     # this is achieved by displaying the buttons dynamically.
     # caveat - are there accessibility implications?
-    possible_items = set(['pdf','ps','doc','link'] + show_links)
+    possible_items = set(['pdf','ps','doc','link'] + show_links) # see also button_label_for_object
     blinkitem_css = ""
     for name in possible_items:
         if smart_selections:
@@ -1202,6 +1202,17 @@ def make_html(all_items, exclude={}, shorten=False):
         return u"<a class=\"%s\" %s %s onclick=\"%s\">%s</a>" % (
         cls, title2, url, js, ("" if smart_selections else name))
 
+    def button_label_for_object(obj, default):
+        if re.search(r'\.pdf$', obj, re.IGNORECASE):
+            n = 'pdf'
+        elif re.search(r'\.docx?$', obj, re.IGNORECASE):
+            n = 'doc'
+        elif re.search(r'\.ps$', obj, re.IGNORECASE):
+            n = 'ps'
+        else:
+            n = default
+        return n
+
     count = 0
     string = ""
     for item in all_items:
@@ -1278,6 +1289,7 @@ def make_html(all_items, exclude={}, shorten=False):
                 if item.bib:
                     abstract, bibitem2 = extract_abstract(item.bib)
                     blinkitem = u""
+
                     # we print the original item name as label so that capitalization may be chosen via the items list
                     for show in show_items:
                         sl = show.lower()
@@ -1293,23 +1305,14 @@ def make_html(all_items, exclude={}, shorten=False):
                                 if a.itemType=='attachment':
                                     fn = a.saved_filename
                                     if fn:
-                                        bi = a_button(show, url=file_output_path+'/'+fn)
+                                        bi = a_button(button_label_for_object(fn, show), url=file_output_path+'/'+fn)
                         elif sl == 'note':
                             for a in item.attachments:
-                                if a.itemType == 'note':
-
-                                    bi = a_button(show) + div('bibshowhide', div('note', ''))
-
-                        elif sl == 'pdf' and u:
+                                if a.itemType == 'note' and a.note:
+                                    bi = a_button(show) + div('bibshowhide', div('note', a.note))
+                        elif (sl == 'pdf' or sl == 'url') and u:
                             # automatically detect what the link points to
-                            if re.search(r'\.pdf$', u, re.IGNORECASE):
-                                n = 'PDF'
-                            elif re.search(r'\.docx?$', u, re.IGNORECASE):
-                                n = 'DOC'
-                            elif re.search(r'\.ps$', u, re.IGNORECASE):
-                                n = 'PS'
-                            else:
-                                n = 'LINK'
+                            n = button_label_for_object(u, 'link')
                             bi = a_button(n, url=u, cls=n.lower())
                         elif ('ris' == sl or 'endnote' == sl) and item.ris:
                             bi = '<a class="%s" title="Download EndNote record" onclick="dwnD(\'%s\');return false;"></a>' % (
@@ -1571,7 +1574,8 @@ class DBInstance:
             make_sure_path_exists(p)
             self.zot.dump(item.key, path=p)
             item.saved_filename = "%s/%s"%(item.key, item.filename)
-            print("Dump "+item.saved_filename)
+            # print("Dump "+item.saved_filename)
+            # ToDo:  check if file is new
 
 import pprint
 def detect_and_merge_doubles(items):
@@ -1648,7 +1652,7 @@ def retrieve_all_items(collections):
     all_items = []
     for e in collections: # key, depth, collection_name, collection_parents, db
         c = 0
-        print(" " + " " * len(e.parents) + e.name + " " + e.key + "...", end="")
+        print(" " + " " * len(e.parents) + e.name + " (" + e.key + ") ...", end="")
 
         key = e.key
 

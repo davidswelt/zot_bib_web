@@ -139,12 +139,22 @@ clipboard_js_path = "site/clipboard.min.js"  # path to file on server
 copy_button_path = "site/clippy.svg" # path to file on server
 
 # Attachments
-file_outputdir = 'files/'
-file_output_path = "files/"
+file_outputdir = 'files/'  # Location to save attached files.
+file_output_path = "files/"  # relative URL on server, corresponding to file_outputdir
 
 # unconditionally show these items if they are available for the item
 # (don't set to obtain defaults)
-# show_links = ['abstract', 'pdf', 'bib', 'wikipedia', 'ris']
+# show_links = ['abstract', 'url', 'bib', 'wikipedia', 'ris', 'file']
+#
+# URL       - the URL field for the item; button is displayed as PDF/DOC/PS/LINK as detected.
+# file      - each file associated with the item in the library.  Files are saved to
+#             file_outputdir and expected to appear on the web server in file_output_path (which see)
+#             Button is displayed as PDF/DOC/PS/LINK as detected.
+# RIS or EndNote - download of the RIS file containing the bibliographic data
+# BIB       - bibliographic data for LaTeX
+# Wikipedia - bibliographic data in Wikipedia format
+# Abstract  - the abstract
+
 
 # omit_COinS = False  # True to omit COINS metadata; useful to save space, but not recommended.
 

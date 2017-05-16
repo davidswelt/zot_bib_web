@@ -24,6 +24,11 @@ options for displaying and sorting the interactive bibliography are available.
 - Shortcuts at the top of the generated webpage can filter by years,
   collections, venues, publication type.
 
+- Files attached to entries in Zotero can now be saved for upload to
+the server. (Requested by Selcuk Bilmis.)  Notes are supported in
+a similar way, but are not functional until some bugs in PyZotero or
+the Zotero API are fixed.
+
 - Bibliographic entries can be numbered within their sections now.
   See the number_bib_items variable.
 
