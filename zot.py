@@ -73,6 +73,8 @@ bib_style = 'apa'
 write_full_html_header = True
 stylesheet_url = "site/style.css"
 outputfile = 'zotero-bib.html'
+file_outputdir = '' # for associated files
+file_output_path = "" # URL path
 category_outputfile_prefix = 'zotero'
 jquery_path = "site/jquery.min.js"
 # jquery_path = "../wp-includes/js/jquery/jquery.js"  # wordpress location
@@ -634,13 +636,14 @@ def index_configuration():
 
 class ZotItem:
     def __init__(self, entries):
-        self.id = None
+        self.key = None
         self.creators = None
         self.event = None
         self.section_keyword = set()
         self.url = None
         self.collection = []
         self.type = None
+        self.date = None
         self.libraryCatalog = None  # special setting, overrides u'itemType' for our purposes
         self.note = None
         self.journalAbbreviation = None
@@ -650,19 +653,24 @@ class ZotItem:
         self.extra = None
         self.series = None
         self.uniqueID = None # will be set by detect_and_merge_doubles
+        self.filename = None
         self.__dict__.update(entries)
-
         # Will be set later - None is a good default
         self.bib = None
         self.ris = None
         self.html = None
         self.coins = None
         self.wikipedia = None
+        self.saved_filename = None
+        self.attachments = []
 
         # populate calculated values
         self.year = self.getYear()
         # allow libraryCatalog to override itemType
         self.type = self.libraryCatalog or self.itemType
+
+    def addAttachment(self, zotItem):
+        self.attachments += [zotItem]
 
     def access(self, key, default=""):
         if key == 'year':
@@ -680,9 +688,10 @@ class ZotItem:
         # raise RuntimeError("access: field %s not found."%key)
 
     def getYear(self):
-        m = re.search('[0-9][0-9][0-9][0-9]', self.date)
-        if m:
-            return int(m.group(0))
+        if self.date:
+            m = re.search('[0-9][0-9][0-9][0-9]', self.date)
+            if m:
+                return int(m.group(0))
         return None
 
     def venue(self):
@@ -710,8 +719,6 @@ class ZotItem:
     def addSectionKeyword(self, s):
         if not s in self.section_keyword:
             self.section_keyword.add(s)
-
-
 
 
 def write_bib(items, outfile):
@@ -1281,6 +1288,18 @@ def make_html(all_items, exclude={}, shorten=False):
                             bi = a_button(show) + div('bibshowhide', div('bib', item.wikipedia, style='white-space:pre-wrap;'))
                         elif 'bib' == sl and bibitem2:
                             bi = a_button(show) + div('bibshowhide', div('bib', bibitem2))
+                        elif sl == 'file':
+                            for a in item.attachments:
+                                if a.itemType=='attachment':
+                                    fn = a.saved_filename
+                                    if fn:
+                                        bi = a_button(show, url=file_output_path+'/'+fn)
+                        elif sl == 'note':
+                            for a in item.attachments:
+                                if a.itemType == 'note':
+
+                                    bi = a_button(show) + div('bibshowhide', div('note', ''))
+
                         elif sl == 'pdf' and u:
                             # automatically detect what the link points to
                             if re.search(r'\.pdf$', u, re.IGNORECASE):
@@ -1365,6 +1384,12 @@ __builtin__.exclude_items = exclude_items
 __all__ += ['user_collection', 'group_collection', 'exclude_collection', 'rename_collection', 'exclude_items']
 
 
+def make_sure_path_exists(path):
+    try:
+        os.makedirs(path)
+    except OSError as exception:
+        if exception.errno != errno.EEXIST:
+            raise
 class DBInstance:
 
     dbInstanceCache = {}
@@ -1435,6 +1460,12 @@ class DBInstance:
             raise SystemExit(1)
 
 
+    def retrieve_attachments(self, collection, **args):
+        items = self.zot.everything(
+            self.zot.collection_items(collection, order=order_by, sort=sort_order, itemType='attachment || note',
+                                    **args))
+        return items
+
     def retrieve_x(self, collection, **args):
         items = self.zot.everything(
             self.zot.collection_items(collection, order=order_by, sort=sort_order, itemType='-attachment || note',
@@ -1480,7 +1511,7 @@ class DBInstance:
                         return items
                     #else:
                         #print("Not using cache %s (library modified)"%cache_name)
-            except (IOError, ValueError, pickle.PicklingError) as e:
+            except (IOError, ValueError, pickle.PicklingError, TypeError, EOFError) as e:
                 # print("Not using cache - some error ", e)
                 pass
 
@@ -1488,6 +1519,15 @@ class DBInstance:
         ii = self.retrieve_x(collection_id)
 
         a = [ZotItem(i['data']) for i in ii]
+
+        # Get attachments (separately)
+        itemindex = {item.key:item for item in a}
+        att = self.retrieve_attachments(collection_id)
+        for i in att:
+            parent = i['data']['parentItem']
+            if parent in itemindex:
+                item = itemindex[parent]
+                item.addAttachment(ZotItem(i['data']))
 
         # PyZotero can retrieve different formats at once,
         # but this does not seem to work with current versions of the library or API
@@ -1515,19 +1555,23 @@ class DBInstance:
             ai.wikipedia = wi
 
         if not no_cache:
-
-            def make_sure_path_exists(path):
-                try:
-                    os.makedirs(path)
-                except OSError as exception:
-                    if exception.errno != errno.EEXIST:
-                        raise
             make_sure_path_exists(os.path.dirname(cache_name))
             pickle.dump((datetime.now(), self.zotLastMod, bib_style, a),
                         open(cache_name, 'wb'))
 
         return a
 
+    def dumpFiles(self, item):
+        global file_outputdir
+        if item.attachments:
+            for a in item.attachments:
+                self.dumpFiles(a)
+        if item.filename:
+            p = file_outputdir + "/" + item.key
+            make_sure_path_exists(p)
+            self.zot.dump(item.key, path=p)
+            item.saved_filename = "%s/%s"%(item.key, item.filename)
+            print("Dump "+item.saved_filename)
 
 import pprint
 def detect_and_merge_doubles(items):
@@ -1604,7 +1648,7 @@ def retrieve_all_items(collections):
     all_items = []
     for e in collections: # key, depth, collection_name, collection_parents, db
         c = 0
-        print(" " + " " * len(e.parents) + e.name + "...", end="")
+        print(" " + " " * len(e.parents) + e.name + " " + e.key + "...", end="")
 
         key = e.key
 
@@ -1623,6 +1667,12 @@ def retrieve_all_items(collections):
                     if k not in item_ids:
                         item_ids[k] = []
                     item_ids[k] += [(i, key)]  # tuple is item and collectionkey
+
+        # Update file
+
+        if 'file' in show_links or 'FILE' in show_links:
+            for item in i2:
+                e.db.dumpFiles(item)
 
         # add IDs to the list with the collection name
         #### collect_ids(i2, collection_name, item_ids)
