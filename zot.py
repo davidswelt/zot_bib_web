@@ -353,13 +353,14 @@ def generate_base_html():
     # Set some (default) styles
     # note - the final style in the style sheet is manipulated by changeCSS
     # this is selected (hack, hack) by index
-    script_html = """<style type="text/css" id="zoterostylesheet" scoped>
+
+    style_html = '<style type="text/css" id="zoterostylesheet" ' + ("" if write_full_html_header else "scoped") + """>
 .bibshowhide {display:none;}
 .bib-venue-short, .bib-venue {display:none;}
 """ + blinkitem_css + """
 .blink {margin:0;margin-right:15px;padding:0;display:none;}
-</style>
-<script type="text/javascript">
+</style>"""
+    script_html = """<script type="text/javascript">
 function dwnD(data) {
   filename = "article.ris"
   var pom = document.createElement('a');
@@ -427,16 +428,15 @@ return trigger.parentNode.childNodes[0].textContent;}});});</script>""" % (
     html_header = u''
     html_footer = u''
     if write_full_html_header:
-        style_html = u''
         if stylesheet_url:
-            style_html = u"<link rel=\"stylesheet\" type=\"text/css\" href=\"%s\">" % stylesheet_url
-        html_header += u'<!DOCTYPE HTML><html><head><meta charset="UTF-8"><title>' + titlestring + u'</title>' + style_html + u'</head><body>'
+            style_html = u"<link rel=\"stylesheet\" type=\"text/css\" href=\"%s\">" % stylesheet_url + style_html
+        html_header += u'<!DOCTYPE html><html lang="%s"><head><meta charset="UTF-8"><title>'%language_code + titlestring + u'</title>' + style_html + u'</head><body>'
         html_header += u'<div class="bibliography">' + script_html
         html_footer += credits_html + u'</div>'
         html_header += '<h1 class="title">' + titlestring + "</h1>\n";
         html_footer += u'</body></html>'
     else:
-        html_header += u'<div class="bibliography">' + script_html
+        html_header += u'<div class="bibliography">' + style_html + script_html
         html_footer += credits_html + u'</div>'
 
     search_box = ""
@@ -1170,7 +1170,7 @@ def make_header_htmls(all_items):
                     counterStr = " (%s)" % len(info.items)
                 else:
                     counterStr = ""
-                html += "<li class='link'><a style='white-space: nowrap;' href='#' onclick='searchF([%s],\"%s\",1);return false;'>%s<span class='cat_count'>%s</a></li>\n" % (
+                html += "<li class='link'><a style='white-space: nowrap;' href='#' onclick='searchF([%s],\"%s\",1);return false;'>%s<span class='cat_count'>%s</span></a></li>\n" % (
                 js_strings(info.vals), info.title, info.title, counterStr)
         headerhtmls += [html]
 
@@ -1705,6 +1705,10 @@ def retrieve_all_items(collections):
     return all_items, item_ids
 
 
+htmlid_regex = re.compile(r"[\s,:;'\"]", re.IGNORECASE)
+def htmlid(s):
+    return htmlid_regex.sub("", s)
+
 def compile_data(all_items, section_code, crits, exclude={}, shorten=False):
     global show_top_section_headings
 
@@ -1725,15 +1729,14 @@ def compile_data(all_items, section_code, crits, exclude={}, shorten=False):
         # raise RuntimeError("compile_data called with empty section_code")
 
     if last_section_id:
-
-        html += "<a id='%s' style='{display: block; position: relative; top: -150px; visibility: hidden;}'></a>" % last_section_id
+        html += "<a id='%s' style='{display: block; position: relative; top: -150px; visibility: hidden;}'></a>" % htmlid(last_section_id)
         if section_code and show_top_section_headings and not Coll.hideSectionTitle(last_section_id):
             depth = 0
             if not is_string(section_code):
                 depth = len(section_code) - 1  # it's a path
             # do not show headings deeper than this
             # if depth<=show_top_section_headings:
-            html += "<h%s class=\"collectiontitle\">%s</h3>\n" % (2 + depth, section_print_title)
+            html += "<h%s class=\"collectiontitle\">%s</h%s>\n" % (2 + depth, section_print_title, 2 + depth)
     html += corehtml
     html = u'<div class="%s-bib-section">' % (u'short' if shorten else u'full') + html + u'</div>'
 
