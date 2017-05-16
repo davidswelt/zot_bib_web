@@ -1724,7 +1724,7 @@ def pull_up_featured_remove_hidden_colls(all_items):
     hidden_categories = defaultdict(set)  # to do, use multi dict
     for it in all_items:
         if Coll.is_hidden_collection(it.collection) and not it.section_keyword in hidden_categories[it.key]:
-            hidden_categories[it.key].add(it.section_keyword)
+            hidden_categories[it.key].update(it.section_keyword)
     for it in visible:
         if it.key in hidden_categories:
             it.section_keyword.update(hidden_categories[it.key])
