@@ -168,15 +168,17 @@ language_code = 'en'
 # Define labels for article types and their ordering
 # types may occur in libraryCatalog or itemType
 # use libraryCatalog to override it in special cases (e.g., archival Conference papers)
-sortkeyname_order['en']['type'] = [('journalArticle', 'Journal Articles'),
-                            ('archivalConferencePaper', 'Archival Conference Papers'),
-                            ('conferencePaper', 'Conference and Workshop Papers'),
-                            ('book','Books'),
-                            ('bookSection', 'Book Chapters'),
-                            ('edited-volume', "Edited Volumes"),
-                            ('thesis', 'Theses'),
-                            ('report', 'Tech Reports'),
-                            ('presentation', 'Talks')]
+# sortkeyname_order['en']['type'] = [('journalArticle', 'Journal Articles'),
+#                             ('archivalConferencePaper', 'Archival Conference Papers'),
+#                             ('conferencePaper', 'Conference and Workshop Papers'),
+#                             ('book','Books'),
+#                             ('bookSection', 'Book Chapters'),
+#                             ('edited-volume', "Edited Volumes"),
+#                             ('thesis', 'Theses'),
+#                             ('report', 'Tech Reports'),
+#                             ('attachment', 'Document'),
+#                             ('webpage', 'Web Site'),
+#                             ('presentation', 'Talks')]
 
 # Translations for links
 # Provide additional languages like so:

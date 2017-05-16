@@ -61,6 +61,10 @@ respective section headings.
 
 - Several new class and id attributes to allow for more styling.
 
+- Buttons (e.g., Wikipedia, EndNote, BIB) have standard capitalization
+now.  Style using CSS.
+
+
 Selected bug fixes:
 
 - Fix problem with nested collections that did not show in the correct location

@@ -109,6 +109,8 @@ sortkeyname_order['en']['type'] = [
     ('edited-volume', "Edited Volumes"),
     ('thesis', 'Theses'),
     ('report', 'Tech Reports'),
+    ('attachment', 'Document'),
+    ('webpage', 'Web Site'),
     ('presentation', 'Talks'),
     ('computerProgram', 'Computer Programs')]
 
@@ -210,7 +212,7 @@ def load_settings(file="settings.py"):
     except ImportError:
         pass
     except IOError:  # no settings file
-        pass
+        warn("%s file not found."%file)
 
 
 def fetch_tag(tag, default=None):
@@ -335,7 +337,7 @@ def generate_base_html():
     # this way, a nice, clean bibliography can be copied right from a browser window
     # this is achieved by displaying the buttons dynamically.
     # caveat - are there accessibility implications?
-    possible_items = set(['pdf','ps','doc','link'] + show_links) # see also button_label_for_object
+    possible_items = set(['PDF','PS','DOC','link','Wikipedia','BIB','RIS','EndNote','Abstract']) # see also button_label_for_object
     blinkitem_css = ""
     for name in possible_items:
         if smart_selections:
@@ -592,6 +594,7 @@ def import_legacy_configuration():
     global sort_criteria
     global sort_reverse
     global catchallcollection
+    global show_links
 
     if library_id and library_type:
         if library_type == 'group':
@@ -618,6 +621,7 @@ def import_legacy_configuration():
         else:
             sort_reverse += [False]
 
+    show_links = [i.lower() for i in show_links]
 
 
 def index_configuration():
@@ -635,7 +639,9 @@ def index_configuration():
 
 
 class ZotItem:
+    __classversion__ = 3
     def __init__(self, entries):
+        self.__version__ = ZotItem.__classversion__
         self.key = None
         self.creators = None
         self.event = None
@@ -650,10 +656,12 @@ class ZotItem:
         self.conferenceName = None
         self.meetingName = None
         self.publicationTitle = None
-        self.extra = None
+        self.shortTitle = None
         self.series = None
+        self.extra = None
         self.uniqueID = None # will be set by detect_and_merge_doubles
         self.filename = None
+        self.parentItem = None
         self.__dict__.update(entries)
         # Will be set later - None is a good default
         self.bib = None
@@ -711,8 +719,7 @@ class ZotItem:
 
         # print(pprint.pformat(self.__dict__))
         return self.journalAbbreviation or maybeshorten(self.conferenceName) or maybeshorten(
-            self.meetingName) or maybeshorten(self.publicationTitle) or maybeshorten(self.shortTitle) or maybeshorten(
-            self.series)
+            self.meetingName) or maybeshorten(self.publicationTitle) or maybeshorten(self.shortTitle) or maybeshorten(self.series)
 
     # or self.shortTitle or self.series
 
@@ -1224,7 +1231,7 @@ def make_html(all_items, exclude={}, shorten=False):
                 htmlitem = item.html
 
                 global show_links
-                show_items = show_links
+                show_items = show_links # not a copy
                 t = item.title
                 u = None
                 if item.url:
@@ -1240,8 +1247,8 @@ def make_html(all_items, exclude={}, shorten=False):
 
                     if new == htmlitem:
                         # replacement not successful
-                        if not 'pdf' in show_items and not 'PDF' in show_items:
-                            show_items += ['pdf']
+                        if not 'pdf' in show_items and not 'url' in show_items:
+                            show_items = show_items + ['pdf'] # make copy
                     else:
                         # remove "Retrieved from"
                         # URL detector from http://daringfireball.net/2010/07/improved_regex_for_matching_urls
@@ -1295,28 +1302,29 @@ def make_html(all_items, exclude={}, shorten=False):
                         sl = show.lower()
                         bi = ""
                         if 'abstract' == sl and abstract:
-                            bi = a_button(show) + div('bibshowhide', div('abstract', abstract))
+                            bi = a_button('Abstract') + div('bibshowhide', div('abstract', abstract))
                         elif 'wikipedia' == sl and item.wikipedia:
-                            bi = a_button(show) + div('bibshowhide', div('bib', item.wikipedia, style='white-space:pre-wrap;'))
+                            bi = a_button('Wikipedia') + div('bibshowhide', div('bib', item.wikipedia, style='white-space:pre-wrap;'))
                         elif 'bib' == sl and bibitem2:
-                            bi = a_button(show) + div('bibshowhide', div('bib', bibitem2))
-                        elif sl == 'file':
+                            bi = a_button('BIB') + div('bibshowhide', div('bib', bibitem2))
+                        elif 'file' == sl:
                             for a in item.attachments:
                                 if a.itemType=='attachment':
                                     fn = a.saved_filename
                                     if fn:
-                                        bi = a_button(button_label_for_object(fn, show), url=file_output_path+'/'+fn)
-                        elif sl == 'note':
+                                        bi = a_button(button_label_for_object(fn, 'File'), url=file_output_path+'/'+fn)
+                        elif 'note' == sl:
                             for a in item.attachments:
                                 if a.itemType == 'note' and a.note:
-                                    bi = a_button(show) + div('bibshowhide', div('note', a.note))
+                                    bi = a_button('Note') + div('bibshowhide', div('note', a.note))
                         elif (sl == 'pdf' or sl == 'url') and u:
                             # automatically detect what the link points to
                             n = button_label_for_object(u, 'link')
                             bi = a_button(n, url=u, cls=n.lower())
-                        elif ('ris' == sl or 'endnote' == sl) and item.ris:
-                            bi = '<a class="%s" title="Download EndNote record" onclick="dwnD(\'%s\');return false;"></a>' % (
-                            show, base64.b64encode(item.ris.encode('utf-8')).decode('utf-8'))
+                        elif 'ris' == sl and item.ris:
+                            bi = '<a class="%s" title="Download RIS record" onclick="dwnD(\'%s\');return false;"></a>' % ('RIS', base64.b64encode(item.ris.encode('utf-8')).decode('utf-8'))
+                        elif 'endnote' == sl and item.ris:  # EndNote = RIS
+                            bi = '<a class="%s" title="Download EndNote record" onclick="dwnD(\'%s\');return false;"></a>' % ('EndNote', base64.b64encode(item.ris.encode('utf-8')).decode('utf-8'))
                         else:
                             continue
                         blinkitem += div('blink', bi)
@@ -1393,6 +1401,7 @@ def make_sure_path_exists(path):
     except OSError as exception:
         if exception.errno != errno.EEXIST:
             raise
+        
 class DBInstance:
 
     dbInstanceCache = {}
@@ -1463,15 +1472,9 @@ class DBInstance:
             raise SystemExit(1)
 
 
-    def retrieve_attachments(self, collection, **args):
-        items = self.zot.everything(
-            self.zot.collection_items(collection, order=order_by, sort=sort_order, itemType='attachment || note',
-                                    **args))
-        return items
-
     def retrieve_x(self, collection, **args):
         items = self.zot.everything(
-            self.zot.collection_items(collection, order=order_by, sort=sort_order, itemType='-attachment || note',
+            self.zot.collection_items(collection, order=order_by, sort=sort_order,
                                     **args))
         return items
 
@@ -1510,8 +1513,8 @@ class DBInstance:
                 date, lm, bs, items = pickle.load(open(cache_name, 'rb'))
                 if date > datetime.now() - timedelta(days=14):  # cache expires after 14 days
                     if self.zotLastMod == lm and bs == bib_style:
-                        #print("Using %s."%cache_name)
-                        return items
+                        if len(items)==0 or (hasattr(items[0], '__version__') and items[0].__version__ == ZotItem.__classversion__):
+                            return items
                     #else:
                         #print("Not using cache %s (library modified)"%cache_name)
             except (IOError, ValueError, pickle.PicklingError, TypeError, EOFError) as e:
@@ -1522,15 +1525,6 @@ class DBInstance:
         ii = self.retrieve_x(collection_id)
 
         a = [ZotItem(i['data']) for i in ii]
-
-        # Get attachments (separately)
-        itemindex = {item.key:item for item in a}
-        att = self.retrieve_attachments(collection_id)
-        for i in att:
-            parent = i['data']['parentItem']
-            if parent in itemindex:
-                item = itemindex[parent]
-                item.addAttachment(ZotItem(i['data']))
 
         # PyZotero can retrieve different formats at once,
         # but this does not seem to work with current versions of the library or API
@@ -1564,6 +1558,19 @@ class DBInstance:
 
         return a
 
+    def arrangeAttachments(self, items):
+        # Get attachments (separately)
+        itemindex = {item.key:item for item in items}
+        filtered = []
+        for i in items:
+            if i.parentItem:
+                if i.parentItem in itemindex:
+                    item = itemindex[i.parentItem]
+                    item.addAttachment(i)
+                    continue
+            filtered += [i]  # was not added to another item
+        return filtered
+
     def dumpFiles(self, item):
         global file_outputdir
         if item.attachments:
@@ -1572,8 +1579,9 @@ class DBInstance:
         if item.filename:
             p = file_outputdir + "/" + item.key
             make_sure_path_exists(p)
-            self.zot.dump(item.key, path=p)
-            item.saved_filename = "%s/%s"%(item.key, item.filename)
+            with open(os.path.join(p, item.filename), 'wb') as f:
+                f.write(self.zot.file(item.key))
+                item.saved_filename = "%s/%s"%(item.key, item.filename)
             # print("Dump "+item.saved_filename)
             # ToDo:  check if file is new
 
@@ -1657,6 +1665,9 @@ def retrieve_all_items(collections):
         key = e.key
 
         i2 = list(e.db.retrieve_data(key))
+
+        i2 = e.db.arrangeAttachments(i2)
+
         if Coll.is_misc_collection(key):  # Miscellaneous type collection
             # This has everything that isn't mentioned above
             # so we'll filter what's in item_ids
