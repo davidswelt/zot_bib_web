@@ -1580,9 +1580,12 @@ class DBInstance:
             p = file_outputdir + "/" + item.key
             make_sure_path_exists(p)
             with open(os.path.join(p, item.filename), 'wb') as f:
-                f.write(self.zot.file(item.key))
-                item.saved_filename = "%s/%s"%(item.key, item.filename)
-            # print("Dump "+item.saved_filename)
+                try:
+                    f.write(self.zot.file(item.key))
+                    item.saved_filename = "%s/%s"%(item.key, item.filename)
+                except ValueError:
+                    warn("Failed to save file %s, content type %s."%(item.filename, item.contentType))
+                    warn("    Error in Pyzotero.")
             # ToDo:  check if file is new
 
 import pprint
