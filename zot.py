@@ -337,7 +337,7 @@ def generate_base_html():
     # this way, a nice, clean bibliography can be copied right from a browser window
     # this is achieved by displaying the buttons dynamically.
     # caveat - are there accessibility implications?
-    possible_items = set(['PDF','PS','DOC','link','Wikipedia','BIB','RIS','EndNote','Abstract']) # see also button_label_for_object
+    possible_items = set(['PDF','PS','DOC','link','Wikipedia','BIB','RIS','EndNote','Abstract', 'File']) # see also button_label_for_object
     blinkitem_css = ""
     for name in possible_items:
         if smart_selections:
@@ -1308,11 +1308,10 @@ def make_html(all_items, exclude={}, shorten=False):
                         elif 'bib' == sl and bibitem2:
                             bi = a_button('BIB') + div('bibshowhide', div('bib', bibitem2))
                         elif 'file' == sl:
+                            bi = u''
                             for a in item.attachments:
-                                if a.itemType=='attachment':
-                                    fn = a.saved_filename
-                                    if fn:
-                                        bi = a_button(button_label_for_object(fn, 'File'), url=file_output_path+'/'+fn)
+                                if a.saved_filename: #a.itemType=='attachment':
+                                    bi += a_button(button_label_for_object(a.saved_filename, 'File'), url=file_output_path+'/'+a.saved_filename)
                         elif 'note' == sl:
                             for a in item.attachments:
                                 if a.itemType == 'note' and a.note:
