@@ -989,7 +989,9 @@ class Shortcut:
         for i in self.all_items:
             if not i.uniqueID in uid:
                 uid.add(i.uniqueID)
-                u += [i.access(self.crit)]
+                v = i.access(self.crit)
+                if not (self.crit=='collection' and Coll.hideSectionTitle(last(v))):
+                    u += [v]
         #u = set([(i.access(self.crit), i.key) for i in self.all_items])
         #        return list([v for v, _id in u if v])
         return u
@@ -1073,7 +1075,7 @@ class Shortcut:
                 return str(v[0])
             return str(v)
 
-        if self.levels:  # e.g., ('type', [v1,v2,v3])
+        if self.levels:  # e.g., ('type', [v1,v2,v3]) - given in settings
             l = [(sortkeyname(self.crit, fit(lev)).sort, fit(lev), lev) for lev in self.levels if lev]
         else:
             l = [sortkeyname(self.crit, lev) + (lev,) for lev in self.getValueForUniqueItems()]
