@@ -1576,14 +1576,16 @@ class DBInstance:
             for a in item.attachments:
                 self.dumpFiles(a)
         if item.filename:
-            p = file_outputdir + "/" + item.key
+            p = os.path.join(file_outputdir, item.key)
             make_sure_path_exists(p)
-            with open(os.path.join(p, item.filename), 'wb') as f:
+            # an odd convention: if it's HTML, it's a "snapshot", and .zip is required
+            fn = item.filename + (".zip" if item.contentType=='text/html' else "")
+            with open(os.path.join(p, fn), 'wb') as f:
                 try:
                     f.write(self.zot.file(item.key))
-                    item.saved_filename = "%s/%s"%(item.key, item.filename)
+                    item.saved_filename = "%s/%s"%(item.key, fn)
                 except ValueError:
-                    warn("Failed to save file %s, content type %s."%(item.filename, item.contentType))
+                    warn("Failed to save file %s, content type %s."%(fn, item.contentType))
                     warn("    Error in Pyzotero.")
             # ToDo:  check if file is new
 
