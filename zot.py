@@ -362,55 +362,68 @@ def generate_base_html():
 </style>"""
     script_html = """<script type="text/javascript">
 function dwnD(data) {
-  filename = "article.ris"
-  var pom = document.createElement('a');
-  var isSafari = navigator.vendor && navigator.vendor.indexOf('Apple') > -1 && navigator.userAgent && !navigator.userAgent.match('CriOS');
-  var mime = (isSafari?"text/plain":"application/x-research-info-systems");
-  pom.href = window.URL.createObjectURL(new Blob([atob(data)], {type: mime+";charset=utf-8"}));
-  pom.download = filename;
-  document.body.appendChild(pom);
-  pom.click();
-  setTimeout(function(){document.body.removeChild(pom);}, 100);
-  return(void(0));}
-function show(elem) {
-  if (elem.parentNode) {
-    var elems = elem.parentNode.parentNode.getElementsByTagName('*');
-    for (i in elems) {
-        if((' ' + elems[i].className + ' ').indexOf(' ' + 'bibshowhide' + ' ') > -1)
-        { if (elems[i].parentNode != elem.parentNode)
-            elems[i].style.display = 'none';
-        }}
-    elems = elem.parentNode.getElementsByTagName('*');
-    for (i in elems) {
-        if((' ' + elems[i].className + ' ').indexOf(' ' + 'bibshowhide' + ' ') > -1)
-        { elems[i].style.display = (elems[i].style.display == 'block') ? 'none' : 'block';
-          return(void(0));
-        }}}
-  return(void(0));}
+    filename = "article.ris"
+    var pom = document.createElement('a');
+    var isSafari = navigator.vendor && navigator.vendor.indexOf('Apple') > -1 && navigator.userAgent && !navigator.userAgent.match('CriOS');
+    var mime = (isSafari?"text/plain":"application/x-research-info-systems");
+    pom.href = window.URL.createObjectURL(new Blob([atob(data)], {type: mime+";charset=utf-8"}));
+    pom.download = filename;
+    document.body.appendChild(pom);
+    pom.click();
+    setTimeout(function(){document.body.removeChild(pom);}, 100);
+    return(void(0));}
+function showThis(e) {
+    elem = e.target;
+    if (elem.parentNode) {
+	var elems = elem.parentNode.parentNode.getElementsByTagName('*');
+	for (i in elems) {
+            if((' ' + elems[i].className + ' ').indexOf(' ' + 'bibshowhide' + ' ') > -1)
+            { if (elems[i].parentNode != elem.parentNode)
+		elems[i].style.display = 'none';
+            }}
+	elems = elem.parentNode.getElementsByTagName('*');
+	for (i in elems) {
+            if((' ' + elems[i].className + ' ').indexOf(' ' + 'bibshowhide' + ' ') > -1)
+	    { elems[i].style.display = 'block';
+	      hideagain = elems[i];
+              e.stopPropagation();
+	      turnoff = function(e){
+		  if (! $.contains(this, e.target))
+		      this.style.display = 'none';
+		  else
+		      $(document).one("click",turnoff_b); // rebind itself
+	      }
+	      turnoff_b = turnoff.bind(elems[i])
+	      $(document).one("click",turnoff_b);
+              return(void(0));
+            }}}
+    return(void(0));}
 function changeCSS() {
     if (!document.styleSheets) return;
     var theRules = new Array();
     //ss = document.styleSheets[document.styleSheets.length-1];
     var ss = document.getElementById('zoterostylesheet');
     if (ss) {
-    ss = ss.sheet
-    if (ss.cssRules)
-        theRules = ss.cssRules
-    else if (ss.rules)
-        theRules = ss.rules
-    else return;
-    theRules[theRules.length-1].style.display = 'inline';
+	ss = ss.sheet
+	if (ss.cssRules)
+            theRules = ss.cssRules
+	else if (ss.rules)
+            theRules = ss.rules
+	else return;
+	theRules[theRules.length-1].style.display = 'inline';
     }
-    }
-changeCSS();</script>"""
+}
+changeCSS();
+</script>"""
 
     if show_copy_button:
         if jquery_path and clipboard_js_path and copy_button_path:
             script_html += """<script type="text/javascript" src="%s"></script>
     <script type="text/javascript" src="%s"></script>
     <script type="text/javascript">
-    jQuery(document).ready(function () {
-    jQuery( "div.bib" ).append('\\n<button class="btn"><img src="%s" width=13 alt="Copy to clipboard"></button>');
+    $(document).ready(function () {
+    $('div.bib-item a').click(showThis);
+    $("div.bib").append('\\n<button class="btn"><img src="%s" width=13 alt="Copy to clipboard"></button>');
         new Clipboard('.btn',{
 text: function(trigger) {
 var prevCol = trigger.parentNode.style.color;
@@ -1193,8 +1206,10 @@ def make_html(all_items, exclude={}, shorten=False):
     def a_button(name, url=None, js=None, title=None, cls=None):
         global smart_selections
         global language_code
-        if not js:
-            js = "show(this)"
+        if js:
+            js = 'onclick="%s"'%js
+        else:
+            js = '' # binding happens at doc level
         if not url:
             url = ""
         else:
@@ -1206,7 +1221,7 @@ def make_html(all_items, exclude={}, shorten=False):
             title2 = "title=\"%s\"" % title
         if language_code in link_translations:
             name = link_translations[language_code].get(name.lower(), name)
-        return u"<a class=\"%s\" %s %s onclick=\"%s\">%s</a>" % (
+        return u"<a class=\"%s\" %s %s %s>%s</a>" % (
         cls, title2, url, js, ("" if smart_selections else name))
 
     def button_label_for_object(obj, default):
@@ -1337,7 +1352,7 @@ def make_html(all_items, exclude={}, shorten=False):
                     htmlitem += div('blinkitems', blinkitem)
 
                 if shorten:
-                    htmlitem = u"<a href=\"#\" onclick=\"show(this);\">&#8862;</a> <span class=\"doctitle-short\">%s</span> <span class=\"containertitle\">%s</span> %s" % (
+                    htmlitem = u"<a href=\"#\">&#8862;</a> <span class=\"doctitle-short\">%s</span> <span class=\"containertitle\">%s</span> %s" % (
                     t, ct, y) + "<div class=\"bibshowhide\" style=\"padding-left:20px;\">" + htmlitem + "</div>"
                     htmlitem = div(None, htmlitem)  # to limit what is being expanded
 
