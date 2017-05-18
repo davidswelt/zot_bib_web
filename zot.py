@@ -639,7 +639,7 @@ def index_configuration():
 
 
 class ZotItem:
-    __classversion__ = 3
+    __classversion__ = 4
     def __init__(self, entries):
         self.__version__ = ZotItem.__classversion__
         self.key = None
@@ -1509,10 +1509,10 @@ class DBInstance:
         if not no_cache:
             cache_name = ".cache/%s.cache" % collection_id
             try:
-                date, lm, bs, items = pickle.load(open(cache_name, 'rb'))
+                date, lm, bs, zv, items = pickle.load(open(cache_name, 'rb'))
                 if date > datetime.now() - timedelta(days=14):  # cache expires after 14 days
                     if self.zotLastMod == lm and bs == bib_style:
-                        if len(items)==0 or (hasattr(items[0], '__version__') and items[0].__version__ == ZotItem.__classversion__):
+                        if len(items)==0 or (hasattr(items[0], '__version__') and items[0].__version__ == ZotItem.__classversion__ and zv == zotero.__version__):
                             return items
                     #else:
                         #print("Not using cache %s (library modified)"%cache_name)
@@ -1552,7 +1552,7 @@ class DBInstance:
 
         if not no_cache:
             make_sure_path_exists(os.path.dirname(cache_name))
-            pickle.dump((datetime.now(), self.zotLastMod, bib_style, a),
+            pickle.dump((datetime.now(), self.zotLastMod, bib_style, zotero.__version__, a),
                         open(cache_name, 'wb'))
 
         return a
