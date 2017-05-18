@@ -253,6 +253,11 @@ def read_args_and_init():
 
     # Parse remaining arguments
 
+    if "--version" in sys.argv:
+        print("Zot_bib_web version "+__version__)
+        print("Pyzotero version "+zotero.__version__)
+        sys.argv.remove('--version')
+        
     if "--div" in sys.argv:
         write_full_html_header = False
         sys.argv.remove('--div')
@@ -1417,7 +1422,8 @@ def make_sure_path_exists(path):
     except OSError as exception:
         if exception.errno != errno.EEXIST:
             raise
-        
+
+import zipfile
 class DBInstance:
 
     dbInstanceCache = {}
@@ -1593,18 +1599,55 @@ class DBInstance:
             for a in item.attachments:
                 self.dumpFiles(a)
         if item.filename:
+ 
+            def dump(item, p, fn):
+                # Dump file into filename fn at path p
+                # Returns the filename if successful
+                outfile = os.path.join(p,fn)
+                # uses zot
+                try:
+                    with open(outfile, 'wb') as f:
+                        f.write(self.zot.file(item.key))
+                    return fn # default
+                except ValueError:
+                    warn("Failed to save file %s into %s (%s), content type %s."%(item.filename, outfile, item.key, item.contentType))
+                    warn("    Error in Pyzotero.")
+                return None
+
+            # an odd convention: if it's HTML, it's a "snapshot", and .zip is required
+            # In Pyzotero 1.2.11, with the Zotero API as of 5/18/2017,
+            # text/html files are really zip files.
+            # the following code attempts to unzip such files.
+            # if this fails, we back off to using the file directly.
+
             p = os.path.join(file_outputdir, item.key)
             make_sure_path_exists(p)
-            # an odd convention: if it's HTML, it's a "snapshot", and .zip is required
-            fn = item.filename + (".zip" if item.contentType=='text/html' else "")
-            with open(os.path.join(p, fn), 'wb') as f:
+
+            if item.contentType in ['application/zip', 'text/html']:
+                outfile = os.path.join(p, "temp.zip")
+                item.saved_filename = dump(item, p, "temp.zip") # good default for now
                 try:
-                    f.write(self.zot.file(item.key))
-                    item.saved_filename = "%s/%s"%(item.key, fn)
-                except ValueError:
-                    warn("Failed to save file %s, content type %s."%(fn, item.contentType))
-                    warn("    Error in Pyzotero.")
-            # ToDo:  check if file is new
+                    # let's see if we can extract it
+                    with zipfile.ZipFile(outfile, 'r') as zf:
+                        for zippedfile in zf.infolist():
+                            # This will relativize absolute path and eliminate .. 
+                            zf.extract(zippedfile, path=p)
+                    item.saved_filename = item.filename # main file inside the archive
+                    os.remove(outfile)
+                except zipfile.BadZipfile:
+                    # use default filename
+                    warn("Failed to deflate ZIP archive %s (%s)"%(item.filename, item.key))
+                    item.saved_filename = item.filename # rename
+                    os.rename(outfile, os.path.join(p, item.saved_filename))
+                    pass
+            else:
+                item.saved_filename = dump(item, p, item.filename)
+
+            # prepend path for URL
+            if item.saved_filename:
+                item.saved_filename = os.path.join(item.key, item.saved_filename)
+
+            # ToDo:  check if file has changed, or maybe keep contents cached in ZotItem
 
 import pprint
 def detect_and_merge_doubles(items):

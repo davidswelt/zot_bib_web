@@ -20,9 +20,16 @@ interface or their desktop applications.
 
 Zot_bib_web does not depend on any third-party web server.  The
 generated bibliographies load quickly because they are stored as static
-files along with the rest of your website. 
+files along with the rest of your website.
 
-Setup is very easy.  Just call zot.py with the key of a public Zotero collection.
+This makes them retrievable 
+
+Setup is very easy for anyone who runs their own website and knows
+how to use a command line (shell).
+
+The easiest way to use it is to call zot.py with the key of a public
+Zotero collection.  It will make a zotero-bib.html file.  Copy this,
+along with the "site" and "files" (if any) directory to your webserver.
 
 Bibliographies
 -  can be ordered by collection, by publication year, or by
