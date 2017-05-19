@@ -397,13 +397,13 @@ function showThis(e) {
 	      hideagain = elems[i];
               e.stopPropagation();
 	      turnoff = function(e){
-		  if (! $.contains(this, e.target))
+		  if (! jQuery.contains(this, e.target))
 		      this.style.display = 'none';
 		  else
-		      $(document).one("click",turnoff_b); // rebind itself
+		      jQuery(document).one("click",turnoff_b); // rebind itself
 	      }
 	      turnoff_b = turnoff.bind(elems[i])
-	      $(document).one("click",turnoff_b);
+	      jQuery(document).one("click",turnoff_b);
               return(void(0));
             }}}
     return(void(0));}
@@ -430,9 +430,9 @@ changeCSS();
             script_html += """<script type="text/javascript" src="%s"></script>
     <script type="text/javascript" src="%s"></script>
     <script type="text/javascript">
-    $(document).ready(function () {
-    $('div.bib-item a').click(showThis);
-    $("div.bib").append('\\n<button class="btn"><img src="%s" width=13 alt="Copy to clipboard"></button>');
+    jQuery(document).ready(function () {
+    jQuery('.blink a').click(showThis);
+    jQuery("div.bib").add("div.cite").append('\\n<button class="btn"><img src="%s" width=13 alt="Copy to clipboard"></button>');
         new Clipboard('.btn',{
 text: function(trigger) {
 var prevCol = trigger.parentNode.style.color;
