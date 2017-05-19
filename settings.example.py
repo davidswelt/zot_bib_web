@@ -144,7 +144,7 @@ file_output_path = "files/"  # relative URL on server, corresponding to file_out
 
 # unconditionally show these items if they are available for the item
 # (don't set to obtain defaults)
-# show_links = ['abstract', 'url', 'bib', 'wikipedia', 'ris', 'file']
+# show_links = ['abstract', 'url', 'bib', 'wikipedia', 'ris', 'cite.apa', 'file']
 #
 # URL       - the URL field for the item; button is displayed as PDF/DOC/PS/LINK as detected.
 # file      - each file associated with the item in the library.  Files are saved to
@@ -154,6 +154,10 @@ file_output_path = "files/"  # relative URL on server, corresponding to file_out
 # BIB       - bibliographic data for LaTeX
 # Wikipedia - bibliographic data in Wikipedia format
 # Abstract  - the abstract
+# cite.APA  - Citation in APA format
+# cite.MLA  - Citation in MLA format
+# cite.<XXX> - Citation in <XXX> format (as supported by Zotero)
+
 
 
 # omit_COinS = False  # True to omit COINS metadata; useful to save space, but not recommended.

@@ -77,6 +77,12 @@ div.short-bib-section li {
 div.short-bib-section .containertitle {
     font-style:italic;
 }
+
+/* Citation (when visible) */
+div.cite {
+    width: 600px;
+}
+
 /* The actual BibTeX record (when visible) */
 div.bib {
     font-family:Menlo,Courier,monospaced;

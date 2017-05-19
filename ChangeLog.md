@@ -24,6 +24,10 @@ options for displaying and sorting the interactive bibliography are available.
 - Shortcuts at the top of the generated webpage can filter by years,
   collections, venues, publication type.
 
+- Citations can be viewed in additional formats (see show_links
+  configuration variable).  For example, we can show the full entry in
+  APA or MLA format (or any other style available).
+
 - Files attached to entries in Zotero can now be saved for upload to
   the server. (Requested by Selcuk Bilmis.)  HTML archives are also
   supported. Notes are supported in

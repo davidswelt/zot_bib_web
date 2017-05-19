@@ -342,12 +342,16 @@ def generate_base_html():
     # this way, a nice, clean bibliography can be copied right from a browser window
     # this is achieved by displaying the buttons dynamically.
     # caveat - are there accessibility implications?
-    possible_items = set(['PDF','PS','DOC','link','Wikipedia','BIB','RIS','EndNote','Abstract', 'File']) # see also button_label_for_object
+    possible_items = ['PDF','PS','DOC','link','Wikipedia','BIB','RIS','EndNote','Abstract', 'File'] # see also button_label_for_object
+    possible_items += ['cite_'+s[5:] for s in show_links if s.startswith("cite.")]
+
     blinkitem_css = ""
-    for name in possible_items:
+    for name in set(possible_items):
         if smart_selections:
             if language_code in link_translations:
                 trans = link_translations[language_code].get(name.lower(), name)
+            elif name.startswith("cite_"):
+                trans = "%s"%name[5:].upper()
             else:
                 trans = name
             blinkitem_css += "a.%s::before {content:\"%s\"}\n" % (name, trans)
@@ -657,7 +661,7 @@ def index_configuration():
 
 
 class ZotItem:
-    __classversion__ = 4
+    __classversion__ = 5
     def __init__(self, entries):
         self.__version__ = ZotItem.__classversion__
         self.key = None
@@ -1346,6 +1350,11 @@ def make_html(all_items, exclude={}, shorten=False):
                             bi = '<a class="%s" title="Download RIS record" onclick="dwnD(\'%s\');return false;"></a>' % ('RIS', base64.b64encode(item.ris.encode('utf-8')).decode('utf-8'))
                         elif 'endnote' == sl and item.ris:  # EndNote = RIS
                             bi = '<a class="%s" title="Download EndNote record" onclick="dwnD(\'%s\');return false;"></a>' % ('EndNote', base64.b64encode(item.ris.encode('utf-8')).decode('utf-8'))
+
+                        elif sl.startswith("cite."):
+                            style = sl[5:]
+                            if item.txtstyle and style in item.txtstyle:
+                                bi = a_button('Cite(%s)'%style.upper(), cls="cite_"+style) + div('bibshowhide', div('cite', item.txtstyle[style]))
                         else:
                             continue
                         blinkitem += div('blink', bi)
@@ -1553,6 +1562,14 @@ class DBInstance:
 
         b = cfilter(a, 'bib', self.retrieve_bib(collection_id, 'bibtex', ''))
         h = cfilter(a, 'html', self.retrieve_bib(collection_id, 'bib', bib_style))
+
+        h_style = {}
+        for bs in [s[5:] for s in show_links if s.startswith("cite.")]:  # e.g., cite.apa, cite.mla
+            if bib_style.lower() == bs:
+                h_style[bs] = h
+            else:
+                h_style[bs] = cfilter(a, bs, self.retrieve_bib(collection_id, 'bib', bs))
+
         if check_show('EndNote') or check_show('RIS'):
             r = cfilter(a, 'ris', self.retrieve_bib(collection_id, 'ris', ''))
         else:
@@ -1566,12 +1583,15 @@ class DBInstance:
         else:
             w = [None for _x in h]
 
-        for bi, hi, ri, ci, wi, ai in zip(b, h, r, c, w, a):
-            ai.bib = bi
-            ai.html = hi
-            ai.ris = ri
-            ai.coins = ci
-            ai.wikipedia = wi
+        #for bi, hi, ri, ci, wi, ai, index in zip(b, h, r, c, w, a):
+        for i in range(0, len(a)):
+            ai = a[i]
+            ai.bib = b[i]
+            ai.html = h[i]
+            ai.ris = r[i]
+            ai.coins = c[i]
+            ai.wikipedia = w[i]
+            ai.txtstyle = {s:st[i] for s,st in h_style.items()}
 
         if not no_cache:
             make_sure_path_exists(os.path.dirname(cache_name))

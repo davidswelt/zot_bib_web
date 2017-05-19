@@ -98,6 +98,11 @@ div.bib-item div.bib-venue-short {
     /* See demo/style3.css for an example on formatting this. */
 }
 
+/* Citation (when visible) */
+div.cite {
+    width: 600px;
+}
+
 /* The actual BibTeX record (when visible) */
 div.bib {
     font-family:Menlo,Courier,monospaced;

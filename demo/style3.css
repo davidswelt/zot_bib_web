@@ -154,6 +154,11 @@ div.bib {
     white-space: pre;
 }
 
+/* Citation (when visible) */
+div.cite {
+    width: 600px;
+}
+
 /* Text "bib" or "abstract" */
 
 /* Text "bib" or "abstract" */
