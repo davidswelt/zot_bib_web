@@ -112,11 +112,11 @@ div.bib {
     margin:20px 60px 60px 10px;
 }
 
-/* Text "bib" or "abstract" */
-.blink a {
+/* Text "bib", "abstract", and other buttons */
+.blinkitems .blink a {
     font-variant: small-caps;
     font-family:Arial,sans-serif;
-    font-size:80%;
+
     text-decoration: none;
     clear: both;
     padding:0;
@@ -128,13 +128,14 @@ div.bib {
     display:inline;
 }
 
-div.full-bib-section .blink a {
+div.full-bib-section .blinkitems .blink a {
     margin-bottom:-30px;
+    font-size:80%;
 }
-div.short-bib-section .blink {
+div.short-bib-section .blinkitems .blink {
     display:inline-block; /* needed to make margin-top work (collapsed margins) */
-    margin-top:-5px;
     margin-bottom:10px;
+    font-size:80%;
 }
 
 

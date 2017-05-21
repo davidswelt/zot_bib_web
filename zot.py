@@ -354,9 +354,9 @@ def generate_base_html():
                 trans = "%s"%name[5:].upper()
             else:
                 trans = name
-            blinkitem_css += "a.%s::before {content:\"%s\"}\n" % (name, trans)
+            blinkitem_css += "a.%s::before {content:\"%s\"}\n" % (name.lower(), trans)
         else:
-            blinkitem_css += "a.%s::before {}\n" % (name)
+            blinkitem_css += "a.%s::before {}\n" % (name.lower())
     blinkitem_css += "a.shortened::before {%s}\n"%('content:"\\229E"' if smart_selections else "")  # hex(8862)
 
     # Set some (default) styles
@@ -1233,7 +1233,7 @@ def make_html(all_items, exclude={}, shorten=False):
         if language_code in link_translations:
             name = link_translations[language_code].get(name.lower(), name)
         return u"<a class=\"%s\" %s %s %s>%s</a>" % (
-        cls, title2, url, js, ("" if smart_selections else name))
+        cls.lower(), title2, url, js, ("" if smart_selections else name))
 
     def button_label_for_object(obj, default):
         if re.search(r'\.pdf$', obj, re.IGNORECASE):
@@ -1347,9 +1347,10 @@ def make_html(all_items, exclude={}, shorten=False):
                             n = button_label_for_object(u, 'link')
                             bi = a_button(n, url=u, cls=n.lower())
                         elif 'ris' == sl and item.ris:
-                            bi = '<a class="%s" title="Download RIS record" onclick="dwnD(\'%s\');return false;"></a>' % ('RIS', base64.b64encode(item.ris.encode('utf-8')).decode('utf-8'))
+                            # to do - use a_button because of smart_selections
+                            bi = '<a class="%s" title="Download RIS record" onclick="dwnD(\'%s\');return false;"></a>' % ('ris', base64.b64encode(item.ris.encode('utf-8')).decode('utf-8'))
                         elif 'endnote' == sl and item.ris:  # EndNote = RIS
-                            bi = '<a class="%s" title="Download EndNote record" onclick="dwnD(\'%s\');return false;"></a>' % ('EndNote', base64.b64encode(item.ris.encode('utf-8')).decode('utf-8'))
+                            bi = '<a class="%s" title="Download EndNote record" onclick="dwnD(\'%s\');return false;"></a>' % ('endnote', base64.b64encode(item.ris.encode('utf-8')).decode('utf-8'))
 
                         elif sl.startswith("cite."):
                             style = sl[5:]
@@ -1363,14 +1364,16 @@ def make_html(all_items, exclude={}, shorten=False):
                         blinkitem += str(item.coins).strip()
 
                     if shorten:  # to do - consider moving this to the CSS
-                        blinkitem = div(None, blinkitem, style="padding-left:20px;")
+                        blinkitem = div(None, blinkitem) #, style="padding-left:20px;")
 
                     htmlitem += div('blinkitems', blinkitem)
 
                 if shorten:
-                    htmlitem = u"<a href=\"#\">&#8862;</a> <span class=\"doctitle-short\">%s</span> <span class=\"containertitle\">%s</span> %s" % (
-                    t, ct, y) + "<div class=\"bibshowhide\" style=\"padding-left:20px;\">" + htmlitem + "</div>"
-                    htmlitem = div(None, htmlitem)  # to limit what is being expanded
+                    htmlitem = a_button("&#8862;", cls='shortened') + \
+                               u"<span class=\"doctitle-short\">%s</span>"%t +\
+                               u"<span class=\"containertitle\">%s</span> %s" % (ct, y) + \
+                               "<div class=\"bibshowhide\" style=\"padding-left:20px;\">" + htmlitem + "</div>"
+                    htmlitem = div('blink', htmlitem)  # to limit what is being expanded
 
                 tag = "li" if number_bib_items else "div"
                 htmlitem = u'<%s class="bib-item">' % tag + htmlitem + u'</%s>' % tag

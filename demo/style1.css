@@ -68,14 +68,13 @@ div.bib {
     margin:20px 60px 60px 10px;
 }
 
-/* Text "bib" or "abstract" */
+/* Text "bib", "abstract", and other buttons */
 
-/* Text "bib" or "abstract" */
-.blink a {
+.blinkitems .blink a {
     font-variant: small-caps;
-    font-family:Arial,sans-serif;
-    font-size:80%;
-    text-decoration: none;
+    font-family:Optima,sans-serif;
+    text-decoration: underline;
+    color:brown;
     clear: both;
     padding:0;
     margin:0;
@@ -88,11 +87,14 @@ div.bib {
 
 div.full-bib-section .blink a {
     margin-bottom:-30px;
+    font-size:80%;
+
 }
-div.short-bib-section .blink {
+div.short-bib-section .blinkitems .blink a {
     display:inline-block; /* needed to make margin-top work (collapsed margins) */
-    margin-top:-5px;
     margin-bottom:10px;
+    font-size:80%;
+
 }
 
 
@@ -134,18 +136,23 @@ span.doctitle {
 }
 #pubSearchBox {
     position:static;
-    text-align:right;
+    text-align:left;
     right:10px; top:100px;
+    margin-top:30px;
     display:block;
 }
 
 
 /* Categories at top of the bibliography */
+#bib-preamble {
+    padding-left:20px;
+    padding-right:50px;
+}
 .bib-cat {
     display: inline;
     list-style: none;
     text-indent: 0;
-    margin: 0; padding: 0; 
+    margin: 0; padding: 0;
 }
 
 .bib-cat li {

@@ -159,11 +159,10 @@ div.cite {
     width: 600px;
 }
 
-/* Text "bib" or "abstract" */
-
-/* Text "bib" or "abstract" */
-.blink a {
-    font-variant: small-caps;
+/* Text "bib", "abstract", and other buttons */
+.blinkitems .blink a {
+    /* font-variant: small-caps; */
+    text-transform: uppercase;
     font-family:Arial,sans-serif;
     font-size:80%;
     text-decoration: none;
@@ -179,11 +178,12 @@ div.cite {
 
 div.full-bib-section .blink a {
     margin-bottom:-30px;
-    border: 1px solid #EEEEEE;
+    border: 1px solid #DDDDDD;
+    background-color: #EEEEEE;
+    padding:1px;
 }
-div.short-bib-section .blink {
+div.short-bib-section .blinkitems .blink a {
     display:inline-block; /* needed to make margin-top work (collapsed margins) */
-    margin-top:-5px;
     margin-bottom:10px;
 }
 

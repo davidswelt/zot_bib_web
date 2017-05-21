@@ -92,19 +92,18 @@ div.bib {
     margin:20px 60px 60px 10px;
 }
 
-/* Text "bib" or "abstract" */
-
-/* Text "bib" or "abstract" */
-.blink a {
-    font-variant: small-caps;
+/* Text "bib", "abstract", and other buttons */
+.blinkitems .blink a {
+    text-transform: lowercase;
+    /* font-variant: small-caps; */
     font-family:Arial,sans-serif;
-    font-size:80%;
     text-decoration: none;
     clear: both;
     padding:0;
     margin:0;
+    
+       
 }
-
 /* the .blink p style is a hack because Wordpress seems to insert <p> at times. */
 .blink p {
     display:inline;
@@ -112,12 +111,15 @@ div.bib {
 
 div.full-bib-section .blink a {
     margin-bottom:-30px;
+    font-size:80%;
     border: 1px solid #EEEEEE;
 }
-div.short-bib-section .blink {
+div.short-bib-section .blinkitems .blink a {
     display:inline-block; /* needed to make margin-top work (collapsed margins) */
-    margin-top:-5px;
-    margin-bottom:10px;
+    margin-bottom:0px;
+   
+    font-size:80%;
+    border: 1px solid #EEEEEE;
 }
 
 
