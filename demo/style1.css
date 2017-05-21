@@ -97,6 +97,11 @@ div.short-bib-section .blinkitems .blink a {
 
 }
 
+div.short-bib-section .bibshowhide {
+    margin-top:20px;
+
+}
+
 
 /* The actual abstract (when visible) */
 div.abstract {

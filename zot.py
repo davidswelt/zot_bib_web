@@ -1370,9 +1370,9 @@ def make_html(all_items, exclude={}, shorten=False):
 
                 if shorten:
                     htmlitem = a_button("&#8862;", cls='shortened') + \
-                               u"<span class=\"doctitle-short\">%s</span>"%t +\
-                               u"<span class=\"containertitle\">%s</span> %s" % (ct, y) + \
-                               "<div class=\"bibshowhide\" style=\"padding-left:20px;\">" + htmlitem + "</div>"
+                               u" <span class=\"doctitle-short\">%s</span>"%t +\
+                               u" <span class=\"containertitle\">%s</span> %s" % (ct, y) + \
+                               u" <div class=\"bibshowhide\" style=\"padding-left:20px;\">" + htmlitem + "</div>"
                     htmlitem = div('blink', htmlitem)  # to limit what is being expanded
 
                 tag = "li" if number_bib_items else "div"
