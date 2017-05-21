@@ -1337,20 +1337,23 @@ def make_html(all_items, exclude={}, shorten=False):
                             bi = u''
                             for a in item.attachments:
                                 if a.saved_filename: #a.itemType=='attachment':
-                                    bi += a_button(button_label_for_object(a.saved_filename, 'File'), url=file_output_path+'/'+a.saved_filename)
+                                    bi += div('blink', a_button(button_label_for_object(a.saved_filename, 'File'), url=file_output_path+'/'+a.saved_filename))
                         elif 'note' == sl:
                             for a in item.attachments:
                                 if a.itemType == 'note' and a.note:
-                                    bi = a_button('Note') + div('bibshowhide', div('note', a.note))
+                                    bi += div('blink', a_button('Note') + div('bibshowhide', div('note', a.note)))
+
                         elif (sl == 'pdf' or sl == 'url') and u:
                             # automatically detect what the link points to
                             n = button_label_for_object(u, 'link')
                             bi = a_button(n, url=u, cls=n.lower())
-                        elif 'ris' == sl and item.ris:
+                        elif sl in ['ris','endnote'] and item.ris:
                             # to do - use a_button because of smart_selections
-                            bi = '<a class="%s" title="Download RIS record" onclick="dwnD(\'%s\');return false;"></a>' % ('ris', base64.b64encode(item.ris.encode('utf-8')).decode('utf-8'))
-                        elif 'endnote' == sl and item.ris:  # EndNote = RIS
-                            bi = '<a class="%s" title="Download EndNote record" onclick="dwnD(\'%s\');return false;"></a>' % ('endnote', base64.b64encode(item.ris.encode('utf-8')).decode('utf-8'))
+                            onclick="dwnD(\'%s\');return false;"%base64.b64encode(item.ris.encode('utf-8')).decode('utf-8')
+                            bi = a_button('RIS' if 'ris'==sl else 'EndNote', js=onclick, title='Download RIS/Endnote record', cls='ris' if 'ris'==sl else 'endnote')
+                            #bi = '<a class="%s" title="Download RIS record" onclick="dwnD(\'%s\');return false;"></a>' % ('ris', base64.b64encode(item.ris.encode('utf-8')).decode('utf-8'))
+                        #elif 'endnote' == sl and item.ris:  # EndNote = RIS
+                        #    bi = '<a class="%s" title="Download EndNote record" onclick="dwnD(\'%s\');return false;"></a>' % ('endnote', base64.b64encode(item.ris.encode('utf-8')).decode('utf-8'))
 
                         elif sl.startswith("cite."):
                             style = sl[5:]
