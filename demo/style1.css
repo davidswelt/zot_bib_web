@@ -151,6 +151,6 @@ span.doctitle {
 .bib-cat li {
     display: inline;
 }
-.bib-cat:not(:last-child):before, .bib-cat li:not(:last-child):after {
+.bib-cat:not(:first-child):before, .bib-cat li:not(:last-child):after {
     content: " | ";
 }
