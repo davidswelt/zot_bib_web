@@ -109,7 +109,7 @@ jquery_path = "site/jquery.min.js"  # path to jquery file on the server
 # jquery_path = "../wp-includes/js/jquery/jquery.js"  # wordpress location
 
 # Show categories at the top of the bibliography for quick filtering
-# 'collection', 'type', 'year', 'venue', 'venue_short' are supported
+# 'collection', 'type', 'year', 'venue', 'venue_short', 'tags' are supported
 show_shortcuts = ['collection']
 # To add specific rather than all available values for a field, use the shortcut function as follows.
 # Note that for year, we support ranges.

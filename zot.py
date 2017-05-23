@@ -684,6 +684,7 @@ class ZotItem:
         self.uniqueID = None # will be set by detect_and_merge_doubles
         self.filename = None
         self.parentItem = None
+        self.tags = []
         self.__dict__.update(entries)
         # Will be set later - None is a good default
         self.bib = None
@@ -712,6 +713,8 @@ class ZotItem:
             return self.venue()
         if key == 'venue_short':
             return self.venue_short()
+        if key == 'tags':
+            return self.getTags()
         if key in self.__dict__ and self.__dict__[key]:
             return self.__dict__[key]
         return default  # default
@@ -748,6 +751,9 @@ class ZotItem:
     def addSectionKeyword(self, s):
         if not s in self.section_keyword:
             self.section_keyword.add(s)
+
+    def getTags(self):
+        return [entry[u'tag'] for entry in self.tags] 
 
 
 def write_bib(items, outfile):
@@ -1083,9 +1089,13 @@ class Shortcut:
             if isinstance(v, list):  # multiple items listed - use first for label
                 return str(v[0])
             return str(v)
+        def flatten(l):
+            return [item for sublist in l for item in sublist]
 
         if self.levels:  # e.g., ('type', [v1,v2,v3]) - given in settings
             l = [(sortkeyname(self.crit, fit(lev)).sort, fit(lev), lev) for lev in self.levels if lev]
+        elif self.crit=='tags':
+            l = [sortkeyname(self.crit, lev) + (lev,) for lev in flatten(self.getValueForUniqueItems())]
         else:
             l = [sortkeyname(self.crit, lev) + (lev,) for lev in self.getValueForUniqueItems()]
         l = filter(lambda snv: snv[1], l)
@@ -1122,7 +1132,7 @@ class Shortcut:
                 allvalues = list(
                     filter(lambda y: (str(y) == str(crit_val)), self.getValueForUniqueItems()))
                 crit_val = 'year__' + crit_val
-        elif self.crit == 'collection':
+        elif self.crit == 'collection' or self.crit == 'tags':
             allvalues = list(filter(lambda y: (crit_val in y), self.getValueForUniqueItems()))
         elif self.crit in ['type', 'venue_short']:
             allvalues = list(filter(lambda y: (str(y) == str(crit_val)), self.getValueForUniqueItems()))
@@ -1292,12 +1302,14 @@ def make_html(all_items, exclude={}, shorten=False):
                 # Insert searchable keywords (not displayed)
                 search_tags = ''
                 if item.section_keyword:
-                    search_tags += " ".join(item.section_keyword)  # no special tag for collections
+                    search_tags += " ".join(item.section_keyword)  # no special tag for collections                   
                 search_tags += " year__" + item.access('year')  # no search by date
                 if item.venue_short():
                     search_tags += " venue_short__" + item.venue_short()
                 if item.type:
                     search_tags += " type__" + item.type
+                search_tags += ' "'+'" "'.join(item.getTags()) + '"'  # no special tag for collections
+
                 htmlitem += "<span class='bib-kw' style='display:none;'>%s</span>" % search_tags
 
                 htmlitem = div('bib-details', htmlitem)
@@ -1552,10 +1564,12 @@ class DBInstance:
                     if self.zotLastMod == lm and bs == bib_style:
                         if len(items)==0 or (hasattr(items[0], '__version__') and items[0].__version__ == ZotItem.__classversion__ and zv == zotero.__version__):
                             return items
-                    #else:
-                        #print("Not using cache %s (library modified)"%cache_name)
+                        else:
+                            print("Not using cache %s (versions or item lengths differ)"%cache_name)
+                    else:
+                        print("Not using cache %s (library modified)"%cache_name)
             except (IOError, ValueError, pickle.PicklingError, TypeError, EOFError) as e:
-                # print("Not using cache - some error ", e)
+                print("Not using cache - some error ", e)
                 pass
 
         # ii = zot.everything(zot.collection_items(collection_id))
@@ -2070,7 +2084,7 @@ def main(include, item_filters=[]):
     headerhtml += search_box + "</div>"  # preamble
 
     write_some_html(headerhtml + fullhtml, outputfile)
-
+    
 
 if __name__ == '__main__':
     read_args_and_init()

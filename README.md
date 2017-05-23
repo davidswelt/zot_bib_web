@@ -185,6 +185,14 @@ Configuration options
   subcollections that indicate topic areas.  A visitor may click on
   these to quickly filter the bibliography.
 
+- Configure the shortcuts shown at the top using the show_shortcuts
+   variable.  'collection', 'type', 'year', 'venue', 'venue_short', and
+   'tags' are supported values, in addition to more fine-grained lists
+   of values you can create using the shortcut() function.  You can
+   give the list of values or ranges (for years), their order, and
+   some filtering to only show the most common ones.  See
+   settings.example.py for a detailed example.
+
 - There are several more options.  See settings.example.py.
 
 
