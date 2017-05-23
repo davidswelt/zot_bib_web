@@ -11,18 +11,21 @@ options for displaying and sorting the interactive bibliography are available.
   statements.  See settings.example.py for documentation.
   Previous settings file are imported (with exception of the next item).
 
-- Additional settings have become available.  See settings.example.py.
-
-- Sorting of the bibliographic items not just
+- You can sort the bibliographic items not just
   by collection as in the Zotero library, but also by year or by
   publication type (e.g., journal article, conference paper), and
-  arbitrary hierarchies thereof.  Extracting "selected works" or "in
-  review" papers is possible.  Even if ordering chronologically,
+  arbitrary hierarchies thereof.   "Selected works" or "in
+  review" papers can be extracted at the top.  Even if ordering chronologically,
   without showing thematic collections, the bibliography can be
   filtered according to area with the collection shortcuts at the top.
 
 - Shortcuts at the top of the generated webpage can filter by years,
   collections, venues, publication type.
+
+- Files (like PDF files) stored in the Zotero library can now be
+  written out and linked to.
+
+- Additional settings have become available.  See settings.example.py.
 
 - Citations can be viewed in additional formats (see show_links
   configuration variable).  For example, we can show the full entry in
@@ -42,7 +45,7 @@ options for displaying and sorting the interactive bibliography are available.
 
 - Caching of Zotero retrieval makes repeated runs much faster.
 
-- Tested with Pyzotero 0.10.1 and Pyzotero 1.2.0
+- Tested with Pyzotero 1.2.11
 - Now compatible with Python 2.7 or Python 3.
 
 Compatibility-breaking Changes:
