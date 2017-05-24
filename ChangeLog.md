@@ -1,4 +1,4 @@
-zot_bib_web 2.0.0
+zot_bib_web 2.0.0  BETA
 -----------------------------------------
 
 The program's configuration has been redesigned, and many more
