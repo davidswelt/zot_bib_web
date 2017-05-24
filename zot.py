@@ -1567,7 +1567,7 @@ class DBInstance:
             except (IOError, ValueError, pickle.PicklingError, TypeError, EOFError) as e:
                 print("Not using cache - some error ", e)
                 pass
-        print("(updating)")
+        print("updating... ", end="")
 
         # ii = zot.everything(zot.collection_items(collection_id))
         ii = self.retrieve_x(collection_id)
