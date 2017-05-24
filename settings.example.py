@@ -96,8 +96,6 @@ limit=None
 # Special settings - configure only if needed.
 
 
-no_cache = True  # Do not use cache; retrieve items from Zotero database every time (slow)
-
 write_full_html_header = True   # False to not output HTML headers.  In this case, expect a file in UTF-8 encoding.
 stylesheet_url = "style.css"  # If set and write_full_html_header is True, link to this style sheet (a URL)
 
@@ -161,6 +159,9 @@ file_output_path = "files/"  # relative URL on server, corresponding to file_out
 
 
 # omit_COinS = False  # True to omit COINS metadata; useful to save space, but not recommended.
+
+# no_cache = True  # True means do not use cache; retrieve items from Zotero database every time (slow)
+
 
 # Prevent viewers from selecting "bib", "pdf" etc for easier copy/paste of bibliography
 # (don't set to obtain default)
