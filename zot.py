@@ -1564,13 +1564,10 @@ class DBInstance:
                     if self.zotLastMod == lm and bs == bib_style:
                         if len(items)==0 or (hasattr(items[0], '__version__') and items[0].__version__ == ZotItem.__classversion__ and zv == zotero.__version__):
                             return items
-                        else:
-                            print("Not using cache %s (versions or item lengths differ)"%cache_name)
-                    else:
-                        print("Not using cache %s (library modified)"%cache_name)
             except (IOError, ValueError, pickle.PicklingError, TypeError, EOFError) as e:
                 print("Not using cache - some error ", e)
                 pass
+        print("(updating)")
 
         # ii = zot.everything(zot.collection_items(collection_id))
         ii = self.retrieve_x(collection_id)
@@ -1661,33 +1658,35 @@ class DBInstance:
             # if this fails, we back off to using the file directly.
 
             p = os.path.join(file_outputdir, item.key)
-            make_sure_path_exists(p)
 
-            if item.contentType in ['application/zip', 'text/html']:
-                outfile = os.path.join(p, "temp.zip")
-                item.saved_filename = dump(item, p, "temp.zip") # good default for now
-                try:
-                    # let's see if we can extract it
-                    with zipfile.ZipFile(outfile, 'r') as zf:
-                        for zippedfile in zf.infolist():
-                            # This will relativize absolute path and eliminate .. 
-                            zf.extract(zippedfile, path=p)
-                    item.saved_filename = item.filename # main file inside the archive
-                    os.remove(outfile)
-                except zipfile.BadZipfile:
-                    # use default filename
-                    warn("Failed to deflate ZIP archive %s (%s)"%(item.filename, item.key))
-                    item.saved_filename = item.filename # rename
-                    os.rename(outfile, os.path.join(p, item.saved_filename))
-                    pass
+            from datetime import datetime
+            if (not os.path.exists(p)) or (not item.dateModified) or  (item.dateModified > datetime.fromtimestamp(os.path.getmtime(p)).isoformat()):
+                make_sure_path_exists(p)
+                if item.contentType in ['application/zip', 'text/html']:
+                    outfile = os.path.join(p, "temp.zip")
+                    item.saved_filename = dump(item, p, "temp.zip") # good default for now
+                    try:
+                        # let's see if we can extract it
+                        with zipfile.ZipFile(outfile, 'r') as zf:
+                            for zippedfile in zf.infolist():
+                                # This will relativize absolute path and eliminate ..
+                                zf.extract(zippedfile, path=p)
+                        item.saved_filename = item.filename # main file inside the archive
+                        os.remove(outfile)
+                    except zipfile.BadZipfile:
+                        # use default filename
+                        warn("Failed to deflate ZIP archive %s (%s)"%(item.filename, item.key))
+                        item.saved_filename = item.filename # rename
+                        os.rename(outfile, os.path.join(p, item.saved_filename))
+                        pass
+                else:
+                    item.saved_filename = dump(item, p, item.filename)
             else:
-                item.saved_filename = dump(item, p, item.filename)
+                item.saved_filename = item.filename
 
             # prepend path for URL
             if item.saved_filename:
                 item.saved_filename = os.path.join(item.key, item.saved_filename)
-
-            # ToDo:  check if file has changed, or maybe keep contents cached in ZotItem
 
 import pprint
 def detect_and_merge_doubles(items):
