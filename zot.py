@@ -241,6 +241,13 @@ def read_args_and_init():
 
     user = group = api_key = None
 
+    if "--version" in sys.argv or  "-v" in sys.argv:
+        print("Zot_bib_web version "+__version__)
+        print("Pyzotero version "+zotero.__version__)
+        print("Python version "+sys.version)
+        sys.exit(1)
+
+
     x = fetch_tag("--settings")
     if x:
         load_settings(x)
@@ -252,11 +259,6 @@ def read_args_and_init():
     # To Do: use argparse
 
     # Parse remaining arguments
-
-    if "--version" in sys.argv:
-        print("Zot_bib_web version "+__version__)
-        print("Pyzotero version "+zotero.__version__)
-        sys.argv.remove('--version')
         
     if "--div" in sys.argv:
         write_full_html_header = False
@@ -576,13 +578,13 @@ def sortkeyname(field, value):
         # sorting by all the numbers (if available).
         # e.g., 10.13, and displaying the last entry
         if 'collection' == field:
-            return SortAndValue(".".join([str(sortkeyname(field, value2).sort) for value2 in value]), sortkeyname(field, value[-1]).value)
+            return SortAndValue(u".".join([u"%s"%sortkeyname(field, value2).sort for value2 in value]), sortkeyname(field, value[-1]).value)
         else:
-            return SortAndValue(".".join([str(sortkeyname(field2, value2).sort) for field2, value2 in zip(field, value)]), \
+            return SortAndValue(u".".join([u"%s"%sortkeyname(field2, value2).sort for field2, value2 in zip(field, value)]), \
                    sortkeyname(field[-1], value[-1]).value)
     if field == "collection":
         if  Coll.hideSectionTitle(value):
-            sort_prefix, name, value = "","",value
+            sort_prefix, name, value = u"",u"",value
         else:
             name = Coll.findName(value)  # value is an ID
             sort_prefix, _, value = collname_split(name)
@@ -600,9 +602,9 @@ def sortkeyname(field, value):
     if field in sortkeyname_dict:
         if value in sortkeyname_dict[field]:
             s, value = sortkeyname_dict[field][value]  # this is (sort_number, label)
-            sort_prefix = str(s) + " " + sort_prefix
+            sort_prefix = "%s"%s + " " + sort_prefix
         elif None in sortkeyname_dict[field]:  # default for unknown values
-            sort_prefix = str(sortkeyname_dict[field][None][0]) + " " + sort_prefix
+            sort_prefix = "%s"%(sortkeyname_dict[field][None][0]) + " " + sort_prefix
 
     sort_prefix = sort_prefix or ""
     value = value or ""
@@ -1087,7 +1089,7 @@ class Shortcut:
     def getLevels(self):
         def fit(v):  # first if tuple
             if isinstance(v, list):  # multiple items listed - use first for label
-                return str(v[0])
+                return "%s"%v[0]
             return str(v)
         def flatten(l):
             return [item for sublist in l for item in sublist]
@@ -1103,7 +1105,7 @@ class Shortcut:
         return l
 
     def getBibItems(self, crit_val, section_print_title):
-        crit_val = last(crit_val) if self.crit == "collection" else str(crit_val)  # if collection, get its ID
+        crit_val = last(crit_val) if self.crit == "collection" else "%s"%crit_val  # if collection, get its ID
         allvalues = [True]  # keep by default
         counter = None
         if self.crit == 'year':
@@ -1135,7 +1137,7 @@ class Shortcut:
         elif self.crit == 'collection' or self.crit == 'tags':
             allvalues = list(filter(lambda y: (crit_val in y), self.getValueForUniqueItems()))
         elif self.crit in ['type', 'venue_short']:
-            allvalues = list(filter(lambda y: (str(y) == str(crit_val)), self.getValueForUniqueItems()))
+            allvalues = list(filter(lambda y: ("%s"%y == crit_val), self.getValueForUniqueItems()))
             crit_val = self.crit + '__' + crit_val
         return crit_val, section_print_title, allvalues
 
@@ -1376,7 +1378,7 @@ def make_html(all_items, exclude={}, shorten=False):
                         blinkitem += div('blink', bi)
 
                     if not omit_COinS and item.coins:
-                        blinkitem += str(item.coins).strip()
+                        blinkitem += ("%s"%item.coins).strip()
 
                     if shorten:  # to do - consider moving this to the CSS
                         blinkitem = div(None, blinkitem) #, style="padding-left:20px;")
@@ -1564,10 +1566,16 @@ class DBInstance:
                     if self.zotLastMod == lm and bs == bib_style:
                         if len(items)==0 or (hasattr(items[0], '__version__') and items[0].__version__ == ZotItem.__classversion__ and zv == zotero.__version__):
                             return items
+                        else:
+                            #print("version diff")
+                            pass
+                    else:
+                        #print("last mod diff")
+                        pass
             except (IOError, ValueError, pickle.PicklingError, TypeError, EOFError) as e:
-                print("Not using cache - some error ", e)
+                #print("Not using cache - some error ", e)
                 pass
-        print("updating... ", end="")
+        print(" updating... ", end="")
 
         # ii = zot.everything(zot.collection_items(collection_id))
         ii = self.retrieve_x(collection_id)
