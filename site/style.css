@@ -128,7 +128,7 @@ div.bib {
     display:inline;
 }
 
-div.full-bib-section .blinkitems .blink a {
+div.full-bib-section .blinkitems .blink {
     margin-bottom:-30px;
     font-size:80%;
 }

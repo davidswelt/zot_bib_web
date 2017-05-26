@@ -159,6 +159,9 @@ div.cite {
     width: 600px;
 }
 
+.blinkitems, .bib-venue, .bib-venue-short {
+}
+
 /* Text "bib", "abstract", and other buttons */
 .blinkitems .blink a {
     /* font-variant: small-caps; */
