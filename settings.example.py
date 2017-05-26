@@ -51,7 +51,7 @@ group_collection(160464, collection='MGID93AS')
 # toRead
 # thesis
 # website
-#    *10 Selected Works
+#    10 Selected Works
 #    20 Journal Articles
 #    30 Conference Proceedings
 #    40 Theses
@@ -60,6 +60,53 @@ group_collection(160464, collection='MGID93AS')
 # When you click on it on the Zotero website, your browser will show you an alphanumeric
 # key in the URL, e.g., items/collectionKey/FCQM2AY6.  The portion 'FCQM2AY6' is what you
 # would use in toplevelfilter.
+
+
+# To cause zot_bib_web to format a sub-collection in special ways, you
+# may add some statements here.  For these statements, supply either
+# the name (title) or the key associated with a collection.
+
+# exclude_collection (C)
+# Remove sub-collection C.
+
+# rename_collection (C, N)
+# Rename collection C to N.
+# This may be used to merge collections by giving them the same name.
+
+# hidden_collection (C)
+# Hide sub-collection C.  We still add a shortcut at the top
+# to unhide its contents if they are available elsewhere.
+# You may use a '-' before the name of the collection in the library instead.
+
+# short_collection (C)
+# Short mode.  This sub-collection will be shown using titles,
+# journal and years only, which can then be expanded.  Journal or
+# conference titles can be kept short.  Specify the "journal abbr or
+# "conference title" fields, or a short "note" if necessary.  You may
+# want to copy bibliographic items from other parts of the bibliography
+# into this sub-collection.
+# You may use a '*' before the name of the collection in the library instead.
+
+# feature_collection (C)
+# Feature this:  Extract this sub-collection and show at the beginning of the
+# bibliography, regardless of whether the rest of the bibliography is
+# sorted by, e.g., year, and ignores the collections otherwise. In the
+# collection shown below, it prevents "in review" articles to show up as
+# regular journal articles (which might give the impression you're
+# taking credit for not-yet-reviewed/published material!)
+# You may use a '!' before the name of the collection in the library instead.
+
+feature_collection("Miscellaneous")
+
+# misc_collection (C)
+# Show the items in this collection, but exclude those items that
+# are already included in another regular collection.  A regular
+# collection is one that is not hidden, not short, and not featured.
+# This is usefull to add a "Miscellaneous" category at the end for
+# additional items without duplicating anything.
+# You may use a '&' before the name of the collection in the library instead.
+
+
 
 #### SPECIAL OPTIONS: STYLE ####################################################
 # Special settings - configure only if needed.

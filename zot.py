@@ -948,7 +948,7 @@ class Coll:   # To do: make collection an object
             return any([Coll.is_special_collection(x, special) for x in section_code])
         c = Coll.find(section_code)
         if c:  # it's a collection key
-            return special in collname_split(c.name)[1]
+            return special in c.specials or special in collname_split(c.name)[1]
         # if it's not a section key, then it doesn't indicate a short section
         return False
 
@@ -970,6 +970,7 @@ class Coll:   # To do: make collection an object
         self.parents = parents
         self.db = db
         self.hideSectionTitle = False
+        self.specials = ""
 
 
 def strip(string):
@@ -1408,23 +1409,48 @@ def make_html(all_items, exclude={}, shorten=False):
 include_collections = []
 item_filters = []
 
+
 def group_collection(id, api_key=None, collection=None, top_level=False):
     global include_collections
     include_collections += [('load', DBInstance.create(id, 'group', api_key), collection, top_level)]
+
 
 def user_collection(id, api_key=None, collection=None, top_level=False):
     global include_collections
     include_collections += [('load', DBInstance.create(id, 'user', api_key), collection, top_level)]
 
+
 def exclude_collection(collection, top_level_only=False):
     global include_collections
     include_collections += [('exclude', collection, top_level_only)]
+
 
 def rename_collection(collection, newName):
     global include_collections
     include_collections += [('rename', collection, newName)]
 
-def exclude_items(filter):
+
+def short_collection(collection):
+    global include_collections
+    include_collections += [('special', '*', collection)]
+
+
+def featured_collection(collection):
+    global include_collections
+    include_collections += [('special', '!', collection)]
+
+
+def hidden_collection(collection):
+    global include_collections
+    include_collections += [('special', '-', collection)]
+
+
+def misc_collection(collection):
+    global include_collections
+    include_collections += [('special', '&', collection)]
+
+
+def exclude_items(filter):  # NOT DOCUMENTED - EXPERIMENTAL
     """After all items are loaded, filter them using a function.
     The function given in FILTER takes one argument, ITEM, and
     returns True for each item to exclude.
@@ -1437,9 +1463,15 @@ __builtin__.user_collection = user_collection
 __builtin__.group_collection = group_collection
 __builtin__.exclude_collection = exclude_collection
 __builtin__.rename_collection = rename_collection
+__builtin__.short_collection = short_collection
+__builtin__.featured_collection = featured_collection
+__builtin__.hidden_collection = hidden_collection
+__builtin__.misc_collection = misc_collection
 __builtin__.exclude_items = exclude_items
 
-__all__ += ['user_collection', 'group_collection', 'exclude_collection', 'rename_collection', 'exclude_items']
+__all__ += ['user_collection', 'group_collection', 'exclude_collection', 'rename_collection',
+            'short_collection', 'featured_collection', 'hidden_collection', 'misc_collection',
+            'exclude_items']
 
 
 def make_sure_path_exists(path):
@@ -2032,12 +2064,18 @@ def main(include, item_filters=[]):
                 warn("Exclude: Collection %s not found."%coll)
         elif func == 'rename':
             coll, name = args
-            collobjs = Coll.findSimilar(coll)
-            for collobj in collobjs:
-                collobj.name = name # newName
-        elif func == 'load': # DB Object
+            for collobj in Coll.findSimilar(coll):
+                collobj.name = name  # newName
+        elif func == 'load':  # DB Object
             db, coll, toplevel = args
             sortedkeys += db.get_collections(coll, toplevel)
+        elif func == 'special':  # DB Object
+            symb, coll = args
+            collobjs = Coll.findSimilar(coll)
+            for collobj in collobjs:
+                collobj.specials += symb
+            if not collobjs:
+                warn("Special %s: Collection %s not found." % (symb, coll))
 
     all_items, item_ids = retrieve_all_items(sortedkeys)
 
