@@ -26,8 +26,9 @@ OPTIONS:
 --apikey KEY         set Zotero API key               [api_key]
 --div                output an HTML fragment          [write_full_html_header=False]
 --full               output full html                 [write_full_html_header=True]
---test               implies --full and uses site/ directory
---nocache            do not load nor update cache     [no_cache]
+--nocache            neither load nor update cache    [no_cache]
+--help  | -h         show this help
+--version  | -v      show versions of libraries
 
 These and additional settings can be loaded from settings.py.
 
@@ -254,7 +255,10 @@ def read_args_and_init():
         print("Zot_bib_web version " + __version__)
         print("Pyzotero version " + zotero.__version__)
         print("Python version " + sys.version)
-        sys.exit(1)
+        sys.exit(0)
+    if "-h" in sys.argv or "--help" in sys.argv:
+        print_usage()
+        sys.exit(0)
 
     x = fetch_tag("--settings")
     if x:
@@ -274,15 +278,6 @@ def read_args_and_init():
     if "--full" in sys.argv:
         write_full_html_header = True
         sys.argv.remove('--full')
-    if "--test" in sys.argv:
-        write_full_html_header = True
-        stylesheet_url = "site/style.css"
-        outputfile = 'zotero-bib.html'
-        jquery_path = "site/jquery.min.js"
-        clipboard_js_path = "site/clipboard.min.js"
-        copy_button_path = "site/clippy.svg"
-        sys.argv.remove('--test')
-        print("Test mode.  Forcing settings for local testing.")
 
     if "--nocache" in sys.argv:
         no_cache = True
@@ -293,12 +288,7 @@ def read_args_and_init():
         sys.argv.remove('-i')
     else:
         interactive_debugging = False
-    if "-h" in sys.argv:
-        sys.argv.remove('-h')
-        print_usage()
-    if "--help" in sys.argv:
-        sys.argv.remove('--help')
-        print_usage()
+
 
     x = fetch_tag("--user")
     if x:
