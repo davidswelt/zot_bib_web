@@ -358,30 +358,52 @@ def generate_base_html():
     possible_items += ['cite_'+s[5:] for s in show_links if s.startswith("cite.")]
 
     blinkitem_css = ""
-    for name in set(possible_items):
-        if smart_selections:
-            if language_code in link_translations:
-                trans = link_translations[language_code].get(name.lower(), name)
-            elif name.startswith("cite_"):
-                trans = "%s"%name[5:].upper()
-            else:
-                trans = name
-            blinkitem_css += "a.%s::before {content:\"%s\"}\n" % (name.lower(), trans)
-        else:
-            blinkitem_css += "a.%s::before {}\n" % (name.lower())
-    blinkitem_css += "a.shortened::before {%s}\n"%('content:"\\229E"' if smart_selections else "")  # hex(8862)
+    #    blinkitem_css += "a.shortened::before {%s}\n"%('content:"\\229E"' if smart_selections else "")  # hex(8862)
 
     # Set some (default) styles
     # note - the final style in the style sheet is manipulated by changeCSS
     # this is selected (hack, hack) by index
 
-    style_html = '<style type="text/css" id="zoterostylesheet" ' + ("" if write_full_html_header else "scoped") + """>
+    style_html = """
 .bibshowhide {display:none;}
-.bib-venue-short, .bib-venue {display:none;}
-""" + blinkitem_css + """
-.blink {margin:0;margin-right:15px;padding:0;display:none;}
-</style>"""
-    script_html = """<script type="text/javascript">
+.bib-venue-short, .bib-venue {display:none;}"""
+    if smart_selections:
+        style_html += '.bib-venue-short::before, .bib-venue::before, .blink a::before  {content: attr(data-before);}'
+    style_html += blinkitem_css + ".blink {margin:0;margin-right:15px;padding:0;display:none;}"
+
+    style_html = '<style type="text/css" id="zoterostylesheet" ' + ("" if write_full_html_header else "scoped") + '>' + style_html + '</style>'
+
+    script_html = ''
+
+    jqready = ''
+    jqready += "jQuery('.blink a').click(showThis);"
+
+    if show_copy_button:
+        if jquery_path and clipboard_js_path and copy_button_path:
+            script_html += '<script type="text/javascript" src="%s"></script>'%clipboard_js_path
+            jqready += """
+        jQuery("div.bib").add("div.cite").append('\\n<button class="btn"><img src="%s" width=13 alt="Copy to clipboard"></button>');
+            new Clipboard('.btn',{
+    text: function(trigger) {
+    var prevCol = trigger.parentNode.style.color;
+    trigger.parentNode.style.color="grey";
+    setTimeout(function(){trigger.parentNode.style.color=prevCol;}, 200);
+    return trigger.parentNode.childNodes[0].textContent;}});"""%copy_button_path
+
+        else:
+            warning("show_search_box set, but jquery_path, clipboard_js_path or copy_button_path undefined.")
+
+    if smart_selections:
+        jqready += """
+        jQuery(".bib-venue-short").each(function(){$(this).attr('data-before', $(this).html()); $(this).html("")});
+        jQuery(".blink a").each(function(){$(this).attr('data-before', $(this).html()); $(this).html("")});
+        """
+
+    if jquery_path:
+        script_html += '<script type="text/javascript" src="' + jquery_path + '"></script>'
+
+    script_html += '<script type="text/javascript">jQuery(document).ready(function () {%s});'%jqready
+    script_html += """
 function dwnD(data) {
     filename = "article.ris"
     var pom = document.createElement('a');
@@ -437,24 +459,6 @@ function changeCSS() {
 changeCSS();
 </script>"""
 
-    if show_copy_button:
-        if jquery_path and clipboard_js_path and copy_button_path:
-            script_html += """<script type="text/javascript" src="%s"></script>
-    <script type="text/javascript" src="%s"></script>
-    <script type="text/javascript">
-    jQuery(document).ready(function () {
-    jQuery('.blink a').click(showThis);
-    jQuery("div.bib").add("div.cite").append('\\n<button class="btn"><img src="%s" width=13 alt="Copy to clipboard"></button>');
-        new Clipboard('.btn',{
-text: function(trigger) {
-var prevCol = trigger.parentNode.style.color;
-trigger.parentNode.style.color="grey";
-setTimeout(function(){trigger.parentNode.style.color=prevCol;}, 200);
-return trigger.parentNode.childNodes[0].textContent;}});});</script>""" % (
-            jquery_path, clipboard_js_path, copy_button_path)
-        else:
-            warning("show_search_box set, but jquery_path, clipboard_js_path or copy_button_path undefined.")
-
     credits_html = u'<div id="zbw_credits" style="text-align:right;">A <a href="https://github.com/davidswelt/zot_bib_web">zot_bib_web</a> bibliography.</div>'
 
     script_html = cleanup_lines(script_html)
@@ -474,8 +478,6 @@ return trigger.parentNode.childNodes[0].textContent;}});});</script>""" % (
         html_footer += credits_html + u'</div>'
 
     search_box = ""
-    if show_search_box or show_shortcuts or show_copy_button:
-        search_box += '<script type="text/javascript" src="' + jquery_path + '</script>'
 
     if show_search_box or show_shortcuts:
         if jquery_path:
@@ -668,7 +670,7 @@ def index_configuration():
         language_code = 'en'  # fallback - should be present.
 
     # use val as default if it is given as None
-    sortkeyname_dict = {key: {val: (idx, mappedVal or val) for idx, (val, mappedVal) in enumerate(list(the_list))} for
+    sortkeyname_dict = {key: {val: ("%03d"%idx, mappedVal or val) for idx, (val, mappedVal) in enumerate(list(the_list))} for
                         key, the_list in sortkeyname_order[language_code].items()}
 
 
@@ -1235,31 +1237,23 @@ def make_html(all_items, exclude={}, shorten=False):
     def a_button(name, url=None, js=None, title=None, cls=None):
         global smart_selections
         global language_code
-        if js:
-            js = 'onclick="%s"'%js
-        else:
-            js = '' # binding happens at doc level
-        if not url:
-            url = ""
-        else:
-            url = 'href=\"%s\"' % url
-        if not cls:
-            cls = name
-        title2 = ""
-        if title:
-            title2 = "title=\"%s\"" % title
+        js = ('onclick="%s"'%js) if js else ''
+        #    js = '' # binding happens at doc level
+        url = ('href="%s"'%url)  if url else ''
+        cls = ('class="%s"' % cls) if cls else ''
+        title = ('title="%s"' % title) if title else ''
         if language_code in link_translations:
             name = link_translations[language_code].get(name.lower(), name)
-        return u"<a class=\"%s\" %s %s %s>%s</a>" % (
-        cls.lower(), title2, url, js, ("" if smart_selections else name))
+        return u"<a %s %s %s %s>%s</a>" % (
+        cls, title, url, js, (name if smart_selections else name))
 
     def button_label_for_object(obj, default):
         if re.search(r'\.pdf$', obj, re.IGNORECASE):
-            n = 'pdf'
+            n = 'PDF'
         elif re.search(r'\.docx?$', obj, re.IGNORECASE):
-            n = 'doc'
+            n = 'Doc'
         elif re.search(r'\.ps$', obj, re.IGNORECASE):
-            n = 'ps'
+            n = 'PS'
         else:
             n = default
         return n
@@ -1285,15 +1279,12 @@ def make_html(all_items, exclude={}, shorten=False):
                 t_to_replace = ["<i>" + t + "</i>.", "<i>" + t2 + "</i>.", "<i>" + t + "</i>", "<i>" + t2 + "</i>",
                                 t + ".", t2 + ".", t, t2]
                 if u:
+                    # note: insert space before doctitle for copy/paste behavior
                     new = tryreplacing(htmlitem, t_to_replace,
                                        u"<span class=\"doctitle\"><a class=\"doctitle\" href=\"%s\">%s</a></span>" % (
                                        u, "\\0"))
 
-                    if new == htmlitem:
-                        # replacement not successful
-                        if not 'pdf' in show_items and not 'url' in show_items:
-                            show_items = show_items + ['pdf'] # make copy
-                    else:
+                    if not new == htmlitem:  # replacement successful
                         # remove "Retrieved from"
                         # URL detector from http://daringfireball.net/2010/07/improved_regex_for_matching_urls
                         new = re.sub(
@@ -1366,11 +1357,11 @@ def make_html(all_items, exclude={}, shorten=False):
                         elif (sl == 'pdf' or sl == 'url') and u:
                             # automatically detect what the link points to
                             n = button_label_for_object(u, 'link')
-                            bi = a_button(n, url=u, cls=n.lower())
+                            bi = a_button(n, url=u)
                         elif sl in ['ris','endnote'] and item.ris:
                             # to do - use a_button because of smart_selections
                             onclick="dwnD(\'%s\');return false;"%base64.b64encode(item.ris.encode('utf-8')).decode('utf-8')
-                            bi = a_button('RIS' if 'ris'==sl else 'EndNote', js=onclick, title='Download RIS/Endnote record', cls='ris' if 'ris'==sl else 'endnote')
+                            bi = a_button('RIS' if 'ris'==sl else 'EndNote', js=onclick, title='Download RIS/Endnote record')
                             #bi = '<a class="%s" title="Download RIS record" onclick="dwnD(\'%s\');return false;"></a>' % ('ris', base64.b64encode(item.ris.encode('utf-8')).decode('utf-8'))
                         #elif 'endnote' == sl and item.ris:  # EndNote = RIS
                         #    bi = '<a class="%s" title="Download EndNote record" onclick="dwnD(\'%s\');return false;"></a>' % ('endnote', base64.b64encode(item.ris.encode('utf-8')).decode('utf-8'))
@@ -1378,7 +1369,7 @@ def make_html(all_items, exclude={}, shorten=False):
                         elif sl.startswith("cite."):
                             style = sl[5:]
                             if item.txtstyle and style in item.txtstyle:
-                                bi = a_button('Cite(%s)'%style.upper(), cls="cite_"+style) + div('bibshowhide', div('cite', item.txtstyle[style]))
+                                bi = a_button('%s'%style.upper()) + div('bibshowhide', div('cite', item.txtstyle[style]))
                         else:
                             continue
                         blinkitem += div('blink', bi)
