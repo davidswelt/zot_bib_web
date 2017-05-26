@@ -33,12 +33,10 @@ These and additional settings can be loaded from settings.py.
 
 """
 
-
 # zot_bib_web
 
 from __future__ import print_function
 from __future__ import unicode_literals
-
 
 ####  Program arguments
 
@@ -61,7 +59,7 @@ from __future__ import unicode_literals
 
 ## The following items are defaults.
 
-__all__ = ['titlestring','bib_style','write_full_html_header', 'stylesheet_url',
+__all__ = ['titlestring', 'bib_style', 'write_full_html_header', 'stylesheet_url',
            'outputfile', 'category_outputfile_prefix', 'jquery_path', 'number_bib_items',
            'show_copy_button', 'clipboard_js_path', 'copy_button_path', 'show_search_box',
            'show_shortcuts', 'show_links', 'omit_COinS', 'smart_selections',
@@ -73,8 +71,8 @@ bib_style = 'apa'
 write_full_html_header = True
 stylesheet_url = "site/style.css"
 outputfile = 'zotero-bib.html'
-file_outputdir = '' # for associated files
-file_output_path = "" # URL path
+file_outputdir = ''  # for associated files
+file_output_path = ""  # URL path
 category_outputfile_prefix = 'zotero'
 jquery_path = "site/jquery.min.js"
 # jquery_path = "../wp-includes/js/jquery/jquery.js"  # wordpress location
@@ -94,6 +92,7 @@ def fix_bibtex_reference(bib, _thisatom):
     sub = re.sub(r'(?<=[a-z\s]{)(?P<name>[^_\s,]+)_(?P<firstword>[^_\s,]+)_(?P<year>[^_\s,]+)(?=\s*,\s*[\r\n])',
                  "\g<name>\g<year>\g<firstword>", bib, count=1)
     return sub or bib
+
 
 content_filter = {'bib': fix_bibtex_reference}  # currently, only this function is supported.
 
@@ -214,7 +213,7 @@ def load_settings(file="settings.py"):
         for k, v in settings.__dict__.items():
             if not "__" in k:  # even if default is not defined (e.g., function definitions for content_filter)
                 if not k in globals() and not callable(v):  # functions are usually harmless.
-                    warn("Settings file defines %s.  Not a configuration symbol."%k)
+                    warn("Settings file defines %s.  Not a configuration symbol." % k)
                 globals()[k] = v
                 # print(k,v)
         print("Loaded settings from %s." % os.path.abspath(file))
@@ -222,7 +221,7 @@ def load_settings(file="settings.py"):
     except ImportError:
         pass
     except IOError:  # no settings file
-        warn("%s file not found."%file)
+        warn("%s file not found." % file)
 
 
 def fetch_tag(tag, default=None):
@@ -251,12 +250,11 @@ def read_args_and_init():
 
     user = group = api_key = None
 
-    if "--version" in sys.argv or  "-v" in sys.argv:
-        print("Zot_bib_web version "+__version__)
-        print("Pyzotero version "+zotero.__version__)
-        print("Python version "+sys.version)
+    if "--version" in sys.argv or "-v" in sys.argv:
+        print("Zot_bib_web version " + __version__)
+        print("Pyzotero version " + zotero.__version__)
+        print("Python version " + sys.version)
         sys.exit(1)
-
 
     x = fetch_tag("--settings")
     if x:
@@ -269,7 +267,7 @@ def read_args_and_init():
     # To Do: use argparse
 
     # Parse remaining arguments
-        
+
     if "--div" in sys.argv:
         write_full_html_header = False
         sys.argv.remove('--div')
@@ -333,7 +331,8 @@ def read_args_and_init():
             if user or group:
                 warn("No collections found in given libraries.")
             else:
-                warn("You must give --user or --group, or add user_collection(..) or group_collection(..) in settings.py.")
+                warn(
+                    "You must give --user or --group, or add user_collection(..) or group_collection(..) in settings.py.")
 
     if print_usage_and_exit:
         print_usage()
@@ -354,8 +353,9 @@ def generate_base_html():
     # this way, a nice, clean bibliography can be copied right from a browser window
     # this is achieved by displaying the buttons dynamically.
     # caveat - are there accessibility implications?
-    possible_items = ['PDF','PS','DOC','link','Wikipedia','BIB','RIS','EndNote','Abstract', 'File'] # see also button_label_for_object
-    possible_items += ['cite_'+s[5:] for s in show_links if s.startswith("cite.")]
+    possible_items = ['PDF', 'PS', 'DOC', 'link', 'Wikipedia', 'BIB', 'RIS', 'EndNote', 'Abstract',
+                      'File']  # see also button_label_for_object
+    possible_items += ['cite_' + s[5:] for s in show_links if s.startswith("cite.")]
 
     blinkitem_css = ""
     #    blinkitem_css += "a.shortened::before {%s}\n"%('content:"\\229E"' if smart_selections else "")  # hex(8862)
@@ -371,7 +371,8 @@ def generate_base_html():
         style_html += '.bib-venue-short::before, .bib-venue::before, .blink a::before  {content: attr(data-before);}'
     style_html += blinkitem_css + ".blink {margin:0;margin-right:15px;padding:0;display:none;}"
 
-    style_html = '<style type="text/css" id="zoterostylesheet" ' + ("" if write_full_html_header else "scoped") + '>' + style_html + '</style>'
+    style_html = '<style type="text/css" id="zoterostylesheet" ' + (
+    "" if write_full_html_header else "scoped") + '>' + style_html + '</style>'
 
     script_html = ''
 
@@ -380,7 +381,7 @@ def generate_base_html():
 
     if show_copy_button:
         if jquery_path and clipboard_js_path and copy_button_path:
-            script_html += '<script type="text/javascript" src="%s"></script>'%clipboard_js_path
+            script_html += '<script type="text/javascript" src="%s"></script>' % clipboard_js_path
             jqready += """
         jQuery("div.bib").add("div.cite").append('\\n<button class="btn"><img src="%s" width=13 alt="Copy to clipboard"></button>');
             new Clipboard('.btn',{
@@ -388,7 +389,7 @@ def generate_base_html():
     var prevCol = trigger.parentNode.style.color;
     trigger.parentNode.style.color="grey";
     setTimeout(function(){trigger.parentNode.style.color=prevCol;}, 200);
-    return trigger.parentNode.childNodes[0].textContent;}});"""%copy_button_path
+    return trigger.parentNode.childNodes[0].textContent;}});""" % copy_button_path
 
         else:
             warning("show_search_box set, but jquery_path, clipboard_js_path or copy_button_path undefined.")
@@ -402,7 +403,7 @@ def generate_base_html():
     if jquery_path:
         script_html += '<script type="text/javascript" src="' + jquery_path + '"></script>'
 
-    script_html += '<script type="text/javascript">jQuery(document).ready(function () {%s});'%jqready
+    script_html += '<script type="text/javascript">jQuery(document).ready(function () {%s});' % jqready
     script_html += """
 function dwnD(data) {
     filename = "article.ris"
@@ -468,10 +469,11 @@ changeCSS();
     if write_full_html_header:
         if stylesheet_url:
             style_html = u"<link rel=\"stylesheet\" type=\"text/css\" href=\"%s\">" % stylesheet_url + style_html
-        html_header += u'<!DOCTYPE html><html lang="%s"><head><meta charset="UTF-8"><title>'%language_code + titlestring + u'</title>' + style_html + u'</head><body>'
+        html_header += u'<!DOCTYPE html><html lang="%s"><head><meta charset="UTF-8"><title>' % language_code + titlestring + u'</title>' + style_html + u'</head><body>'
         html_header += u'<div class="bibliography">' + script_html
         html_footer += credits_html + u'</div>'
-        html_header += '<h1 class="title">' + titlestring + "</h1>\n";
+        if titlestring:
+            html_header += '<h1 class="title">' + titlestring + "</h1>\n";
         html_footer += u'</body></html>'
     else:
         html_header += u'<div class="bibliography">' + style_html + script_html
@@ -573,7 +575,8 @@ def basicparse(value):
     return value, year
 
 
-SortAndValue = namedtuple('SortAndValue', ['sort','value'])
+SortAndValue = namedtuple('SortAndValue', ['sort', 'value'])
+
 
 def sortkeyname(field, value):
     global sortkeyname_dict
@@ -590,13 +593,15 @@ def sortkeyname(field, value):
         # sorting by all the numbers (if available).
         # e.g., 10.13, and displaying the last entry
         if 'collection' == field:
-            return SortAndValue(u".".join([u"%s"%sortkeyname(field, value2).sort for value2 in value]), sortkeyname(field, value[-1]).value)
+            return SortAndValue(u".".join([u"%s" % sortkeyname(field, value2).sort for value2 in value]),
+                                sortkeyname(field, value[-1]).value)
         else:
-            return SortAndValue(u".".join([u"%s"%sortkeyname(field2, value2).sort for field2, value2 in zip(field, value)]), \
-                   sortkeyname(field[-1], value[-1]).value)
+            return SortAndValue(
+                u".".join([u"%s" % sortkeyname(field2, value2).sort for field2, value2 in zip(field, value)]), \
+                sortkeyname(field[-1], value[-1]).value)
     if field == "collection":
-        if  Coll.hideSectionTitle(value):
-            sort_prefix, name, value = u"",u"",value
+        if Coll.hideSectionTitle(value):
+            sort_prefix, name, value = u"", u"", value
         else:
             name = Coll.findName(value)  # value is an ID
             sort_prefix, _, value = collname_split(name)
@@ -614,17 +619,19 @@ def sortkeyname(field, value):
     if field in sortkeyname_dict:
         if value in sortkeyname_dict[field]:
             s, value = sortkeyname_dict[field][value]  # this is (sort_number, label)
-            sort_prefix = "%s"%s + " " + sort_prefix
+            sort_prefix = "%s" % s + " " + sort_prefix
         elif None in sortkeyname_dict[field]:  # default for unknown values
-            sort_prefix = "%s"%(sortkeyname_dict[field][None][0]) + " " + sort_prefix
+            sort_prefix = "%s" % (sortkeyname_dict[field][None][0]) + " " + sort_prefix
 
     sort_prefix = sort_prefix or ""
     value = value or ""
 
-    return SortAndValue(" ".join([sort_prefix, value.lower()]), value) # sort by value
+    return SortAndValue(" ".join([sort_prefix, value.lower()]), value)  # sort by value
 
 
-sort_reverse=[]
+sort_reverse = []
+
+
 def import_legacy_configuration():
     global order_by
     global sort_criteria
@@ -670,12 +677,14 @@ def index_configuration():
         language_code = 'en'  # fallback - should be present.
 
     # use val as default if it is given as None
-    sortkeyname_dict = {key: {val: ("%03d"%idx, mappedVal or val) for idx, (val, mappedVal) in enumerate(list(the_list))} for
-                        key, the_list in sortkeyname_order[language_code].items()}
+    sortkeyname_dict = {
+    key: {val: ("%03d" % idx, mappedVal or val) for idx, (val, mappedVal) in enumerate(list(the_list))} for
+    key, the_list in sortkeyname_order[language_code].items()}
 
 
 class ZotItem:
     __classversion__ = 5
+
     def __init__(self, entries):
         self.__version__ = ZotItem.__classversion__
         self.key = None
@@ -695,7 +704,7 @@ class ZotItem:
         self.shortTitle = None
         self.series = None
         self.extra = None
-        self.uniqueID = None # will be set by detect_and_merge_doubles
+        self.uniqueID = None  # will be set by detect_and_merge_doubles
         self.filename = None
         self.parentItem = None
         self.tags = []
@@ -758,7 +767,8 @@ class ZotItem:
 
         # print(pprint.pformat(self.__dict__))
         return self.journalAbbreviation or maybeshorten(self.conferenceName) or maybeshorten(
-            self.meetingName) or maybeshorten(self.publicationTitle) or maybeshorten(self.shortTitle) or maybeshorten(self.series)
+            self.meetingName) or maybeshorten(self.publicationTitle) or maybeshorten(self.shortTitle) or maybeshorten(
+            self.series)
 
     # or self.shortTitle or self.series
 
@@ -767,7 +777,7 @@ class ZotItem:
             self.section_keyword.add(s)
 
     def getTags(self):
-        return [entry[u'tag'] for entry in self.tags] 
+        return [entry[u'tag'] for entry in self.tags]
 
 
 def write_bib(items, outfile):
@@ -792,6 +802,7 @@ def format_bib(bib):
 
 def format_ris(bib):
     return bib.replace("\n", "\\n").replace("\r", "\\r")
+
 
 def extract_abstract(bib):
     m = re.match(r'(.*)abstract\s*=\s*{?(.*?)}\s*(,|})(.*)', bib, re.DOTALL | re.IGNORECASE)
@@ -880,7 +891,7 @@ def collname_split(name):  # returns sort_prefix,modifiers,value
     return "", "", name
 
 
-class Coll:   # To do: make collection an object
+class Coll:  # To do: use collection objects and collection path objects instead of key strings and lists thereof.
     collection_info = {}
 
     @staticmethod
@@ -909,12 +920,10 @@ class Coll:   # To do: make collection an object
         Coll.collection_info[code] = c
         return c
 
-
     @staticmethod
     def is_short_collection(section_code):
         "Show abbreviated entries for items in this collection"
         return Coll.is_special_collection(section_code, "*")
-
 
     # def is_exclusive_collection(section_code):
     #     "Show items in this collection, and do not show them in regular collections"
@@ -1012,9 +1021,9 @@ class Shortcut:
             if not i.uniqueID in uid:
                 uid.add(i.uniqueID)
                 v = i.access(self.crit)
-                if not (self.crit=='collection' and Coll.hideSectionTitle(last(v))):
+                if not (self.crit == 'collection' and Coll.hideSectionTitle(last(v))):
                     u += [v]
-        #u = set([(i.access(self.crit), i.key) for i in self.all_items])
+        # u = set([(i.access(self.crit), i.key) for i in self.all_items])
         #        return list([v for v, _id in u if v])
         return u
 
@@ -1060,8 +1069,8 @@ class Shortcut:
                 if self.sortBy == 'count':
                     k = lambda x: len(x.items)
                 elif self.sortBy == 'name':
-                        k = lambda x: x.title # by title
-                else: # by sort name
+                    k = lambda x: x.title  # by title
+                else:  # by sort name
                     k = lambda x: x.sortname  # sort by sort name (as given by sortkeyname)
                 self.catInfo.sort(key=k, reverse=(sort == 'desc'))
 
@@ -1094,14 +1103,15 @@ class Shortcut:
     def getLevels(self):
         def fit(v):  # first if tuple
             if isinstance(v, list):  # multiple items listed - use first for label
-                return "%s"%v[0]
+                return "%s" % v[0]
             return str(v)
+
         def flatten(l):
             return [item for sublist in l for item in sublist]
 
         if self.levels:  # e.g., ('type', [v1,v2,v3]) - given in settings
             l = [(sortkeyname(self.crit, fit(lev)).sort, fit(lev), lev) for lev in self.levels if lev]
-        elif self.crit=='tags':
+        elif self.crit == 'tags':
             l = [sortkeyname(self.crit, lev) + (lev,) for lev in flatten(self.getValueForUniqueItems())]
         else:
             l = [sortkeyname(self.crit, lev) + (lev,) for lev in self.getValueForUniqueItems()]
@@ -1110,7 +1120,7 @@ class Shortcut:
         return l
 
     def getBibItems(self, crit_val, section_print_title):
-        crit_val = last(crit_val) if self.crit == "collection" else "%s"%crit_val  # if collection, get its ID
+        crit_val = last(crit_val) if self.crit == "collection" else "%s" % crit_val  # if collection, get its ID
         allvalues = [True]  # keep by default
         counter = None
         if self.crit == 'year':
@@ -1142,7 +1152,7 @@ class Shortcut:
         elif self.crit == 'collection' or self.crit == 'tags':
             allvalues = list(filter(lambda y: (crit_val in y), self.getValueForUniqueItems()))
         elif self.crit in ['type', 'venue_short']:
-            allvalues = list(filter(lambda y: ("%s"%y == crit_val), self.getValueForUniqueItems()))
+            allvalues = list(filter(lambda y: ("%s" % y == crit_val), self.getValueForUniqueItems()))
             crit_val = self.crit + '__' + crit_val
         return crit_val, section_print_title, allvalues
 
@@ -1174,14 +1184,12 @@ except ImportError:
     # Python 3
     import builtins as __builtin__
 
-
 __builtin__.sortkeyname_order = sortkeyname_order
 
-__builtin__.push_wordpress = lambda *args,**kwargs: None
+__builtin__.push_wordpress = lambda *args, **kwargs: None
 
 __builtin__.shortcut = shortcut
 __all__ += ['shortcut']
-
 
 __builtin__.content_filter = content_filter
 
@@ -1205,7 +1213,7 @@ def make_header_htmls(all_items):
         complex_crit.compile()
 
         html = ""
-        for info in complex_crit.getCatValueInfo(): # get info on the bib items associated with a category value (e.g., year=2007)
+        for info in complex_crit.getCatValueInfo():  # get info on the bib items associated with a category value (e.g., year=2007)
             # info: 'vals', 'sortname', 'title', 'items'
             if not info.items:  # empty result set (no items for this search, if type or year search)
                 print("Warning: %s %s not found, but mentioned in shortcuts. Skipping." % (crit, info.vals))
@@ -1216,7 +1224,7 @@ def make_header_htmls(all_items):
                 else:
                     counterStr = ""
                 html += "<li class='link'><a style='white-space: nowrap;' href='#' onclick='searchF([%s],\"%s\",1);return false;'>%s<span class='cat_count'>%s</span></a></li>\n" % (
-                js_strings(info.vals), info.title, info.title, counterStr)
+                    js_strings(info.vals), info.title, info.title, counterStr)
         headerhtmls += [html]
 
     return headerhtmls
@@ -1224,29 +1232,32 @@ def make_header_htmls(all_items):
 
 entry_count = 0
 
+
 def div(cls=None, content="", style=None):
     "Helper that creates a HTML DIV element."
-    s = u' style="%s"'%style if style else u''
+    s = u' style="%s"' % style if style else u''
     c = u' class="%s"' % cls if cls else u''
-    return u'<div%s%s>%s</div>'%(c,s,content)
+    return u'<div%s%s>%s</div>' % (c, s, content)
+
 
 def make_html(all_items, exclude={}, shorten=False):
     """Produce the HTML for ALL_ITEMS.
     EXCLUDE certain items.
     SHORTEN the produced output for featured collections.
     """
+
     def a_button(name, url=None, js=None, title=None, cls=None):
         global smart_selections
         global language_code
-        js = ('onclick="%s"'%js) if js else ''
+        js = ('onclick="%s"' % js) if js else ''
         #    js = '' # binding happens at doc level
-        url = ('href="%s"'%url)  if url else ''
+        url = ('href="%s"' % url) if url else ''
         cls = ('class="%s"' % cls) if cls else ''
         title = ('title="%s"' % title) if title else ''
         if language_code in link_translations:
             name = link_translations[language_code].get(name.lower(), name)
         return u"<a %s %s %s %s>%s</a>" % (
-        cls, title, url, js, (name if smart_selections else name))
+            cls, title, url, js, (name if smart_selections else name))
 
     def button_label_for_object(obj, default):
         if re.search(r'\.pdf$', obj, re.IGNORECASE):
@@ -1270,7 +1281,7 @@ def make_html(all_items, exclude={}, shorten=False):
                 htmlitem = item.html
 
                 global show_links
-                show_items = show_links # not a copy
+                show_items = show_links  # not a copy
                 t = item.title
                 u = None
                 if item.url:
@@ -1283,7 +1294,7 @@ def make_html(all_items, exclude={}, shorten=False):
                     # note: insert space before doctitle for copy/paste behavior
                     new = tryreplacing(htmlitem, t_to_replace,
                                        u"<span class=\"doctitle\"><a class=\"doctitle\" href=\"%s\">%s</a></span>" % (
-                                       u, "\\0"))
+                                           u, "\\0"))
 
                     if not new == htmlitem:  # replacement successful
                         # remove "Retrieved from"
@@ -1308,7 +1319,7 @@ def make_html(all_items, exclude={}, shorten=False):
                     search_tags += " venue_short__" + item.venue_short()
                 if item.type:
                     search_tags += " type__" + item.type
-                search_tags += ' "'+'" "'.join(item.getTags()) + '"'  # no special tag for collections
+                search_tags += ' "' + '" "'.join(item.getTags()) + '"'  # no special tag for collections
 
                 htmlitem += "<span class='bib-kw' style='display:none;'>%s</span>" % search_tags
 
@@ -1342,14 +1353,16 @@ def make_html(all_items, exclude={}, shorten=False):
                         if 'abstract' == sl and abstract:
                             bi = a_button('Abstract') + div('bibshowhide', div('abstract', abstract))
                         elif 'wikipedia' == sl and item.wikipedia:
-                            bi = a_button('Wikipedia') + div('bibshowhide', div('bib', item.wikipedia, style='white-space:pre-wrap;'))
+                            bi = a_button('Wikipedia') + div('bibshowhide', div('bib', item.wikipedia,
+                                                                                style='white-space:pre-wrap;'))
                         elif 'bib' == sl and bibitem2:
                             bi = a_button('BIB') + div('bibshowhide', div('bib', bibitem2))
                         elif 'file' == sl:
                             bi = u''
                             for a in item.attachments:
-                                if a.saved_filename: #a.itemType=='attachment':
-                                    bi += div('blink', a_button(button_label_for_object(a.saved_filename, 'File'), url=file_output_path+'/'+a.saved_filename))
+                                if a.saved_filename:  # a.itemType=='attachment':
+                                    bi += div('blink', a_button(button_label_for_object(a.saved_filename, 'File'),
+                                                                url=file_output_path + '/' + a.saved_filename))
                         elif 'note' == sl:
                             for a in item.attachments:
                                 if a.itemType == 'note' and a.note:
@@ -1359,33 +1372,32 @@ def make_html(all_items, exclude={}, shorten=False):
                             # automatically detect what the link points to
                             n = button_label_for_object(u, 'link')
                             bi = a_button(n, url=u)
-                        elif sl in ['ris','endnote'] and item.ris:
+                        elif sl in ['ris', 'endnote'] and item.ris:
                             # to do - use a_button because of smart_selections
-                            onclick="dwnD(\'%s\');return false;"%base64.b64encode(item.ris.encode('utf-8')).decode('utf-8')
-                            bi = a_button('RIS' if 'ris'==sl else 'EndNote', js=onclick, title='Download RIS/Endnote record')
-                            #bi = '<a class="%s" title="Download RIS record" onclick="dwnD(\'%s\');return false;"></a>' % ('ris', base64.b64encode(item.ris.encode('utf-8')).decode('utf-8'))
-                        #elif 'endnote' == sl and item.ris:  # EndNote = RIS
-                        #    bi = '<a class="%s" title="Download EndNote record" onclick="dwnD(\'%s\');return false;"></a>' % ('endnote', base64.b64encode(item.ris.encode('utf-8')).decode('utf-8'))
-
+                            onclick = "dwnD(\'%s\');return false;" % base64.b64encode(item.ris.encode('utf-8')).decode(
+                                'utf-8')
+                            bi = a_button('RIS' if 'ris' == sl else 'EndNote', js=onclick,
+                                          title='Download RIS/Endnote record')
                         elif sl.startswith("cite."):
                             style = sl[5:]
                             if item.txtstyle and style in item.txtstyle:
-                                bi = a_button('%s'%style.upper()) + div('bibshowhide', div('cite', item.txtstyle[style]))
+                                bi = a_button('%s' % style.upper()) + div('bibshowhide',
+                                                                          div('cite', item.txtstyle[style]))
                         else:
                             continue
                         blinkitem += div('blink', bi)
 
                     if not omit_COinS and item.coins:
-                        blinkitem += ("%s"%item.coins).strip()
+                        blinkitem += ("%s" % item.coins).strip()
 
                     if shorten:  # to do - consider moving this to the CSS
-                        blinkitem = div(None, blinkitem) #, style="padding-left:20px;")
+                        blinkitem = div(None, blinkitem)  # , style="padding-left:20px;")
 
                     htmlitem += div('blinkitems', blinkitem)
 
                 if shorten:
                     htmlitem = a_button("&#8862;", cls='shortened') + \
-                               u" <span class=\"doctitle-short\">%s</span>"%t +\
+                               u" <span class=\"doctitle-short\">%s</span>" % t + \
                                u" <span class=\"containertitle\">%s</span> %s" % (ct, y) + \
                                u" <div class=\"bibshowhide\" style=\"padding-left:20px;\">" + htmlitem + "</div>"
                     htmlitem = div('blink', htmlitem)  # to limit what is being expanded
@@ -1481,20 +1493,23 @@ def make_sure_path_exists(path):
         if exception.errno != errno.EEXIST:
             raise
 
-import zipfile
-class DBInstance:
 
+import zipfile
+
+
+class DBInstance:
     dbInstanceCache = {}
+
     @staticmethod  # factory method
     def create(library_id, library_type, api_key):
 
         self = DBInstance()
         try:
             return DBInstance.dbInstanceCache[(library_id, library_type, api_key)]
-        except KeyError: # not found
+        except KeyError:  # not found
             pass
 
-        self.zot=None
+        self.zot = None
         self.zotLastMod = None
         try:
             self.zot = zotero.Zotero(library_id, library_type, api_key)
@@ -1508,7 +1523,8 @@ class DBInstance:
                 print("Loading: %s" % library_id)
 
         except zotero_errors.UserNotAuthorised:
-            print("UserNotAuthorised: Set correct Zotero API key in settings.py for library ID %s."%library_id, file=sys.stderr)
+            print("UserNotAuthorised: Set correct Zotero API key in settings.py for library ID %s." % library_id,
+                  file=sys.stderr)
             raise SystemExit(1)
 
         return self
@@ -1534,12 +1550,12 @@ class DBInstance:
                 colls = self.traverse([self.zot.collection(topcollection)])
 
                 if not top_level:
-                    colls[0].hideSectionTitle=True  # the topmost one should be hidden
+                    colls[0].hideSectionTitle = True  # the topmost one should be hidden
 
-               # if top_level:
-              #      print("Fetching top-level collection ", topcollection)
-              #  else:
-             #       colls = self.traverse(self.zot.collections_sub(topcollection))
+                    # if top_level:
+                    #      print("Fetching top-level collection ", topcollection)
+                    #  else:
+                    #       colls = self.traverse(self.zot.collections_sub(topcollection))
             else:
                 print("Fetching all collections:")
                 colls = self.traverse(self.zot.collections())
@@ -1551,11 +1567,10 @@ class DBInstance:
             print("UserNotAuthorised: Set correct Zotero API key in settings.py and allow access.", file=sys.stderr)
             raise SystemExit(1)
 
-
     def retrieve_x(self, collection, **args):
         items = self.zot.everything(
             self.zot.collection_items(collection, order=order_by, sort=sort_order,
-                                    **args))
+                                      **args))
         return items
 
     def retrieve_bib(self, collection, content, style):
@@ -1579,18 +1594,17 @@ class DBInstance:
         def cfilter(atom, type, content):
             if content_filter and type in content_filter:
                 fun = content_filter[type]
-                #return [globals()[fun](item, thisatom, atom) for item, thisatom in zip(content, atom)]
-                #return globals()[fun](content, atom)
+                # return [globals()[fun](item, thisatom, atom) for item, thisatom in zip(content, atom)]
+                # return globals()[fun](content, atom)
                 return fun(content, atom)
             return content
 
         for ai in a:
-            for fil in ['bib','html','ris','coins','wikipedia']:
+            for fil in ['bib', 'html', 'ris', 'coins', 'wikipedia']:
                 if hasattr(ai, fil):
                     setattr(ai, fil, cfilter(ai, fil, getattr(ai, fil)))
-            # to do: txtstyle
+                    # to do: txtstyle
         return a
-
 
     def retrieve_data_cached(self, collection_id, exclude=None):
         def check_show(s):
@@ -1601,24 +1615,24 @@ class DBInstance:
                     return True
             return False
 
-
-
         if not no_cache:
             cache_name = ".cache/%s.cache" % collection_id
             try:
                 date, lm, bs, zv, items = pickle.load(open(cache_name, 'rb'))
                 if date > datetime.now() - timedelta(days=14):  # cache expires after 14 days
                     if self.zotLastMod == lm and bs == bib_style:
-                        if len(items)==0 or (hasattr(items[0], '__version__') and items[0].__version__ == ZotItem.__classversion__ and zv == zotero.__version__):
+                        if len(items) == 0 or (hasattr(items[0], '__version__') and
+                                                       items[0].__version__ == ZotItem.__classversion__ and
+                                                       zv == zotero.__version__):
                             return items
                         else:
-                            #print("version diff")
+                            # print("version diff")
                             pass
                     else:
-                        #print("last mod diff")
+                        # print("last mod diff")
                         pass
             except (IOError, ValueError, pickle.PicklingError, TypeError, EOFError) as e:
-                #print("Not using cache - some error ", e)
+                # print("Not using cache - some error ", e)
                 pass
         print(" updating... ", end="")
 
@@ -1653,7 +1667,7 @@ class DBInstance:
         else:
             w = [None for _x in h]
 
-        #for bi, hi, ri, ci, wi, ai, index in zip(b, h, r, c, w, a):
+        # for bi, hi, ri, ci, wi, ai, index in zip(b, h, r, c, w, a):
         for i in range(0, len(a)):
             ai = a[i]
             ai.bib = b[i]
@@ -1661,7 +1675,7 @@ class DBInstance:
             ai.ris = r[i]
             ai.coins = c[i]
             ai.wikipedia = w[i]
-            ai.txtstyle = {s:st[i] for s,st in h_style.items()}
+            ai.txtstyle = {s: st[i] for s, st in h_style.items()}
 
         if not no_cache:
             make_sure_path_exists(os.path.dirname(cache_name))
@@ -1672,7 +1686,7 @@ class DBInstance:
 
     def arrangeAttachments(self, items):
         # Get attachments (separately)
-        itemindex = {item.key:item for item in items}
+        itemindex = {item.key: item for item in items}
         filtered = []
         for i in items:
             if i.parentItem:
@@ -1689,18 +1703,19 @@ class DBInstance:
             for a in item.attachments:
                 self.dumpFiles(a)
         if item.filename:
- 
+
             def dump(item, p, fn):
                 # Dump file into filename fn at path p
                 # Returns the filename if successful
-                outfile = os.path.join(p,fn)
+                outfile = os.path.join(p, fn)
                 # uses zot
                 try:
                     with open(outfile, 'wb') as f:
                         f.write(self.zot.file(item.key))
-                    return fn # default
+                    return fn  # default
                 except ValueError:
-                    warn("Failed to save file %s into %s (%s), content type %s."%(item.filename, outfile, item.key, item.contentType))
+                    warn("Failed to save file %s into %s (%s), content type %s." % (
+                    item.filename, outfile, item.key, item.contentType))
                     warn("    Error in Pyzotero.")
                 return None
 
@@ -1713,23 +1728,25 @@ class DBInstance:
             p = os.path.join(file_outputdir, item.key)
 
             from datetime import datetime
-            if (not os.path.exists(p)) or (not item.dateModified) or  (item.dateModified > datetime.fromtimestamp(os.path.getmtime(p)).isoformat()):
+            if (not os.path.exists(p)) or \
+                    (not item.dateModified) or \
+                    (item.dateModified > datetime.fromtimestamp(os.path.getmtime(p)).isoformat()):
                 make_sure_path_exists(p)
                 if item.contentType in ['application/zip', 'text/html']:
                     outfile = os.path.join(p, "temp.zip")
-                    item.saved_filename = dump(item, p, "temp.zip") # good default for now
+                    item.saved_filename = dump(item, p, "temp.zip")  # good default for now
                     try:
                         # let's see if we can extract it
                         with zipfile.ZipFile(outfile, 'r') as zf:
                             for zippedfile in zf.infolist():
                                 # This will relativize absolute path and eliminate ..
                                 zf.extract(zippedfile, path=p)
-                        item.saved_filename = item.filename # main file inside the archive
+                        item.saved_filename = item.filename  # main file inside the archive
                         os.remove(outfile)
                     except zipfile.BadZipfile:
                         # use default filename
-                        warn("Failed to deflate ZIP archive %s (%s)"%(item.filename, item.key))
-                        item.saved_filename = item.filename # rename
+                        warn("Failed to deflate ZIP archive %s (%s)" % (item.filename, item.key))
+                        item.saved_filename = item.filename  # rename
                         os.rename(outfile, os.path.join(p, item.saved_filename))
                         pass
                 else:
@@ -1741,7 +1758,7 @@ class DBInstance:
             if item.saved_filename:
                 item.saved_filename = os.path.join(item.key, item.saved_filename)
 
-import pprint
+
 def detect_and_merge_doubles(items):
     iids = {}
     titles = {}
@@ -1752,7 +1769,7 @@ def detect_and_merge_doubles(items):
         a.uniqueID = b.uniqueID
 
     # get last names of all creators.  exclude editors unless editors is all we have
-    lastnames = lambda creators: [c['lastName'] for c in creators if not c['creatorType'] == 'editor'] or\
+    lastnames = lambda creators: [c['lastName'] for c in creators if not c['creatorType'] == 'editor'] or \
                                  [c['lastName'] for c in creators]
 
     uniqueID = 0
@@ -1775,14 +1792,15 @@ def detect_and_merge_doubles(items):
                     if set(lastnames(a.creators)) == set(lastnames(t.creators)):
                         merge(a, iids[t.key])
                         break
-                    # We're showing warnings for almost-equal items later
+                        # We're showing warnings for almost-equal items later
         if not a.uniqueID:  # wasn't merged
             iids[key] = a
             titles[atl] = (titles[atl] if atl in titles else []) + [a]
-            uniqueID+=1
+            uniqueID += 1
             a.uniqueID = uniqueID
 
     return uniqueID
+
 
 def merge_doubles(items):
     # this assumes that detect_and_merge_doubles has been run.
@@ -1814,9 +1832,9 @@ def retrieve_all_items(collections):
                   [e for e in collections if Coll.is_misc_collection(e.key)]
 
     all_items = []
-    for e in collections: # key, depth, collection_name, collection_parents, db
+    for e in collections:  # key, depth, collection_name, collection_parents, db
         c = 0
-        print(" " + " " * len(e.parents) + e.name + " (" + e.key + ") ...", end="")
+        print(" " + " " * len(e.parents) + e.name + " " + e.specials + " (" + e.key + ") ...", end="")
 
         key = e.key
 
@@ -1853,7 +1871,8 @@ def retrieve_all_items(collections):
         parent_path = tuple(e.parents + [key])
         for item in i2:  # for sorting by collection
             item.collection = parent_path
-            item.section_keyword = set(parent_path)  # will be added HTML so the entry can be found.  Create individual set.
+            item.section_keyword = set(
+                parent_path)  # will be added HTML so the entry can be found.  Create individual set.
 
         if len(i2) > 0:
             all_items += i2
@@ -1862,8 +1881,11 @@ def retrieve_all_items(collections):
 
 
 htmlid_regex = re.compile(r"[\s,:;'\"]", re.IGNORECASE)
+
+
 def htmlid(s):
     return htmlid_regex.sub("", s)
+
 
 def compile_data(all_items, section_code, crits, exclude={}, shorten=False):
     global show_top_section_headings
@@ -1885,7 +1907,8 @@ def compile_data(all_items, section_code, crits, exclude={}, shorten=False):
         # raise RuntimeError("compile_data called with empty section_code")
 
     if last_section_id:
-        html += "<a id='%s' style='{display: block; position: relative; top: -150px; visibility: hidden;}'></a>" % htmlid(last_section_id)
+        html += "<a id='%s' style='{display: block; position: relative; top: -150px; visibility: hidden;}'></a>" % htmlid(
+            last_section_id)
         if section_code and show_top_section_headings and not Coll.hideSectionTitle(last_section_id):
             depth = 0
             if not is_string(section_code):
@@ -1901,7 +1924,6 @@ def compile_data(all_items, section_code, crits, exclude={}, shorten=False):
 
 
 def show_double_warnings(item_ids):
-
     def itemref(i):
         auth = (i.title and i.title[:30]) or u""
         year = i.date or u""
@@ -1924,10 +1946,7 @@ def show_double_warnings(item_ids):
                     # we know that every item here has the same ID (because of the previous check)
                     # itemcolls is a list
                     warning('Item "%s" included in %s collections:\n %s' % (
-                    itemref(itemcolls[0][0]), len(uniquecolls), ", ".join(map(Coll.findName, uniquecolls))))
-
-
-
+                        itemref(itemcolls[0][0]), len(uniquecolls), ", ".join(map(Coll.findName, uniquecolls))))
 
 
 def pull_up_featured_remove_hidden_colls(all_items):
@@ -2013,10 +2032,10 @@ def section_generator(items, crits):
             # Then, everything is organized according to the sort criteria
             for crit in crits[:show_top_section_headings]:
                 val = item.access(crit)
-                if not crit=='collection':  # for collections, need to preserve ID (will be converted later)
+                if not crit == 'collection':  # for collections, need to preserve ID (will be converted later)
                     # for everything else we want to aggregate bib items based on the display title of the section
                     # that way, some sections can be unified via sortkeyname, or years can be used for dates
-                    _sortkey, val = sortkeyname(crit,val)
+                    _sortkey, val = sortkeyname(crit, val)
                 if is_string(val):  # basic fields
                     section += [val]
                     crits_sec += [crit]
@@ -2044,8 +2063,8 @@ def section_generator(items, crits):
     if collect:
         yield prev_section, prev_crits_sec, collect
 
-def main(include, item_filters=[]):
 
+def main(include, item_filters=[]):
     index_configuration()
 
     all_items = []
@@ -2059,9 +2078,10 @@ def main(include, item_filters=[]):
             # if coll is the name of a collection, turn it into a key
             collobjs = Coll.findSimilar(coll)
             for collobj in collobjs:
-                sortedkeys = list(filter(lambda e:  (not collobj.key in [e.key]+([] if top_level_only else e.parents)), sortedkeys))
+                sortedkeys = list(
+                    filter(lambda e: (not collobj.key in [e.key] + ([] if top_level_only else e.parents)), sortedkeys))
             if not collobjs:
-                warn("Exclude: Collection %s not found."%coll)
+                warn("Exclude: Collection %s not found." % coll)
         elif func == 'rename':
             coll, name = args
             for collobj in Coll.findSimilar(coll):
@@ -2094,8 +2114,8 @@ def main(include, item_filters=[]):
     # merge collections with the same name
     for c in sortedkeys:
         collobjs = Coll.findSimilar(c.name)
-        if len(collobjs)>1:
-            print("Merging %s collections into section %s."%(len(collobjs),c.name))
+        if len(collobjs) > 1:
+            print("Merging %s collections into section %s." % (len(collobjs), c.name))
             for collobj in collobjs:
                 for i in all_items:
                     if last(i.collection) == collobj.key:
@@ -2142,7 +2162,7 @@ def main(include, item_filters=[]):
     headerhtml += search_box + "</div>"  # preamble
 
     write_some_html(headerhtml + fullhtml, outputfile)
-    
+
 
 if __name__ == '__main__':
     read_args_and_init()
