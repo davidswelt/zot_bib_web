@@ -87,7 +87,15 @@ show_shortcuts = ['collection']
 show_links = ['abstract', 'url', 'BIB', 'Wikipedia', 'EndNote']
 omit_COinS = False
 smart_selections = True
-content_filter = {'bib': 'fix_bibtex_reference'}  # currently, only this function is supported.
+
+
+def fix_bibtex_reference(bib, _thisatom):
+    "Fix reference style for BIB entries: use authorYEARfirstword convention."
+    sub = re.sub(r'(?<=[a-z\s]{)(?P<name>[^_\s,]+)_(?P<firstword>[^_\s,]+)_(?P<year>[^_\s,]+)(?=\s*,\s*[\r\n])',
+                 "\g<name>\g<year>\g<firstword>", bib, count=1)
+    return sub or bib
+
+content_filter = {'bib': fix_bibtex_reference}  # currently, only this function is supported.
 
 sort_criteria = ['collection', '-year', 'type']
 show_top_section_headings = 1
@@ -204,7 +212,9 @@ def load_settings(file="settings.py"):
         settings = imp.load_source("settings", file)
         # import settings into local namespace:
         for k, v in settings.__dict__.items():
-            if k in globals() and not "__" in k:  # only if default is defined
+            if not "__" in k:  # even if default is not defined (e.g., function definitions for content_filter)
+                if not k in globals() and not callable(v):  # functions are usually harmless.
+                    warn("Settings file defines %s.  Not a configuration symbol."%k)
                 globals()[k] = v
                 # print(k,v)
         print("Loaded settings from %s." % os.path.abspath(file))
@@ -781,14 +791,6 @@ def format_bib(bib):
 def format_ris(bib):
     return bib.replace("\n", "\\n").replace("\r", "\\r")
 
-
-def fix_bibtex_reference(bib, _thisatom, _allatoms):
-    "Fix reference style for BIB entries: use authorYEARfirstword convention."
-    sub = re.sub(r'(?<=[a-z\s]{)(?P<name>[^_\s,]+)_(?P<firstword>[^_\s,]+)_(?P<year>[^_\s,]+)(?=\s*,\s*[\r\n])',
-                 "\g<name>\g<year>\g<firstword>", bib, count=1)
-    return sub or bib
-
-
 def extract_abstract(bib):
     m = re.match(r'(.*)abstract\s*=\s*{?(.*?)}\s*(,|})(.*)', bib, re.DOTALL | re.IGNORECASE)
     if m:
@@ -1177,6 +1179,10 @@ __builtin__.push_wordpress = lambda *args,**kwargs: None
 __builtin__.shortcut = shortcut
 __all__ += ['shortcut']
 
+
+__builtin__.content_filter = content_filter
+
+
 def make_header_htmls(all_items):
     # ordering:
     # sort collections as they are normally sorted (sortkeyname)
@@ -1543,6 +1549,27 @@ class DBInstance:
 
     # public
     def retrieve_data(self, collection_id, exclude=None):
+        return self.filter_data(self.retrieve_data_cached(collection_id, exclude))
+
+    def filter_data(self, a):
+
+        def cfilter(atom, type, content):
+            if content_filter and type in content_filter:
+                fun = content_filter[type]
+                #return [globals()[fun](item, thisatom, atom) for item, thisatom in zip(content, atom)]
+                #return globals()[fun](content, atom)
+                return fun(content, atom)
+            return content
+
+        for ai in a:
+            for fil in ['bib','html','ris','coins','wikipedia']:
+                if hasattr(ai, fil):
+                    setattr(ai, fil, cfilter(ai, fil, getattr(ai, fil)))
+            # to do: txtstyle
+        return a
+
+
+    def retrieve_data_cached(self, collection_id, exclude=None):
         def check_show(s):
             global show_links
             s = s.lower()
@@ -1551,11 +1578,6 @@ class DBInstance:
                     return True
             return False
 
-        def cfilter(atom, type, content):
-            if content_filter and type in content_filter:
-                fun = content_filter[type]
-                return [globals()[fun](item, thisatom, atom) for item, thisatom in zip(content, atom)]
-            return content
 
 
         if not no_cache:
@@ -1585,26 +1607,26 @@ class DBInstance:
         # PyZotero can retrieve different formats at once,
         # but this does not seem to work with current versions of the library or API
 
-        b = cfilter(a, 'bib', self.retrieve_bib(collection_id, 'bibtex', ''))
-        h = cfilter(a, 'html', self.retrieve_bib(collection_id, 'bib', bib_style))
+        b = self.retrieve_bib(collection_id, 'bibtex', '')
+        h = self.retrieve_bib(collection_id, 'bib', bib_style)
 
         h_style = {}
         for bs in [s[5:] for s in show_links if s.startswith("cite.")]:  # e.g., cite.apa, cite.mla
             if bib_style.lower() == bs:
                 h_style[bs] = h
             else:
-                h_style[bs] = cfilter(a, bs, self.retrieve_bib(collection_id, 'bib', bs))
+                h_style[bs] = self.retrieve_bib(collection_id, 'bib', bs)
 
         if check_show('EndNote') or check_show('RIS'):
-            r = cfilter(a, 'ris', self.retrieve_bib(collection_id, 'ris', ''))
+            r = self.retrieve_bib(collection_id, 'ris', '')
         else:
             r = [None for _x in h]
         if not omit_COinS:
-            c = cfilter(a, 'coins', self.retrieve_coins(collection_id))
+            c = self.retrieve_coins(collection_id)
         else:
             c = [None for _x in h]
         if check_show('wikipedia'):
-            w = cfilter(a, 'wikipedia', self.retrieve_wikipedia(collection_id))
+            w = self.retrieve_wikipedia(collection_id)
         else:
             w = [None for _x in h]
 
