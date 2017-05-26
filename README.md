@@ -65,7 +65,7 @@ Demo
   are included.
 
 
-License
+License and Donations
 ----------------------------------------
 
 - Use and modify this software free of charge.
@@ -73,10 +73,14 @@ License
 - Please e-mail david.reitter@gmail.com a link to the bibliography on
   your website if you decide to use zot_bib_web.
 
+- You may use this software for free.  A donation is suggested, either
+  via Bitcoin (1CsboLGieSnxWeVC4dFZjBGPQEn5Uyfsia) or with a
+  credit card at http://aquamacs.org/donate
+
 
 Requirements
 ----------------------------------------
-- Python 2.7 or 3
+- Python 2.7 or 3.6+
 - Pyzotero.
 To install Pyzotero, a library for python:
 
@@ -123,40 +127,15 @@ Bibliography in Zotero
 
 - You can add sub-collections to your bibliography.
 
-- To define an order for the sub-collections, name them starting with
+- If you format ordered by collections, giving them an order may be
+  helpful.  You can name collections starting with
   a number: "10 Social Psychology".
-
-- To cause zot_bib_web to format a sub-collection in special ways, you
-may add some qualifiers to the beginning of the collection name:
-
-"-" Hide this sub-collection.  We still add a shortcut at the top
-to unhide its contents if they are available elsewhere.
-
-"*" Short mode.  This sub-collection will be shown using titles,
-journal and years only, which can then be expanded.  Journal or
-conference titles can be kept short.  Specify the "journal abbr or
-"conference title" fields, or a short "note" if necessary.  You may
-want to copy bibliographic items from other parts of the bibliography
-into this sub-collection.
-
-"!"  Feature this:  Extract this sub-collection and show at the beginning of the
-bibliography, regardless of whether the rest of the bibliography is
-sorted by, e.g., year, and ignores the collections otherwise. In the
-collection shown below, it prevents "in review" articles to show up as
-regular journal articles (which might give the impression you're
-taking credit for not-yet-reviewed/published material!)
-
-"&"  Show the items in this collection, but exclude those items that
-are already included in another regular collection.  A regular
-collection is one that is not hidden, not short, and not featured.
-This is usefull to add a "Miscellaneous" category at the end for
-additional items without duplicating anything.
 
 Here's an example of a bibliography structure:
 
 	My Publications [MGID90AT]
-		10*!- Selected Works
-		15*! In Preparation / Under Review
+		10 Selected Works
+		15 In Preparation / Under Review
 		20 Refereed Works by Topic
 			Semantics
 			Parsing
@@ -171,6 +150,14 @@ To see this, use the provided settings.py as an example.
 
 Configuration options
 -----------------------------------------
+
+- Configuration takes place in a settings file, by default named
+  settings.py.
+
+- Call ./zot.py --help to see a list of command-line options.
+
+- Please see settings.example.py for documentation.  A few options are
+  discussed in the following.
 
 - You can order our bibliography by sub-collection, by year, or by
   publication type (e.g., journal articles first, then conference
@@ -193,7 +180,7 @@ Configuration options
    some filtering to only show the most common ones.  See
    settings.example.py for a detailed example.
 
-- There are several more options.  See settings.example.py.
+- There are several more options.  Again, see settings.example.py.
 
 
 
