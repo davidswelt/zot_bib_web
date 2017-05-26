@@ -1358,16 +1358,16 @@ def make_html(all_items, exclude={}, shorten=False):
                         elif 'bib' == sl and bibitem2:
                             bi = a_button('BIB') + div('bibshowhide', div('bib', bibitem2))
                         elif 'file' == sl:
+                            fil = sorted(filter(lambda x: x.saved_filename, item.attachments),
+                                         key=lambda x: button_label_for_object(x.saved_filename, 'File'))
                             bi = u''
-                            for a in item.attachments:
-                                if a.saved_filename:  # a.itemType=='attachment':
-                                    bi += div('blink', a_button(button_label_for_object(a.saved_filename, 'File'),
-                                                                url=file_output_path + '/' + a.saved_filename))
+                            for a in fil:
+                                lab = button_label_for_object(a.saved_filename, 'File')
+                                bi += div('blink', a_button(lab, url=file_output_path + '/' + a.saved_filename))
                         elif 'note' == sl:
                             for a in item.attachments:
                                 if a.itemType == 'note' and a.note:
                                     bi += div('blink', a_button('Note') + div('bibshowhide', div('note', a.note)))
-
                         elif (sl == 'pdf' or sl == 'url') and u:
                             # automatically detect what the link points to
                             n = button_label_for_object(u, 'link')
