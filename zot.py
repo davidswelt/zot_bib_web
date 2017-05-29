@@ -235,12 +235,8 @@ def fetch_tag(tag, default=None):
 
 
 import argparse
-def read_args_and_init():
-    global interactive_debugging
-    global write_full_html_header, stylesheet_url, outputfile, jquery_path
-    global clipboard_js_path, copy_button_path, no_cache, toplevelfilter
-    global api_key
 
+def make_arg_parser():
     parser = argparse.ArgumentParser(description='Zot_Bib_Web.  A simple way to add a fast, interactive Zotero bibiography to your website.')
     parser.add_argument('COLLECTION', type=str, nargs='?',
                         help='Start at this collection')
@@ -268,7 +264,15 @@ def read_args_and_init():
 
     parser.add_argument('--interactive', '-i', action='store_true', dest='interactive',
                         help="interactive debugging (internal)")
+    return parser
 
+def read_args_and_init():
+    global interactive_debugging
+    global write_full_html_header, stylesheet_url, outputfile, jquery_path
+    global clipboard_js_path, copy_button_path, no_cache, toplevelfilter
+    global api_key
+
+    parser = make_arg_parser()
     args = parser.parse_args()
 
 
