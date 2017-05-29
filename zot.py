@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 """
-# A simple way to add a fast, interactive Zotero bibiography in your website.
+# A simple way to add a fast, interactive Zotero bibiography to your website.
 
 # This tool will retrieve a set of collections and format an interactive
 # bibliography in HTML5.  The bibliography contains BibTeX records and
@@ -16,22 +16,7 @@
 # (C) 2014,2015,2016,2017 David Reitter, The Pennsylvania State University
 # Released under the GNU General Public License, V.3 or later.
 
-Usage:   zot.py {OPTIONS} [TOPLEVEL_COLLECTION_ID] [OUTPUTFILE]
-Example: ./zot.py --group 160464 DTDTV2EP
-
-OPTIONS:
---settings FILE.py   load settings from FILE.  See settings.example.py.
---group GID          set a group library              [library_id; library_type='group']
---user UID           set a user library               [library_id; library_type='user']
---apikey KEY         set Zotero API key               [api_key]
---div                output an HTML fragment          [write_full_html_header=False]
---full               output full html                 [write_full_html_header=True]
---nocache            neither load nor update cache    [no_cache]
---help  | -h         show this help
---version  | -v      show versions of libraries
-
-These and additional settings can be loaded from settings.py.
-
+For usage, see:   zot.py --help
 """
 
 # zot_bib_web
@@ -204,12 +189,14 @@ import os
 from collections import namedtuple, defaultdict
 
 
-def load_settings(file="settings.py"):
+def load_settings(file=None):
     try:
         import imp
 
+
+        loadfile = file or "settings.py"
         # from settings import *
-        settings = imp.load_source("settings", file)
+        settings = imp.load_source("settings", loadfile)
         # import settings into local namespace:
         for k, v in settings.__dict__.items():
             if not "__" in k:  # even if default is not defined (e.g., function definitions for content_filter)
@@ -217,12 +204,22 @@ def load_settings(file="settings.py"):
                     warn("Settings file defines %s.  Not a configuration symbol." % k)
                 globals()[k] = v
                 # print(k,v)
-        print("Loaded settings from %s." % os.path.abspath(file))
+        print("Loaded settings from %s." % os.path.abspath(loadfile))
 
     except ImportError:
         pass
-    except IOError:  # no settings file
-        warn("%s file not found." % file)
+    except OSError as e:  # no settings file
+        if e.errno == errno.ENOENT and file:
+            warn("%s file not found." % file)
+            sys.exit(1)
+    except IOError as e:  # no settings file
+        if e.errno == errno.ENOENT:
+            if file:
+                warn("%s file not found." % file)
+                sys.exit(1)
+        else:
+            warn("%s file could not be read." % loadfile)
+            sys.exit(1)
 
 
 def fetch_tag(tag, default=None):
@@ -237,97 +234,79 @@ def fetch_tag(tag, default=None):
     return result
 
 
-def print_usage():
-    print(__doc__)
-
-
-# import argparse
+import argparse
 def read_args_and_init():
     global interactive_debugging
     global write_full_html_header, stylesheet_url, outputfile, jquery_path
     global clipboard_js_path, copy_button_path, no_cache, toplevelfilter
+    global api_key
 
-    print_usage_and_exit = False
+    parser = argparse.ArgumentParser(description='Zot_Bib_Web.  A simple way to add a fast, interactive Zotero bibiography to your website.')
+    parser.add_argument('COLLECTION', type=str, nargs='?',
+                        help='Start at this collection')
+    parser.add_argument('OUTPUT', type=str, nargs='?',
+                        help='Output to this file')
 
-    user = group = api_key = None
+    parser.add_argument('--settings', '-s', dest='settingsfile',
+                        action='store', default=None,
+                        help='load settings from FILE.  See settings.example.py.')
 
-    if "--version" in sys.argv or "-v" in sys.argv:
-        print("Zot_bib_web version " + __version__)
-        print("Pyzotero version " + zotero.__version__)
-        print("Python version " + sys.version)
-        sys.exit(0)
-    if "-h" in sys.argv or "--help" in sys.argv:
-        print_usage()
-        sys.exit(0)
+    v = "ZBW %s - Pyzotero %s - Python %s"%(__version__, zotero.__version__, sys.version)
+    parser.add_argument('--version', '-v', version=v, action='version')
 
-    x = fetch_tag("--settings")
-    if x:
-        load_settings(x)
+    df = parser.add_mutually_exclusive_group(required=False)
+    df.add_argument('--div', action='store_false', dest='full',       help="output an HTML fragment  [write_full_html_header=False]")
+    df.add_argument('--full', action='store_true', dest='full',       help="output full html         [write_full_html_header=True]")
+
+    ug = parser.add_mutually_exclusive_group(required=False)
+    ug.add_argument('--user', nargs=1, action='store', dest='user',   help="load a user library      [user_library(...)]")
+    ug.add_argument('--group', nargs=1, action='store', dest='group', help="load a group library     [group_library(...)]")
+
+    parser.add_argument('--api_key', action='store', dest='api_key',  help="set Zotero API key       [user_library(..., api_key=...)]")
+    parser.add_argument('--no_cache', '-n', action='store_true', dest='no_cache',
+                                                                      help="do not use cache         [no_cache]")
+
+    parser.add_argument('--interactive', '-i', action='store_true', dest='interactive',
+                        help="interactive debugging (internal)")
+
+    args = parser.parse_args()
+
+
+    if args.settingsfile:
+        load_settings(args.settingsfile)
     else:
         load_settings()
 
     import_legacy_configuration()
 
-    # To Do: use argparse
+    outputfile = args.OUTPUT or outputfile
 
-    # Parse remaining arguments
+    write_full_html_header = args.full
 
-    if "--div" in sys.argv:
-        write_full_html_header = False
-        sys.argv.remove('--div')
-    if "--full" in sys.argv:
-        write_full_html_header = True
-        sys.argv.remove('--full')
+    no_cache = args.no_cache or no_cache
 
-    if "--nocache" in sys.argv:
-        no_cache = True
-        sys.argv.remove('--cache')
+    interactive_debugging = args.interactive
 
-    if "-i" in sys.argv:
-        interactive_debugging = True
-        sys.argv.remove('-i')
-    else:
-        interactive_debugging = False
-
-
-    x = fetch_tag("--user")
-    if x:
-        user = x
+    if args.user:
         toplevelfilter = None
+        user_collection(args.user, api_key=args.api_key, collection=args.COLLECTION)
 
-    x = fetch_tag("--group")
-    if x:
-        group = x
+    if args.group:
+        group_collection(args.group, api_key=args.api_key, collection=args.COLLECTION)
 
-    api_key = fetch_tag("--apikey", api_key)
-
-    if len(sys.argv) > 1:
-        if not sys.argv[1] == "None":
-            toplevelfilter = sys.argv[1]
-    if len(sys.argv) > 2:
-        if not sys.argv[2] == "None":
-            outputfile = sys.argv[2]
-
-    # execute
-    if user:
-        user_collection(user, api_key=api_key, collection=toplevelfilter)
-    if group:
-        group_collection(group, api_key=api_key, collection=toplevelfilter)
+    # api_key = args.api_key or api_key  # for use as default by commands in settings file
 
     ###########
     if not include_collections:
-        print_usage_and_exit = True
         if len(sys.argv) > 1:
-            if user or group:
+            if args.user or args.group:
                 warn("No collections found in given libraries.")
             else:
                 warn(
                     "You must give --user or --group, or add user_collection(..) or group_collection(..) in settings.py.")
-
-    if print_usage_and_exit:
-        print_usage()
+        else:
+            parser.print_usage()
         sys.exit(1)
-
 
 ###########
 
