@@ -87,7 +87,9 @@ group_collection(160464, collection='MGID93AS')
 # into this sub-collection.
 # You may use a '*' before the name of the collection in the library instead.
 
-# feature_collection (C)
+short_collection("Selected Works")
+
+# featured_collection (C)
 # Feature this:  Extract this sub-collection and show at the beginning of the
 # bibliography, regardless of whether the rest of the bibliography is
 # sorted by, e.g., year, and ignores the collections otherwise. In the
@@ -96,7 +98,7 @@ group_collection(160464, collection='MGID93AS')
 # taking credit for not-yet-reviewed/published material!)
 # You may use a '!' before the name of the collection in the library instead.
 
-feature_collection("Miscellaneous")
+featured_collection("Selected Works")
 
 # misc_collection (C)
 # Show the items in this collection, but exclude those items that
@@ -106,6 +108,7 @@ feature_collection("Miscellaneous")
 # additional items without duplicating anything.
 # You may use a '&' before the name of the collection in the library instead.
 
+misc_collection("Miscellaneous")
 
 
 #### SPECIAL OPTIONS: STYLE ####################################################
@@ -133,11 +136,6 @@ show_top_section_headings = True
 
 # bibliography style format (e.g., 'apa' or 'mla') - Any valid CSL style in the Zotero style repository
 bib_style =  'apa'
-
-# Limit - for fast testing and debugging
-# None, or set a limit (integer<100) for each collection for debugging
-# You may also give the --limit argument to zot.py
-limit=None
 
 #### SPECIAL OPTIONS: HTML AND FILE CONFIGURATION ##############################
 # Special settings - configure only if needed.
