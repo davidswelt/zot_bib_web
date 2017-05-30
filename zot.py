@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
-"""
+
 # A simple way to add a fast, interactive Zotero bibiography to your website.
 
 # This tool will retrieve a set of collections and format an interactive
@@ -11,18 +11,19 @@
 
 # The primary way to configure a web bibliography is via a settings file.
 # The file settings.py is loaded by default, if present.
-# See settings.example.py for documentation.
+# See settings_example.py for documentation.
 
 # (C) 2014,2015,2016,2017 David Reitter, The Pennsylvania State University
 # Released under the GNU General Public License, V.3 or later.
 
-For usage, see:   zot.py --help
-"""
+# For usage, see:   zot.py --help
 
 # zot_bib_web
 
 from __future__ import print_function
 from __future__ import unicode_literals
+
+
 
 ####  Program arguments
 
@@ -32,45 +33,45 @@ from __future__ import unicode_literals
 
 #############################################################################
 
-## See settings.example.py for configuration information
+## See settings_example.py for configuration information
 ## Create settings.py to supply your configuration.
-
-#############################################################################
-#############################################################################
-#############################################################################
-#############################################################################
-#############################################################################
-#############################################################################
-#############################################################################
 
 ## The following items are defaults.
 
+titlestring = 'Bibliography' #: Bibliography title
+"""The Bibliography title"""
+
+bib_style = 'apa' #: Style.  'apa', 'mla', or any other style known to Zotero
+
+write_full_html_header = True  #: If True, a standalone HTML file is written (default).
+stylesheet_url = "site/style.css" #: URL to the style file on the web server.
+outputfile = 'zotero-bib.html' #: The resulting HTML document will be in this file.
+file_outputdir = ''  #: Directory used for attachments that come with the bibliography items.
+file_output_path = ""  #: URL to the directory for attachments when on the server.
+jquery_path = "site/jquery.min.js"  #: URL to jQuery on the server
+# jquery_path = "../wp-includes/js/jquery/jquery.js"  # wordpress location
+number_bib_items = False #: If True, enumerate bibliographic items within a category as a list.
+show_copy_button = True #: If True, show a button that copies text to clipboard.
+clipboard_js_path = "site/clipboard.min.js" #: URL to Clipboard.min.js on the server.
+copy_button_path = "site/clippy.svg" #: URL to clippy.svg on the server.
+show_search_box = True #: Show a search box
+show_shortcuts = ['collection']  #: List of shortcuts
+
+#: List of Links.
+#: Possible values: 'abstract', 'url', 'BIB', 'Wikipedia', 'EndNote', 'RIS', 'MLA', 'Cite.MLA', 'Cite.APA', 'Cite.<STYLE>'
+show_links = ['abstract', 'url', 'BIB', 'Wikipedia', 'EndNote']   #: List of links to show for each bib item
+"""test show_lninks
+"""
+omit_COinS = False #: If True, do not include COInS metadata
+smart_selections = True #: If True, prevent user from selecting/copying text that shouldn't be copied.
+
+
 __all__ = ['titlestring', 'bib_style', 'write_full_html_header', 'stylesheet_url',
-           'outputfile', 'category_outputfile_prefix', 'jquery_path', 'number_bib_items',
+           'outputfile',  'jquery_path', 'number_bib_items',
            'show_copy_button', 'clipboard_js_path', 'copy_button_path', 'show_search_box',
            'show_shortcuts', 'show_links', 'omit_COinS', 'smart_selections',
            'content_filter', 'sort_criteria', 'show_top_section_headings', 'no_cache',
            'language_code', 'sortkeyname_order', 'link_translations']
-
-titlestring = 'Bibliography'
-bib_style = 'apa'
-write_full_html_header = True
-stylesheet_url = "site/style.css"
-outputfile = 'zotero-bib.html'
-file_outputdir = ''  # for associated files
-file_output_path = ""  # URL path
-category_outputfile_prefix = 'zotero'
-jquery_path = "site/jquery.min.js"
-# jquery_path = "../wp-includes/js/jquery/jquery.js"  # wordpress location
-number_bib_items = False
-show_copy_button = True
-clipboard_js_path = "site/clipboard.min.js"
-copy_button_path = "site/clippy.svg"
-show_search_box = True
-show_shortcuts = ['collection']
-show_links = ['abstract', 'url', 'BIB', 'Wikipedia', 'EndNote']
-omit_COinS = False
-smart_selections = True
 
 
 def fix_bibtex_reference(bib, _thisatom):
@@ -83,15 +84,25 @@ def fix_bibtex_reference(bib, _thisatom):
 content_filter = {'bib': fix_bibtex_reference}  # currently, only this function is supported.
 
 sort_criteria = ['collection', '-year', 'type']
+#: List of strings giving a hierarchy of subsections and ordering within them.
+#: Possible values include 'collection', 'year', 'type'.
+#: Prepend an item with '-', e.g., '-year' to sort in descending order.
+
 show_top_section_headings = 1
+#: Number of first sort_criteria to show as section headings
+#: E.g., if 1, the first element from sort_criteria will be shown as section
+#: heading, and the rest without section headings (but ordered).
 
-no_cache = False
 
-language_code = 'en'
+no_cache = False #: If True, avoid use of cache
+
+language_code = 'en'  #: Language code used for ``sortkeyname_order`` and ``link_translations``
+
 sortkeyname_order = {}
-# Define label for article types and their ordering
-# types may occur in libraryCatalog or itemType
-# use libraryCatalog to override it in special cases (e.g., archival Conference publications)
+#: Define label for article types and their ordering
+#: types may occur in libraryCatalog or itemType
+#: use libraryCatalog to override it in special cases (e.g., archival Conference publications)
+
 sortkeyname_order['en'] = {}
 sortkeyname_order['en']['type'] = [
     ('journalArticle', 'Journal Articles'),
@@ -130,7 +141,7 @@ sortkeyname_order['de']['type'] = [
     ('computerProgram', 'Software')]
 
 # Basic translations
-link_translations = {}
+link_translations = {}  #: Internationalization of link buttons (see also ``show_links``)
 link_translations['de'] = {'abstract': 'Abstrakt', 'pdf': 'Volltext'}
 
 ##### legacy settings
@@ -245,7 +256,7 @@ def make_arg_parser():
 
     parser.add_argument('--settings', '-s', dest='settingsfile',
                         action='store', default=None,
-                        help='load settings from FILE.  See settings.example.py.')
+                        help='load settings from FILE.  See settings_example.py.')
 
     v = "ZBW %s - Pyzotero %s - Python %s"%(__version__, zotero.__version__, sys.version)
     parser.add_argument('--version', '-v', version=v, action='version')
@@ -974,6 +985,152 @@ def js_strings(string_or_list):
     return ",".join(map(js_strings, string_or_list))
 
 
+include_collections = []
+item_filters = []
+
+
+def group_collection(id, api_key=None, collection=None, top_level=False):
+    """
+    Use group_collection for a group library, user_collection for a
+    (private) user library.
+    ID specifies the group or user ID.
+
+    You may find your user ID for the library_id setting under
+    "Settings -> Feeds/API":
+    https://www.zotero.org/settings/keys
+
+    You may find your library ID by selecting the group on the Zotero
+    website, and then choose "Group Settings".  The URL in your browser
+    window will then show you a six-digit number,
+    e.g.,  .../groups/110233/settings
+
+    Args:
+
+      api_key (str):
+          The secret key provided by Zotero.
+          If you want to retrieve non-public data from Zotero, you'll need a
+          Zotero account (or group) at zotero.org.  Log into your account,
+          access the Settings page on the Zotero site and create an private
+          API key (under "Settings -> Feeds/API").  For the key, check
+          "Allow library access".  This key is used in the api_key setting.
+
+      collection (str):
+          ID of the top-level collection to be included.
+          All sub-collections under this collection will be imported.
+          If not given (None), all available collections will be included.
+
+      top_level (str):
+          If true, then the collection given be included as a level.
+          Otherwise (default, False), sub-collections and items will be
+          included directly.
+    """
+
+    global include_collections
+    include_collections += [('load', DBInstance.create(id, 'group', api_key), collection, top_level)]
+
+
+def user_collection(id, api_key=None, collection=None, top_level=False):
+    global include_collections
+    include_collections += [('load', DBInstance.create(id, 'user', api_key), collection, top_level)]
+
+
+def exclude_collection(collection, top_level_only=False):
+    """Remove sub-collection ``collection``."""
+    global include_collections
+    include_collections += [('exclude', collection, top_level_only)]
+
+
+def rename_collection(collection, newName):
+    """Rename collection ``collection`` to ``newName``.
+This may be used to merge collections by giving them the same name.
+"""
+    global include_collections
+    include_collections += [('rename', collection, newName)]
+
+
+def short_collection(collection):
+    """Short mode ``collection``.
+This sub-collection will be shown using titles,
+journal and years only, which can then be expanded.  Journal or
+conference titles can be kept short.  Specify the "journal abbr or
+"conference title" fields, or a short "note" if necessary.  You may
+want to copy bibliographic items from other parts of the bibliography
+into this sub-collection.
+You may also use a '*' before the name of the collection in the library.
+"""
+    global include_collections
+    include_collections += [('special', '*', collection)]
+
+
+def featured_collection(collection):
+    """Feature ``collection``.
+Extract this sub-collection and show at the beginning of
+the bibliography, regardless of whether the rest of the bibliography is
+sorted by, e.g., year, and ignores the collections otherwise. In the
+collection shown below, it prevents "in review" articles to show up as
+regular journal articles (which might give the impression you're
+taking credit for not-yet-reviewed/published material!)
+You may also use a '!' before the name of the collection in the library.
+"""
+    global include_collections
+    include_collections += [('special', '!', collection)]
+
+
+def hidden_collection(collection):
+    """Hide sub-collection ``collection``.
+We still add a shortcut at the top to unhide its contents
+if they are available elsewhere.
+You may also use a '-' before the name of the collection in the library.
+"""
+    global include_collections
+    include_collections += [('special', '-', collection)]
+
+
+def misc_collection(collection):
+    """Show only new items in ``collection``.
+Show items in this collection, but exclude those items that
+are already included in another regular collection.  A regular
+collection is one that is not hidden, not short, and not featured.
+This is useful to add a "Miscellaneous" category at the end for
+additional items without duplicating anything.
+You may also use a '&' before the name of the collection in the library.
+"""
+    global include_collections
+    include_collections += [('special', '&', collection)]
+
+
+def exclude_items(filter):  # NOT DOCUMENTED - EXPERIMENTAL
+    """After all items are loaded, filter them using a function.
+    The function given in ``filter`` takes one argument, ITEM, and
+    returns True for each item to exclude.
+    ITEM is of type ZotItem."""
+    global item_filters
+    item_filters += [filter]
+
+
+
+try:
+    import __builtin__
+except ImportError:
+    # Python 3
+    import builtins as __builtin__
+
+
+__builtin__.user_collection = user_collection
+__builtin__.group_collection = group_collection
+__builtin__.exclude_collection = exclude_collection
+__builtin__.rename_collection = rename_collection
+__builtin__.short_collection = short_collection
+__builtin__.featured_collection = featured_collection
+__builtin__.hidden_collection = hidden_collection
+__builtin__.misc_collection = misc_collection
+__builtin__.exclude_items = exclude_items
+
+__all__ += ['user_collection', 'group_collection', 'exclude_collection', 'rename_collection',
+            'short_collection', 'featured_collection', 'hidden_collection', 'misc_collection',
+            'exclude_items']
+
+
 class Shortcut:
     def __init__(self, crit, values=None, topN=None, sortBy=None, sortDir='auto'):
         self.crit = crit
@@ -1131,31 +1288,31 @@ class Shortcut:
 
 
 def shortcut(crit, values=None, topN=None, sortDir='auto', sortBy=None):
-    """Make a shortcut for Zot/Bib/Web's show_shortcuts variable.
+    """Make a shortcut for Zot_Bib_Web's ``show_shortcuts`` variable.
 
-    CRIT     The criterion as a string, selected by the shortcut.
-             Permissible values include 'collection', 'year', 'type', 'venue', and 'venue_short'.
+    Args:
 
-    VALUES   Optional list of values to be show for the criterion.  Each element may be string,
-             or an int (if appropriate, for years).  For numbers, strings may specify a range, e.g.,
-             "2004-2009" (to select the range of years), or "-2004" or "2010-" to select years
-             before or after the given year, respectively.
+        crit (str):
+                The criterion as a string, selected by the shortcut.
+                Permissible values include 'collection', 'year', 'type', 'venue', and 'venue_short'.
 
-    TOPN     If given, only show the TOPN values with the most bibliographic entries.
+        values (list):
+                Optional list of values to be show for the criterion.  Each element may be string,
+                or an int (if appropriate, for years).  For numbers, strings may specify a range, e.g.,
+                "2004-2009" (to select the range of years), or "-2004" or "2010-" to select years
+                before or after the given year, respectively.
 
-    SORTDIR  Direction of sorting.  If given, 'asc' or 'desc', or None (to turn off sorting).
+        topN (int):
+                If given, only show the TOPN values with the most bibliographic entries.
 
-    SORTBY   May be given as 'count', which indicates sorting by the number of bibliographic entries
-             covered by each value, or 'name', to sort by name.  The canonical order is default.
+        sortDir (str):
+                Direction of sorting.  If given, 'asc' or 'desc', or None (to turn off sorting).
+
+        sortBy (str):
+                May be given as 'count', which indicates sorting by the number of bibliographic entries
+                covered by each value, or 'name', to sort by name.  The canonical order is default.
     """
     return Shortcut(crit, values=values, sortDir=sortDir, topN=topN, sortBy=sortBy)
-
-
-try:
-    import __builtin__
-except ImportError:
-    # Python 3
-    import builtins as __builtin__
 
 __builtin__.sortkeyname_order = sortkeyname_order
 
@@ -1389,74 +1546,6 @@ def make_html(all_items, exclude={}, shorten=False):
     entry_count += count
 
     return cleanup_lines(string), count
-
-
-include_collections = []
-item_filters = []
-
-
-def group_collection(id, api_key=None, collection=None, top_level=False):
-    global include_collections
-    include_collections += [('load', DBInstance.create(id, 'group', api_key), collection, top_level)]
-
-
-def user_collection(id, api_key=None, collection=None, top_level=False):
-    global include_collections
-    include_collections += [('load', DBInstance.create(id, 'user', api_key), collection, top_level)]
-
-
-def exclude_collection(collection, top_level_only=False):
-    global include_collections
-    include_collections += [('exclude', collection, top_level_only)]
-
-
-def rename_collection(collection, newName):
-    global include_collections
-    include_collections += [('rename', collection, newName)]
-
-
-def short_collection(collection):
-    global include_collections
-    include_collections += [('special', '*', collection)]
-
-
-def featured_collection(collection):
-    global include_collections
-    include_collections += [('special', '!', collection)]
-
-
-def hidden_collection(collection):
-    global include_collections
-    include_collections += [('special', '-', collection)]
-
-
-def misc_collection(collection):
-    global include_collections
-    include_collections += [('special', '&', collection)]
-
-
-def exclude_items(filter):  # NOT DOCUMENTED - EXPERIMENTAL
-    """After all items are loaded, filter them using a function.
-    The function given in FILTER takes one argument, ITEM, and
-    returns True for each item to exclude.
-    ITEM is of type ZotItem."""
-    global item_filters
-    item_filters += [filter]
-
-
-__builtin__.user_collection = user_collection
-__builtin__.group_collection = group_collection
-__builtin__.exclude_collection = exclude_collection
-__builtin__.rename_collection = rename_collection
-__builtin__.short_collection = short_collection
-__builtin__.featured_collection = featured_collection
-__builtin__.hidden_collection = hidden_collection
-__builtin__.misc_collection = misc_collection
-__builtin__.exclude_items = exclude_items
-
-__all__ += ['user_collection', 'group_collection', 'exclude_collection', 'rename_collection',
-            'short_collection', 'featured_collection', 'hidden_collection', 'misc_collection',
-            'exclude_items']
 
 
 def make_sure_path_exists(path):
@@ -2147,3 +2236,4 @@ if __name__ == '__main__':
         code.interact(local=locals())
     else:
         main(include_collections, item_filters)
+
