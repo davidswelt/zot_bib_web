@@ -1,0 +1,3 @@
+Sphinx==1.6.2
+sphinx-argparse==0.2.0
+sphinxcontrib-websupport==1.0.1
