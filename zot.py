@@ -173,7 +173,9 @@ def warn(*objs):
     print(*objs, file=sys.stderr)
 
 
-from pyzotero import zotero, zotero_errors
+
+if __name__ == '__main__': # not for documentation-building
+    from pyzotero import zotero, zotero_errors
 
 def check_requirements ():
     try:
@@ -259,8 +261,9 @@ def make_arg_parser():
                         action='store', default=None,
                         help='load settings from FILE.  See settings_example.py.')
 
-    v = "ZBW %s - Pyzotero %s - Python %s"%(__version__, zotero.__version__, sys.version)
-    parser.add_argument('--version', '-v', version=v, action='version')
+    if __name__ == '__main__':
+        v = "ZBW %s - Pyzotero %s - Python %s"%(__version__, zotero.__version__, sys.version)
+        parser.add_argument('--version', '-v', version=v, action='version')
 
     df = parser.add_mutually_exclusive_group(required=False)
     df.add_argument('--div', action='store_false', dest='full',       help="output an HTML fragment  [write_full_html_header=False]")
