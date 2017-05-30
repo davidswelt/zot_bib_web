@@ -38,8 +38,7 @@ from __future__ import unicode_literals
 
 ## The following items are defaults.
 
-titlestring = 'Bibliography' #: Bibliography title
-"""The Bibliography title"""
+titlestring = 'Bibliography' #: The title shown for the bibliography document
 
 bib_style = 'apa' #: Style.  'apa', 'mla', or any other style known to Zotero
 
@@ -55,13 +54,18 @@ show_copy_button = True #: If True, show a button that copies text to clipboard.
 clipboard_js_path = "site/clipboard.min.js" #: URL to Clipboard.min.js on the server.
 copy_button_path = "site/clippy.svg" #: URL to clippy.svg on the server.
 show_search_box = True #: Show a search box
-show_shortcuts = ['collection']  #: List of shortcuts
 
+show_shortcuts = ['collection']
+#: List of shortcuts.
+#: Permissible values include the strings 'collection', 'year', 'type', 'venue', and 'venue_short',
+#: or objects made with the function :func:`shortcut`.
+
+
+show_links = ['abstract', 'url', 'BIB', 'Wikipedia', 'EndNote']
 #: List of Links.
 #: Possible values: 'abstract', 'url', 'BIB', 'Wikipedia', 'EndNote', 'RIS', 'MLA', 'Cite.MLA', 'Cite.APA', 'Cite.<STYLE>'
-show_links = ['abstract', 'url', 'BIB', 'Wikipedia', 'EndNote']   #: List of links to show for each bib item
-"""test show_lninks
-"""
+
+
 omit_COinS = False #: If True, do not include COInS metadata
 smart_selections = True #: If True, prevent user from selecting/copying text that shouldn't be copied.
 
@@ -87,6 +91,7 @@ sort_criteria = ['collection', '-year', 'type']
 #: List of strings giving a hierarchy of subsections and ordering within them.
 #: Possible values include 'collection', 'year', 'type'.
 #: Prepend an item with '-', e.g., '-year' to sort in descending order.
+
 
 show_top_section_headings = 1
 #: Number of first sort_criteria to show as section headings
@@ -1027,6 +1032,35 @@ def group_collection(id, api_key=None, collection=None, top_level=False):
           If true, then the collection given be included as a level.
           Otherwise (default, False), sub-collections and items will be
           included directly.
+
+
+
+	It is recommended to make one collection in Zotero, 
+    for example, "website", and then create titled sub-collections, like so:
+
+	toRead
+	thesis
+	website
+	   10 Selected Works
+	   20 Journal Articles
+	   30 Conference Proceedings
+	   40 Theses
+
+	The ID of the top-level collection called "website" is to be included as
+    ``collection`` argument.
+
+	To find this ID:
+    When you click on it on the Zotero website, your browser will show you
+	an alphanumeric key in the URL, e.g., items/collectionKey/FCQM2AY6.
+	The portion 'FCQM2AY6' is what you would use in 'collection' for
+	the user_collection or group_collection directives.
+
+    Individual sub-collections may be excluded using :func:`exclude_collection`.
+    Sub-collections may be renamed or merged using :func:`rename_collection`.
+
+	To cause zot_bib_web to format a sub-collection in special ways, you
+	may add further statements, such as :func:`featured_collection`,
+    :func:`hidden_collection`, :func:`misc_collection`, :func:`short_collection`.
     """
 
     global include_collections
