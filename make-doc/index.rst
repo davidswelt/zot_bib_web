@@ -10,15 +10,20 @@ Welcome to Zot_Bib_Web's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+.. py:module:: zot
 
 .. argparse::
    :module: zot
    :func: make_arg_parser
    :prog: Zot_Bib_Web
 
-.. literalinclude:: ../settings.example.py
+Settings file
+=====================
 
-	     
+.. automodule:: zot
+   :members:
+
+
 Indices and tables
 ==================
 
