@@ -21,6 +21,9 @@ import sys
 sys.path.insert(0, os.path.abspath('..'))
 
 autodoc_mock_imports = ['pyzotero', 'zotero']
+# If true, the current module name will be prepended to all description
+# unit titles (such as .. function::).
+add_module_names = False
 
 # -- General configuration ------------------------------------------------
 
