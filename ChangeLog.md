@@ -8,7 +8,7 @@ options for displaying and sorting the interactive bibliography are available.
 - Much simplified installation and setup.  Improved documentation.
   Settings files can now load multiple collections from different
   libraries.  Use user_collection(...) and group_collection(...)
-  statements.  See settings.example.py for documentation.
+  statements.  See settings_example.py for documentation.
   Previous settings file are imported (with exception of the next item).
 
 - You can sort the bibliographic items not just
@@ -25,7 +25,7 @@ options for displaying and sorting the interactive bibliography are available.
 - Files (like PDF files) stored in the Zotero library can now be
   written out and linked to.
 
-- Additional settings have become available.  See settings.example.py.
+- Additional settings have become available.  See settings_example.py.
 
 - Citations can be viewed in additional formats (see show_links
   configuration variable).  For example, we can show the full entry in

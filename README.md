@@ -108,7 +108,7 @@ Setup
    If that looks good, move on to the next steps for configuration.
 
 - In a new file called settings.py, add configuration as documented in
-  the file settings.example.py.
+  the file settings_example.py.
   Go to zotero.org to get your API secret key and your user or library
   IDs.  It's easy: see the top of settings.example.py for details.
   If settings.py is set up, you can call zot.py without arguments.

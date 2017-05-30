@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# coding: utf-8
+
 ## settings.example.py
 
 ## You must configure the authentication settings and one collection key.
@@ -107,7 +110,7 @@ featured_collection("Selected Works")
 # Show the items in this collection, but exclude those items that
 # are already included in another regular collection.  A regular
 # collection is one that is not hidden, not short, and not featured.
-# This is usefull to add a "Miscellaneous" category at the end for
+# This is useful to add a "Miscellaneous" category at the end for
 # additional items without duplicating anything.
 # You may also use a '&' before the name of the collection in the library.
 
@@ -132,15 +135,15 @@ sort_criteria = ['type','-date']   # by type, then by date ("issued").
 
 
 
-# bibliography title
 titlestring = 'Bibliography'
+""" bibliography title """
 
-# show section headings for the primary search criterion
 show_top_section_headings = True
+""" show section headings for the primary search criterion"""
 
-# bibliography style format (e.g., 'apa' or 'mla') - Any valid CSL style
-# in the Zotero style repository
 bib_style =  'apa'
+""" bibliography style format (e.g., 'apa' or 'mla') - Any valid CSL style
+ in the Zotero style repository"""
 
 #### SPECIAL OPTIONS: HTML AND FILE CONFIGURATION ########################
 # Special settings - configure only if needed.
@@ -156,8 +159,6 @@ stylesheet_url = "style.css"
 
 outputfile = 'zotero-bib.html'
 # relative or absolute path name of output file
-category_outputfile_prefix = 'zotero'
-# relative or absolute path prefix
 
 show_search_box = True
 # show a Javascript/JQuery based search box to filter pubs by keyword.
