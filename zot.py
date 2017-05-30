@@ -175,15 +175,16 @@ def warn(*objs):
 
 from pyzotero import zotero, zotero_errors
 
-try:
-    v = float("%d.%02d%02d" % tuple(map(int, zotero.__version__.split(r'.'))))
-    if v < 1.0103:
-        warning("Pyzotero version is incompatible.  Upgrade to 1.1.3 or later.")
-        sys.exit(1)
-except SystemExit as e:
-    raise e
-except:
-    warning("Pyzotero version could not be validated. 1.1.3 or later required.")
+def check_requirements ():
+    try:
+        v = float("%d.%02d%02d" % tuple(map(int, zotero.__version__.split(r'.'))))
+        if v < 1.0103:
+            warning("Pyzotero version is incompatible.  Upgrade to 1.1.3 or later.")
+            sys.exit(1)
+    except SystemExit as e:
+    	raise e
+    except:
+        warning("Pyzotero version could not be validated. 1.1.3 or later required.")
 
 # redirect warnings (needed for InsecurePlatformWarning on Macs with standard Python)
 import logging
@@ -2227,6 +2228,7 @@ def main(include, item_filters=[]):
 
 
 if __name__ == '__main__':
+    check_requirements()
     read_args_and_init()
     html_header, search_box, html_footer = generate_base_html()
 
