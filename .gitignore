@@ -1,0 +1,9 @@
+files/*
+zot.build
+.idea
+*.pyc
+*~
+.cache
+_build
+__pycache__
+
