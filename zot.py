@@ -328,8 +328,8 @@ def make_arg_parser():
     df.add_argument('--full', action='store_true', dest='full',       help="output full html         [write_full_html_header=True]")
 
     ug = parser.add_mutually_exclusive_group(required=False)
-    ug.add_argument('--user', nargs=1, action='store', dest='user',   help="load a user library      [user_library(...)]")
-    ug.add_argument('--group', nargs=1, action='store', dest='group', help="load a group library     [group_library(...)]")
+    ug.add_argument('--user', action='store', dest='user',   help="load a user library      [user_library(...)]")
+    ug.add_argument('--group', action='store', dest='group', help="load a group library     [group_library(...)]")
 
     parser.add_argument('--api_key', action='store', dest='api_key',  help="set Zotero API key       [user_library(..., api_key=...)]")
     parser.add_argument('--no_cache', '-n', action='store_true', dest='no_cache',
