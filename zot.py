@@ -229,6 +229,12 @@ def warn(*objs):
     print(*objs, file=sys.stderr)
 
 
+def log(*objs, **kwargs):
+    global outputfile
+    kwargs['file'] = sys.stderr if outputfile == '-' else sys.stdout
+    print(*objs, **kwargs)
+
+
 
 if __name__ == '__main__': # not for documentation-building
     from pyzotero import zotero, zotero_errors
@@ -274,7 +280,7 @@ def load_settings(file=None):
                     warn("Settings file defines %s.  Not a configuration symbol." % k)
                 globals()[k] = v
                 # print(k,v)
-        print("Loaded settings from %s." % os.path.abspath(loadfile))
+        log("Loaded settings from %s." % os.path.abspath(loadfile))
 
     except ImportError:
         pass
@@ -345,10 +351,12 @@ def read_args_and_init():
     global write_full_html_header, stylesheet_url, outputfile, jquery_path
     global clipboard_js_path, copy_button_path, no_cache, toplevelfilter
     global api_key
+    global outputfile
 
     parser = make_arg_parser()
     args = parser.parse_args()
 
+    outputfile = args.output or outputfile  # set early because log() needs it
 
     if args.settingsfile:
         load_settings(args.settingsfile)
@@ -357,7 +365,7 @@ def read_args_and_init():
 
     import_legacy_configuration()
 
-    outputfile = args.output or outputfile
+    outputfile = args.output or outputfile  # again, because parms take precedence
 
     write_full_html_header = args.full
 
@@ -872,14 +880,20 @@ def extract_abstract(bib):
 def write_some_html(body, outfile, title=None):
     global html_header
     global html_footer
-    file = codecs.open(outfile, "w", "utf-8")
-    file.write(html_header)
+
+    content = html_header
     if title:
-        file.write('<h1 class="title">' + title + "</h1>")
-    file.write(body)
-    file.write(html_footer)
-    file.close()
-    print("Output written to %s." % outfile)
+        content += '<h1 class="title">' + title + '</h1>'
+    content += body + html_footer
+
+    if outfile=='-':
+        sys.stdout.write(content.encode("utf-8"))
+        warn("Output written to stdout.")
+    else:
+        file = codecs.open(outfile, mode="w", encoding="utf-8")
+        file.write(content)
+        file.close()
+        warn("Output written to %s." % outfile)
 
 
 def flexible_html_regex(r):  # To Do: request non-HTML output from Zotero instead
@@ -901,7 +915,7 @@ def tryreplacing(source, strings, repl):
         if re.search(r, source):
             repl2 = repl.replace("\\0", s)
             return re.sub(r, repl2, source)
-    # print("not successful: ", source, strings)
+    # warn("not successful: ", source, strings)
     return source
 
 
@@ -1444,7 +1458,7 @@ def make_header_htmls(all_items):
         for info in complex_crit.getCatValueInfo():  # get info on the bib items associated with a category value (e.g., year=2007)
             # info: 'vals', 'sortname', 'title', 'items'
             if not info.items:  # empty result set (no items for this search, if type or year search)
-                print("Warning: %s %s not found, but mentioned in shortcuts. Skipping." % (crit, info.vals))
+                warning("%s %s not found, but mentioned in shortcuts. Skipping." % (crit, info.vals))
             else:
                 # collection does not need to be marked
                 if hasattr(info.items, '__iter__'):
@@ -1678,12 +1692,12 @@ class DBInstance:
             DBInstance.dbInstanceCache[(library_id, library_type, api_key)] = self
 
             if library_type == 'group':
-                print("Loading: https://www.zotero.org/groups/%s/items" % library_id)
+                log("Loading: https://www.zotero.org/groups/%s/items" % library_id)
             else:
-                print("Loading: %s" % library_id)
+                log("Loading: %s" % library_id)
 
         except zotero_errors.UserNotAuthorised:
-            print("UserNotAuthorised: Set correct Zotero API key in settings.py for library ID %s." % library_id,
+            warn("UserNotAuthorised: Set correct Zotero API key in settings.py for library ID %s." % library_id,
                   file=sys.stderr)
             raise SystemExit(1)
 
@@ -1717,14 +1731,14 @@ class DBInstance:
                     #  else:
                     #       colls = self.traverse(self.zot.collections_sub(topcollection))
             else:
-                print("Fetching all collections:")
+                log("Fetching all collections:")
                 colls = self.traverse(self.zot.collections())
 
             colls = filter(lambda e: e, colls)  # remove empties
             return colls
 
         except zotero_errors.UserNotAuthorised:
-            print("UserNotAuthorised: Set correct Zotero API key in settings.py and allow access.", file=sys.stderr)
+            warn("UserNotAuthorised: Set correct Zotero API key in settings.py and allow access.", file=sys.stderr)
             raise SystemExit(1)
 
     def retrieve_x(self, collection, **args):
@@ -1786,15 +1800,15 @@ class DBInstance:
                                                        zv == zotero.__version__):
                             return items
                         else:
-                            # print("version diff")
+                            # log("version diff")
                             pass
                     else:
-                        # print("last mod diff")
+                        # log("last mod diff")
                         pass
             except (IOError, ValueError, pickle.PicklingError, TypeError, EOFError) as e:
-                # print("Not using cache - some error ", e)
+                # log("Not using cache - some error ", e)
                 pass
-        print(" updating... ", end="")
+        log(" updating... ", end="")
 
         # ii = zot.everything(zot.collection_items(collection_id))
         ii = self.retrieve_x(collection_id)
@@ -1941,7 +1955,7 @@ def detect_and_merge_doubles(items):
             # depending on sort criteria, even the short collection ones
             # can show up elsewhere.
             #  and not (u'collection' in iids[key] and Coll.is_short_collection(iids[key].collection))
-            # print("Merging ", a.title)
+            # log("Merging ", a.title)
 
             # merge "section keywords"
 
@@ -1994,7 +2008,7 @@ def retrieve_all_items(collections):
     all_items = []
     for e in collections:  # key, depth, collection_name, collection_parents, db
         c = 0
-        print(" " + " " * len(e.parents) + e.name + " " + e.specials + " (" + e.key + ") ...", end="")
+        log(" " + " " * len(e.parents) + e.name + " " + e.specials + " (" + e.key + ") ...", end="")
 
         key = e.key
 
@@ -2005,10 +2019,10 @@ def retrieve_all_items(collections):
         if Coll.is_misc_collection(key):  # Miscellaneous type collection
             # This has everything that isn't mentioned above
             # so we'll filter what's in item_ids
-            # print("Miscellaneous collection: %s items initially"%len(i2))
+            # log("Miscellaneous collection: %s items initially"%len(i2))
             i2 = list(filter(lambda a: not ((a.key in item_ids) or (a.title.lower() in item_ids)), i2))
 
-            # print("Miscellaneous collection: %s items left"%len(i2))
+            # log("Miscellaneous collection: %s items left"%len(i2))
         elif Coll.is_regular_collection(key):
             for i in i2:
                 # we store by key (ID) and also by title hash
@@ -2026,7 +2040,7 @@ def retrieve_all_items(collections):
         # add IDs to the list with the collection name
         #### collect_ids(i2, collection_name, item_ids)
 
-        print("%s Items." % len(list(i2)))
+        log("%s Items." % len(list(i2)))
 
         parent_path = tuple(e.parents + [key])
         for item in i2:  # for sorting by collection
@@ -2063,7 +2077,7 @@ def compile_data(all_items, section_code, crits, exclude={}, shorten=False):
         section_print_title = "Other"
         last_section_id = last_crit = None
         section_code = ['Other']
-        # print(all_items)
+        # log(all_items)
         # raise RuntimeError("compile_data called with empty section_code")
 
     if last_section_id:
@@ -2142,7 +2156,7 @@ def sort_items(all_items, sort_criteria, sort_reverse):
         # sort is stable, so we will sort several times,
         # from the last to the first criterion
         for crit, rev in reversed(list(zip(sort_criteria, sort_reverse))):
-            # print("Sorting by",crit, rev)
+            # log("Sorting by",crit, rev)
             # all_items contains 4-tuples, the last one is the atom representation
             all_items.sort(key=lambda x: sortkeyname(crit, x.access(crit)).sort, reverse=rev)
 
@@ -2275,7 +2289,7 @@ def main(include, item_filters=[]):
     for c in sortedkeys:
         collobjs = Coll.findSimilar(c.name)
         if len(collobjs) > 1:
-            print("Merging %s collections into section %s." % (len(collobjs), c.name))
+            log("Merging %s collections into section %s." % (len(collobjs), c.name))
             for collobj in collobjs:
                 for i in all_items:
                     if last(i.collection) == collobj.key:
@@ -2310,7 +2324,7 @@ def main(include, item_filters=[]):
         # Keep track of IDs so we can show statistics
         itemids.update(map(lambda i: i.key, items))
 
-    print("The bibliography contains %s entries (%s unique keys)." % (len(all_items), len(itemids)))
+    log("The bibliography contains %s entries (%s unique keys)." % (len(all_items), len(itemids)))
 
     headerhtml = '<div id="bib-preamble" style="visibility:hidden;">'
     for crit, h in zip(show_shortcuts, headerhtmls):

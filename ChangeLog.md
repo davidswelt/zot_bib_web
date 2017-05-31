@@ -1,4 +1,4 @@
-zot_bib_web 2.0.0  BETA
+zot_bib_web 2.0.3
 -----------------------------------------
 
 The program's configuration has been redesigned, and many more
@@ -56,8 +56,15 @@ Compatibility-breaking Changes:
 the settings file.  Specify a "catch-all collection" via the &
 modifier directly in the name of the respective collection,
 e.g. "9999& Miscellaneous" (9999 if sorting at the end is desired).
+
+- Output file is not longer a positional argument to the program.
+  Use -o <outfile> instead.  '-' is permissible for stdout.
+
 - Items in top-level collection are no longer excluded
+
 - Limit has been removed (replaced with caching)
+
+
 
 CSS  and HTML Changes:
 
