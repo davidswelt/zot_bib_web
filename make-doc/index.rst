@@ -2,11 +2,7 @@
 Zot_Bib_Web's documentation
 =======================================
 
-Written by David Reitter.
-
-Latest versions: https://github.com/davidswelt/zot_bib_web
-
-Documentation: http://zot-bib-web.readthedocs.io
+.. include:: ../README.rst
 
 
 .. toctree::
@@ -36,6 +32,8 @@ See `settings_example.py` for an example explanations.
    :members:
    :undoc-members: zot
 
+
+		   
 
 Indices and tables
 =======================================
