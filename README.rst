@@ -17,48 +17,27 @@ Features
 --------
 
 This tool generates interactive web bibliographies based on one or more
-collections in a Zotero repository.
-
-Collections can be maintained by groups of people, using Zotero's web
+collections in a Zotero repository. Collections can be maintained by
+groups of people, using Zotero's web
 interface or their desktop applications.
+
+Bibliographies can be ordered by collection, by publication year, or
+by publication type (e.g., journal articles first), are interactively
+searchable, can be linked to PDF documents or other URLs, have records
+for BibTex, EndNote and Wikipedia, and can be exported to HTML or pushed
+to a Wordpress database.
 
 Zot\_bib\_web does not depend on any third-party web server. The
 generated bibliographies load quickly because they are stored as static
-files along with the rest of your website.
+files along with the rest of your website. This makes a good source
+for webcrawlers, including Google Scholar and CiteSeer.
 
-This makes a good source for webcrawlers, including Google Scholar and
-CiteSeer.
-
-Setup is very easy for anyone who runs their own website and knows how
+Setup is easy for anyone who runs their own website and knows how
 to use a command line (shell).
-
 The easiest way to use it is to call zot.py with the key of a public
 Zotero collection. It will make a zotero-bib.html file. Copy this, along
 with the "site" and "files" (if any) directory to your webserver.
 
-Bibliographies - can be ordered by collection, by publication year, or
-by publication type (e.g., journal articles first), - are editable in
-Zotero by one or more users, - are interactively searchable, - can be
-linked to PDF documents or other URLs, - have records for BibTex,
-EndNote and Wikipedia, and - can be exported to HTML or pushed to a
-Wordpress database.
-
-The following formats and info can also be included: BibTex, RIS (for
-EndNote etc.), Wikipedia markup, abstract, PDF, APA and MLA format.
-
-A readable bibliographic entry (e.g., in APA style) is always shown.
-COInS is always included (invisible).
-
-The content generated is static. This program is meant to be run
-periodically.
-
-Support for other languages is provided; by default for German and
-English.
-
-A tool to push the resulting bibliography to a Wordpress installation is
-also provided.
-
-zot\_bib\_web is available on Github.
 
 Demo
 ----
@@ -67,9 +46,9 @@ Demo
    bibliographies. Their respective settings files and CSS style files
    are included.
 
--  Run
+-  Run::
 
-./zot.py --settings demo/settings3.py
+  ./zot.py --settings demo/settings3.py
 
 to see it in action.
 
@@ -89,31 +68,25 @@ Requirements
 ------------
 
 -  Python 2.7 or 3.6+
--  Pyzotero. To install Pyzotero, a library for python:
-
-   ::
+-  Pyzotero. To install Pyzotero, a library for python::
 
        sudo pip install pyzotero
 
-   or:
-
-   ::
+   or::
 
        sudo easy_install pyzotero
 
 -  A Zotero collection with your bibliography (as user or as group)
 
-Optional: - dateutils package for Python (improves date parsing if
+-  Optional: dateutils package for Python (improves date parsing if
 present)
 
 Setup
 -----
 
--  ensure zot.py is executable (chmod ug+x zot.py)
+-  Ensure zot.py is executable (chmod ug+x zot.py)
 
--  Try it out. From a unix-like command-line, do this:
-
-   ::
+-  Try it out. From a unix-like command-line, do this::
 
        ./zot.py --group 160464 DTDTV2EP
 
@@ -142,9 +115,7 @@ Bibliography in Zotero
    helpful. You can name collections starting with a number: "10 Social
    Psychology".
 
-Here's an example of a bibliography structure:
-
-::
+Here's an example of a bibliography structure::
 
     My Publications [MGID90AT]
         10 Selected Works
@@ -167,8 +138,9 @@ Overview of Configuration options
 
 -  Call ./zot.py --help to see a list of command-line options.
 
--  Please see settings.example.py for documentation. A few options are
-   discussed in the following.
+-  Please refer to the documentation for information on the settings
+   file, or read settings\_example.py.
+   A few options are discussed in the following.
 
 -  You can order our bibliography by sub-collection, by year, or by
    publication type (e.g., journal articles first, then conference
@@ -192,7 +164,7 @@ Overview of Configuration options
    filtering to only show the most common ones. See settings.example.py
    for a detailed example.
 
--  There are several more options. Again, see settings.example.py.
+-  There are several more options. Again, see settings\_example.py.
 
 Deployment to a web site
 ------------------------
@@ -248,25 +220,9 @@ Follow these steps:
 7. Run push.py regularly or on demand. It will call zot.py automatically
    and then update the page in WP.
 
-How it works
-------------
-
-Zot.py produces annotated, beautiful bibliographies for the web from a
-Zotero collection. It is designed for individuals and for research
-groups.
-
-This program will load settings.py for its configuration. It will
-retrieve all publications for the given user or group. If subcollections
-are present, each subcollection will form a separate section. The
-top-level collection can be ignored (depending on configuration.)
-
-The output of zot.py consists of HTML: either a full document, or a
-snippet, as configured.
-
-Each bibliographic entry is annotated with a bib record and an abstract,
-each of which can be revealed by the reader (client-side javascript).
 
 Author
 ------
 
 David Reitter, Penn State
+david.reitter@gmail.com
