@@ -1,4 +1,4 @@
-zot\_bib\_web: Interactive web bibliographies with Zotero
+Interactive web bibliographies with Zotero
 =========================================================
 
 Example Installations
