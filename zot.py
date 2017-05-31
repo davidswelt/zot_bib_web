@@ -264,136 +264,128 @@ import os
 
 from collections import namedtuple, defaultdict
 
-
-def load_settings(file=None):
-    try:
-        import imp
-
-
-        loadfile = file or "settings.py"
-        # from settings import *
-        settings = imp.load_source("settings", loadfile)
-        # import settings into local namespace:
-        for k, v in settings.__dict__.items():
-            if not "__" in k:  # even if default is not defined (e.g., function definitions for content_filter)
-                if not k in globals() and not callable(v):  # functions are usually harmless.
-                    warn("Settings file defines %s.  Not a configuration symbol." % k)
-                globals()[k] = v
-                # print(k,v)
-        log("Loaded settings from %s." % os.path.abspath(loadfile))
-
-    except ImportError:
-        pass
-    except OSError as e:  # no settings file
-        if e.errno == errno.ENOENT and file:
-            warn("%s file not found." % file)
-            sys.exit(1)
-    except IOError as e:  # no settings file
-        if e.errno == errno.ENOENT:
-            if file:
-                warn("%s file not found." % file)
-                sys.exit(1)
-        else:
-            warn("%s file could not be read." % loadfile)
-            sys.exit(1)
-
-
-def fetch_tag(tag, default=None):
-    result = default
-    if tag in sys.argv:
-        i = sys.argv.index(tag)
-        if len(sys.argv) > i + 1:
-            result = sys.argv[i + 1]
-            sys.argv = sys.argv[:i] + sys.argv[i + 2:]
-        else:
-            warn("%s needs a value." % tag)
-    return result
-
-
 import argparse
 
-def make_arg_parser():
-    global __doc__
-    parser = argparse.ArgumentParser(description=__doc__)
-    __doc__ = "" # don't include twice in documentation
-    parser.add_argument('COLLECTION', type=str, nargs='?',
-                        help='Start at this collection')
+class Settings:
+    # To do: move settings into an object of class Settings
+    
+    @staticmethod
+    def load_settings(file=None):
+        try:
+            import imp
 
-    parser.add_argument('--settings', '-s', dest='settingsfile',
-                        action='store', default=None,
-                        help='load settings from FILE.  See settings_example.py.')
+            loadfile = file or "settings.py"
+            # from settings import *
+            settings = imp.load_source("settings", loadfile)
+            # import settings into local namespace:
+            for k, v in settings.__dict__.items():
+                if not "__" in k:  # even if default is not defined (e.g., function definitions for content_filter)
+                    if not k in globals() and not callable(v):  # functions are usually harmless.
+                        warn("Settings file defines %s.  Not a configuration symbol." % k)
+                    globals()[k] = v
+                    # print(k,v)
+            log("Loaded settings from %s." % os.path.abspath(loadfile))
 
-    ug = parser.add_mutually_exclusive_group(required=False)
-    ug.add_argument('--user', action='store', dest='user',   help="load a user library      [user_library(...)]")
-    ug.add_argument('--group', action='store', dest='group', help="load a group library     [group_library(...)]")
-
-    parser.add_argument('--api_key', action='store', dest='api_key',  help="set Zotero API key       [user_library(..., api_key=...)]")
-
-    parser.add_argument('--output', '-o', dest='output', type=str, action='store',
-                        help='Output to this file   [outputfile]')
-
-    df = parser.add_mutually_exclusive_group(required=False)
-    df.add_argument('--div', action='store_false', dest='full',       help="output an HTML fragment  [write_full_html_header=False]")
-    df.add_argument('--full', action='store_true', dest='full',       help="output full html         [write_full_html_header=True]")
-
-    parser.add_argument('--no_cache', '-n', action='store_true', dest='no_cache',
-                                                                      help="do not use cache         [no_cache]")
-    if __name__ == '__main__':
-        v = "ZBW %s - Pyzotero %s - Python %s"%(__version__, zotero.__version__, sys.version)
-        parser.add_argument('--version', '-v', version=v, action='version')
-
-    parser.add_argument('--interactive', '-i', action='store_true', dest='interactive',
-                        help=argparse.SUPPRESS)
-    return parser
-
-def read_args_and_init():
-    global interactive_debugging
-    global write_full_html_header, stylesheet_url, outputfile, jquery_path
-    global clipboard_js_path, copy_button_path, no_cache, toplevelfilter
-    global api_key
-    global outputfile
-
-    parser = make_arg_parser()
-    args = parser.parse_args()
-
-    outputfile = args.output or outputfile  # set early because log() needs it
-
-    if args.settingsfile:
-        load_settings(args.settingsfile)
-    else:
-        load_settings()
-
-    import_legacy_configuration()
-
-    outputfile = args.output or outputfile  # again, because parms take precedence
-
-    write_full_html_header = args.full
-
-    no_cache = args.no_cache or no_cache
-
-    interactive_debugging = args.interactive
-
-    if args.user:
-        toplevelfilter = None
-        user_collection(args.user, api_key=args.api_key, collection=args.COLLECTION)
-
-    if args.group:
-        group_collection(args.group, api_key=args.api_key, collection=args.COLLECTION)
-
-    # api_key = args.api_key or api_key  # for use as default by commands in settings file
-
-    ###########
-    if not include_collections:
-        if len(sys.argv) > 1:
-            if args.user or args.group:
-                warn("No collections found in given libraries.")
+        except ImportError:
+            pass
+        except OSError as e:  # no settings file
+            if e.errno == errno.ENOENT and file:
+                warn("%s file not found." % file)
+                sys.exit(1)
+        except IOError as e:  # no settings file
+            if e.errno == errno.ENOENT:
+                if file:
+                    warn("%s file not found." % file)
+                    sys.exit(1)
             else:
-                warn(
-                    "You must give --user or --group, or add user_collection(..) or group_collection(..) in settings.py.")
-        else:
-            parser.print_usage()
-        sys.exit(1)
+                warn("%s file could not be read." % loadfile)
+                sys.exit(1)
 
+    @staticmethod
+    def make_arg_parser():
+        global __doc__
+        parser = argparse.ArgumentParser(description=__doc__)
+        __doc__ = "" # don't include twice in documentation
+        parser.add_argument('COLLECTION', type=str, nargs='?',
+                            help='Start at this collection')
+
+        parser.add_argument('--settings', '-s', dest='settingsfile',
+                            action='store', default=None,
+                            help='load settings from FILE.  See settings_example.py.')
+
+        ug = parser.add_mutually_exclusive_group(required=False)
+        ug.add_argument('--user', action='store', dest='user',   help="load a user library      [user_library(...)]")
+        ug.add_argument('--group', action='store', dest='group', help="load a group library     [group_library(...)]")
+
+        parser.add_argument('--api_key', action='store', dest='api_key',  help="set Zotero API key       [user_library(..., api_key=...)]")
+
+        parser.add_argument('--output', '-o', dest='output', type=str, action='store',
+                            help='Output to this file   [outputfile]')
+
+        df = parser.add_mutually_exclusive_group(required=False)
+        df.add_argument('--div', action='store_false', dest='full',       help="output an HTML fragment  [write_full_html_header=False]")
+        df.add_argument('--full', action='store_true', dest='full',       help="output full html         [write_full_html_header=True]")
+
+        parser.add_argument('--no_cache', '-n', action='store_true', dest='no_cache',
+                                                                          help="do not use cache         [no_cache]")
+        if __name__ == '__main__':
+            v = "ZBW %s - Pyzotero %s - Python %s"%(__version__, zotero.__version__, sys.version)
+            parser.add_argument('--version', '-v', version=v, action='version')
+
+        parser.add_argument('--interactive', '-i', action='store_true', dest='interactive',
+                            help=argparse.SUPPRESS)
+        return parser
+
+    @staticmethod
+    def read_args_and_init():
+        global interactive_debugging
+        global write_full_html_header, stylesheet_url, outputfile, jquery_path
+        global clipboard_js_path, copy_button_path, no_cache, toplevelfilter
+        global api_key
+        global outputfile
+
+        parser = Settings.make_arg_parser()
+        args = parser.parse_args()
+
+        outputfile = args.output or outputfile  # set early because log() needs it
+
+        if args.settingsfile:
+            Settings.load_settings(args.settingsfile)
+        else:
+            Settings.load_settings()
+
+        import_legacy_configuration()
+
+        outputfile = args.output or outputfile  # again, because parms take precedence
+
+        write_full_html_header = args.full
+
+        no_cache = args.no_cache or no_cache
+
+        interactive_debugging = args.interactive
+
+        if args.user:
+            toplevelfilter = None
+            user_collection(args.user, api_key=args.api_key, collection=args.COLLECTION)
+
+        if args.group:
+            group_collection(args.group, api_key=args.api_key, collection=args.COLLECTION)
+
+        # api_key = args.api_key or api_key  # for use as default by commands in settings file
+
+        ###########
+        if not include_collections:
+            if len(sys.argv) > 1:
+                if args.user or args.group:
+                    warn("No collections found in given libraries.")
+                else:
+                    warn(
+                        "You must give --user or --group, or add user_collection(..) or group_collection(..) in settings.py.")
+            else:
+                parser.print_usage()
+            sys.exit(1)
+
+make_arg_parser = Settings.make_arg_parser  # for Sphinx-argparse
 ###########
 
 def cleanup_lines(string):
@@ -877,9 +869,7 @@ def extract_abstract(bib):
     return None, bib
 
 
-def write_some_html(body, outfile, title=None):
-    global html_header
-    global html_footer
+def write_some_html(body, outfile, html_header, html_footer, title=None):
 
     content = html_header
     if title:
@@ -2093,7 +2083,6 @@ def compile_data(all_items, section_code, crits, exclude={}, shorten=False):
     html += corehtml
     html = u'<div class="%s-bib-section">' % (u'short' if shorten else u'full') + html + u'</div>'
 
-    # write_some_html(html, category_outputfile_prefix+"-%s.html"%last_section_id)
     return html
 
 
@@ -2238,7 +2227,9 @@ def section_generator(items, crits):
         yield prev_section, prev_crits_sec, collect
 
 
-def main(include, item_filters=[]):
+def generate_html(include, item_filters=[]):
+    
+    html_header, search_box, html_footer = generate_base_html()
     index_configuration()
 
     all_items = []
@@ -2335,17 +2326,15 @@ def main(include, item_filters=[]):
         headerhtml += '<ul id="bib-cat-%s" class="bib-cat">' % crit + h + "</ul>"
     headerhtml += search_box + "</div>"  # preamble
 
-    write_some_html(headerhtml + fullhtml, outputfile)
+    write_some_html(headerhtml + fullhtml, outputfile, html_header, html_footer)
 
 
 if __name__ == '__main__':
     check_requirements()
-    read_args_and_init()
-    html_header, search_box, html_footer = generate_base_html()
+    Settings.read_args_and_init()
 
     if interactive_debugging:
         import code
-
         code.interact(local=locals())
     else:
-        main(include_collections, item_filters)
+        generate_html(include_collections, item_filters)
