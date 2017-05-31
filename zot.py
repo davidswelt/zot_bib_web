@@ -312,31 +312,32 @@ def make_arg_parser():
     __doc__ = "" # don't include twice in documentation
     parser.add_argument('COLLECTION', type=str, nargs='?',
                         help='Start at this collection')
-    parser.add_argument('OUTPUT', type=str, nargs='?',
-                        help='Output to this file')
 
     parser.add_argument('--settings', '-s', dest='settingsfile',
                         action='store', default=None,
                         help='load settings from FILE.  See settings_example.py.')
-
-    if __name__ == '__main__':
-        v = "ZBW %s - Pyzotero %s - Python %s"%(__version__, zotero.__version__, sys.version)
-        parser.add_argument('--version', '-v', version=v, action='version')
-
-    df = parser.add_mutually_exclusive_group(required=False)
-    df.add_argument('--div', action='store_false', dest='full',       help="output an HTML fragment  [write_full_html_header=False]")
-    df.add_argument('--full', action='store_true', dest='full',       help="output full html         [write_full_html_header=True]")
 
     ug = parser.add_mutually_exclusive_group(required=False)
     ug.add_argument('--user', action='store', dest='user',   help="load a user library      [user_library(...)]")
     ug.add_argument('--group', action='store', dest='group', help="load a group library     [group_library(...)]")
 
     parser.add_argument('--api_key', action='store', dest='api_key',  help="set Zotero API key       [user_library(..., api_key=...)]")
+
+    parser.add_argument('--output', '-o', dest='output', type=str, action='store',
+                        help='Output to this file   [outputfile]')
+
+    df = parser.add_mutually_exclusive_group(required=False)
+    df.add_argument('--div', action='store_false', dest='full',       help="output an HTML fragment  [write_full_html_header=False]")
+    df.add_argument('--full', action='store_true', dest='full',       help="output full html         [write_full_html_header=True]")
+
     parser.add_argument('--no_cache', '-n', action='store_true', dest='no_cache',
                                                                       help="do not use cache         [no_cache]")
+    if __name__ == '__main__':
+        v = "ZBW %s - Pyzotero %s - Python %s"%(__version__, zotero.__version__, sys.version)
+        parser.add_argument('--version', '-v', version=v, action='version')
 
     parser.add_argument('--interactive', '-i', action='store_true', dest='interactive',
-                        help="interactive debugging (internal)")
+                        help=argparse.SUPPRESS)
     return parser
 
 def read_args_and_init():
@@ -356,7 +357,7 @@ def read_args_and_init():
 
     import_legacy_configuration()
 
-    outputfile = args.OUTPUT or outputfile
+    outputfile = args.output or outputfile
 
     write_full_html_header = args.full
 
