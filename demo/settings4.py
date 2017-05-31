@@ -42,7 +42,6 @@ bib_style = 'mla'     # bibliography style format (e.g., 'apa' or 'mla') - Any v
 write_full_html_header = True   # False to not output HTML headers.  In this case, expect a file in UTF-8 encoding.
 
 outputfile = 'demo/example4.html'  # relative or absolute path name of output file
-category_outputfile_prefix = 'zotero'  # relative or absolute path prefix
 
 show_search_box = True  # show a Javascript/JQuery based search box to filter pubs by keyword.  Must define jquery_path.
 jquery_path = "site/jquery.min.js"  # path to jquery file on the server - default: wordpress location
