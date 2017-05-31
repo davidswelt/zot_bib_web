@@ -78,7 +78,7 @@ def get_bibliography (coll):
     if coll:
         outputfile = 'zotero-bib.html'
         # to do: why call as a sub-process when we can just import it?
-        call(["./zot.py", coll, outputfile, '--div'])
+        call(["./zot.py", coll, '-o', outputfile, '--div'])
 
     if outputfile:
         file = codecs.open(outputfile, "r", "utf-8")
