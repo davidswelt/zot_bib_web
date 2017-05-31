@@ -9,6 +9,12 @@ Example Installations
 [Personal website](http://david-reitter.com/pub/)
 
 
+Documentation
+----------------------------------------
+
+http://zot-bib-web.readthedocs.io/
+
+
 Features
 ----------------------------------------
 
@@ -22,7 +28,7 @@ Zot_bib_web does not depend on any third-party web server.  The
 generated bibliographies load quickly because they are stored as static
 files along with the rest of your website.
 
-This makes them retrievable 
+This makes a good source for webcrawlers, including Google Scholar and CiteSeer.
 
 Setup is very easy for anyone who runs their own website and knows
 how to use a command line (shell).
@@ -40,11 +46,12 @@ Bibliographies
 -  have records for BibTex, EndNote and Wikipedia, and
 -  can be exported to HTML or pushed to a Wordpress database.
 
-The following formats and info can be included:
-BibTex, RIS (for EndNote etc.), Wikipedia markup, abstract, PDF.
+The following formats and info can also be included:
+BibTex, RIS (for EndNote etc.), Wikipedia markup, abstract, PDF,
+APA and MLA format.
 
 A readable bibliographic entry (e.g., in APA style) is always shown.
-COINS is always included (invisible).
+COInS is always included (invisible).
 
 The content generated is static.  This program is meant to
 be run periodically.
@@ -63,6 +70,12 @@ Demo
 - View the HTML files in the demo folder for some examples of
   bibliographies.  Their respective settings files and CSS style files
   are included.
+
+- Run
+
+  ./zot.py --settings demo/settings3.py
+
+  to see it in action.
 
 
 License and Donations

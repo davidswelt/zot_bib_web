@@ -11,6 +11,8 @@ options for displaying and sorting the interactive bibliography are available.
   statements.  See settings_example.py for documentation.
   Previous settings file are imported (with exception of the next item).
 
+- Documentation is now available at http://zot-bib-web.readthedocs.io .
+
 - You can sort the bibliographic items not just
   by collection as in the Zotero library, but also by year or by
   publication type (e.g., journal article, conference paper), and
