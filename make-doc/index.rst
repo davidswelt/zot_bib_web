@@ -1,12 +1,12 @@
+.. toctree::
+   :maxdepth: 3
+   :caption: Contents:
+
 
 .. image:: screenshot.png
    :width: 300	   
 
 .. include:: ../README.rst
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
 
 Running the zot.py program
 ================================
