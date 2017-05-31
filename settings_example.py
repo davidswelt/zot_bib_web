@@ -153,7 +153,7 @@ write_full_html_header = True
 # False to not output HTML headers.
 # In this case, expect a file in UTF-8 encoding.
 
-stylesheet_url = "style.css"
+stylesheet_url = "site/style.css"
 # If set and write_full_html_header is True,
 # link to this style sheet (a URL)
 
