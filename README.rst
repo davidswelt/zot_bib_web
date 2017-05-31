@@ -47,10 +47,10 @@ Demo
    are included.
 
 -  Run::
+     
+     ./zot.py --settings demo/settings3.py
 
-  ./zot.py --settings demo/settings3.py
-
-to see it in action.
+   to see it in action.
 
 License and Donations
 ---------------------
@@ -78,8 +78,8 @@ Requirements
 
 -  A Zotero collection with your bibliography (as user or as group)
 
--  Optional: dateutils package for Python (improves date parsing if
-present)
+-  Optional: dateutils package for Python (improves date parsing if present)
+
 
 Setup
 -----
@@ -131,7 +131,7 @@ Here's an example of a bibliography structure::
 To see this, use the provided settings.py as an example.
 
 Overview of Configuration options
----------------------
+--------------------------------------
 
 -  Configuration takes place in a settings file, by default named
    settings.py.

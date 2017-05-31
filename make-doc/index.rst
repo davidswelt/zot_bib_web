@@ -1,16 +1,17 @@
 
-Zot_Bib_Web's documentation
-=======================================
+.. image:: screenshot.png
+   :width: 300	   
 
 .. include:: ../README.rst
-
 
 .. toctree::
    :maxdepth: 1
    :caption: Contents:
 
+Running the zot.py program
+================================
+	     
 .. py:module:: zot
-
 	       
 .. argparse::
    :module: zot
@@ -33,8 +34,7 @@ See `settings_example.py` for an example explanations.
    :undoc-members: zot
 
 
-		   
-
+		  
 Indices and tables
 =======================================
 
