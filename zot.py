@@ -81,12 +81,12 @@ omit_COinS = False #: If True, do not include COInS metadata
 smart_selections = True #: If True, prevent user from selecting/copying text that shouldn't be copied.
 
 
-__all__ = ['titlestring', 'bib_style', 'write_full_html_header',
+__all__ = ['titlestring', 'bib_style',
            'sort_criteria', 'show_top_section_headings',
            'number_bib_items',     
-           'outputfile',  'stylesheet_url', 'jquery_path',
            'show_shortcuts', 'shortcut', 'show_links',
            'omit_COinS', 'smart_selections',
+           'outputfile',  'write_full_html_header', 'stylesheet_url', 'jquery_path',
            'show_copy_button', 'clipboard_js_path', 'copy_button_path', 'show_search_box',
            'content_filter',  'no_cache',
            'language_code', 'sortkeyname_order', 'link_translations']
