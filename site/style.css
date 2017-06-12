@@ -76,6 +76,7 @@ div.short-bib-section .containertitle {
 
 /* details (e.g., collection, editors, years, pages, etc.) of a bib item */
 div.bib-details{
+    
 }
 
 
@@ -107,9 +108,7 @@ div.cite {
 div.bib {
     font-family:Menlo,Courier,monospaced;
     color:brown;
-    padding-left:30px;
-    white-space: pre;
-    margin:20px 60px 60px 10px;
+    white-space: pre-wrap;
 }
 
 /* Text "bib", "abstract", and other buttons */
@@ -122,6 +121,30 @@ div.bib {
     padding:0;
     margin:0;
 }
+
+/* Show/hide  area */
+div.blinkitems .bibshowhide {
+    background: white;
+    padding: 20px;
+    margin-left:40px;
+    z-index: 5;
+    position: absolute;
+    width: 600px;
+
+}
+
+/* grey border inside the white padding */
+div.blinkitems .bibshowhide:before {
+  content: " ";
+  position: absolute;
+  z-index: -1;
+  top: 5px;
+  left: 5px;
+  right: 5px;
+  bottom: 5px;
+  border: 2px solid grey;
+}
+
 
 /* the .blink p style is a hack because Wordpress seems to insert <p> at times. */
 .blink p {
@@ -142,10 +165,10 @@ div.short-bib-section .blinkitems .blink {
 /* The actual abstract (when visible) */
 div.abstract {
     color:black;
-    margin:20px 60px 60px 10px;
-    padding:10px;
-    border:1px solid black;
+    line-height:120%;
+    font-size:120%;
 }
+
 
 /* Document titles */
 .doctitle {
