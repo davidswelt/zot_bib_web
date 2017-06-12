@@ -1,4 +1,4 @@
-zot_bib_web 2.0.3
+zot_bib_web 2.0.4
 -----------------------------------------
 
 The program's configuration has been redesigned, and many more
@@ -47,8 +47,8 @@ options for displaying and sorting the interactive bibliography are available.
 
 - Caching of Zotero retrieval makes repeated runs much faster.
 
-- Tested with Pyzotero 1.2.11
-- Now compatible with Python 2.7 or Python 3.
+- Tested with Pyzotero 1.2.11.
+- Now compatible with Python 2.7 or Python 3.6.
 
 Compatibility-breaking Changes:
 
