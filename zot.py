@@ -120,6 +120,8 @@ show_top_section_headings = 1
 
 no_cache = False #: If True, avoid use of cache
 
+interactive_debugging = False
+
 language_code = 'en'
 """ Language code used for :data:`sortkeyname_order` and :data:`link_translations`
     Define labels for article types and their ordering
@@ -323,16 +325,16 @@ class Settings:
                             help='Output to this file   [outputfile]')
 
         df = parser.add_mutually_exclusive_group(required=False)
-        df.add_argument('--div', action='store_false', dest='full',       help="output an HTML fragment  [write_full_html_header=False]")
-        df.add_argument('--full', action='store_true', dest='full',       help="output full html         [write_full_html_header=True]")
+        df.add_argument('--div',  default=None, action='store_false', dest='full',       help="output an HTML fragment  [write_full_html_header=False]")
+        df.add_argument('--full', default=None, action='store_true', dest='full',       help="output full html         [write_full_html_header=True]")
 
-        parser.add_argument('--no_cache', '-n', action='store_true', dest='no_cache',
+        parser.add_argument('--no_cache', '-n', action='store_true', dest='no_cache', default=None,
                                                                           help="do not use cache         [no_cache]")
         if __name__ == '__main__':
             v = "ZBW %s - Pyzotero %s - Python %s"%(__version__, zotero.__version__, sys.version)
             parser.add_argument('--version', '-v', version=v, action='version')
 
-        parser.add_argument('--interactive', '-i', action='store_true', dest='interactive',
+        parser.add_argument('--interactive', '-i', action='store_true', dest='interactive', default=None,
                             help=argparse.SUPPRESS)
         return parser
 
@@ -358,11 +360,11 @@ class Settings:
 
         outputfile = args.output or outputfile  # again, because parms take precedence
 
-        write_full_html_header = args.full
+        write_full_html_header = args.full if args.full != None else write_full_html_header
 
-        no_cache = args.no_cache or no_cache
+        no_cache = args.no_cache if args.no_cache != None else no_cache
 
-        interactive_debugging = args.interactive
+        interactive_debugging = args.interactive if args.interactive != None else interactive_debugging
 
         if args.user:
             toplevelfilter = None
@@ -1871,6 +1873,7 @@ class DBInstance:
             def dump(item, p, fn):
                 # Dump file into filename fn at path p
                 # Returns the filename if successful
+                # PyZotero's "dump" is not available until in more recent versions
                 outfile = os.path.join(p, fn)
                 # uses zot
                 try:
