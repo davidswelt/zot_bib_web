@@ -300,14 +300,17 @@ class Settings:
             if e.errno == errno.ENOENT and file:
                 warn("%s file not found." % file)
                 sys.exit(1)
+            else:
+                warn("%s file could not be read or processed." % loadfile)
+                raise e
         except IOError as e:  # no settings file
             if e.errno == errno.ENOENT:
                 if file:
                     warn("%s file not found." % file)
                     sys.exit(1)
             else:
-                warn("%s file could not be read." % loadfile)
-                sys.exit(1)
+                warn("%s file could not be read or processed." % loadfile)
+                raise e
 
     @staticmethod
     def make_arg_parser():
