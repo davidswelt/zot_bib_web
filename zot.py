@@ -223,18 +223,24 @@ import errno
 import re
 
 
-def warning(*objs):
-    print("WARNING: ", *objs, file=sys.stderr)
+def flexprint(*args, **kwargs):
+    try:
+        print(*args, **kwargs)
+    except UnicodeEncodeError:
+        f = kwargs['file'] if 'file' in kwargs else sys.stdout
+        for o in args:
+            print("{}".format(o).encode(f.encoding, errors="ignore"), **kwargs)
 
+def warning(*objs):
+    flexprint("WARNING: ", *objs, file=sys.stderr)
 
 def warn(*objs):
-    print(*objs, file=sys.stderr)
-
+    flexprint(*objs, file=sys.stderr)
 
 def log(*objs, **kwargs):
     global outputfile
     kwargs['file'] = sys.stderr if outputfile == '-' else sys.stdout
-    print(*objs, **kwargs)
+    flexprint(*objs, **kwargs)
 
 
 
