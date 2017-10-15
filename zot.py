@@ -919,6 +919,16 @@ def tryreplacing(source, strings, repl):
     # warn("not successful: ", source, strings)
     return source
 
+def urlize(text):
+    """
+    Convert any URLs in text into clickable links.
+    """
+    mexp = r'(?<=[^"\'])(((?:https?|ftp)://)(?:\S+(?::\S*)?@)?(?:(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]+-?)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]+-?)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:/[^\s<]*)?)'
+    #    for m in re.finditer(mexp, text):
+    #       print(m.group(1))
+    text = re.sub(mexp, r'<a href="\1">\1</a>', text)
+    return text
+
 
 try:  # python 2/3 compatibility
     basestring
@@ -1552,6 +1562,9 @@ def make_html(all_items, exclude={}, shorten=False):
 
                 if item.extra:
                     htmlitem += div('bib-extra', item.extra)
+
+                # links
+                htmlitem = urlize(htmlitem)
 
                 # Insert searchable keywords (not displayed)
                 search_tags = ''
