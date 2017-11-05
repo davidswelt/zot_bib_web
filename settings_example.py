@@ -5,9 +5,14 @@
 
 ## You must configure the authentication settings and one collection key.
 
+verbosity = 0
+# Print more or less output during execution
+# -2: print errors
+# -1: print warnings and errors
+# 0: print progress information, warnings and errors
+# 1: print log information and everything else.
+
 #### AUTHENTICATION AND COLLECTIONS ######################################
-
-
 
 group_collection(160464, collection='MGID93AS')
 

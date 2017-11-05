@@ -38,6 +38,8 @@ from __future__ import unicode_literals
 # Create settings.py to supply your configuration.
 # The following items are defaults.
 
+verbosity = 0  #: How much diagnostic output to print
+
 titlestring = 'Bibliography'  #: The title shown for the bibliography document
 
 bib_style = 'apa' #: Style.  'apa', 'mla', or any other style known to Zotero
@@ -224,6 +226,13 @@ import re
 
 
 def flexprint(*args, **kwargs):
+    global verbosity
+    level = 0 # default importance - print unless "quiet"
+    if 'level' in kwargs:
+        level = kwargs['level']
+        del kwargs['level']
+    if verbosity < - level:
+        return
     try:
         print(*args, **kwargs)
     except UnicodeEncodeError:
@@ -231,18 +240,29 @@ def flexprint(*args, **kwargs):
         for o in args:
             print("{}".format(o).encode(f.encoding, errors="ignore"), **kwargs)
 
-def warning(*objs):
-    flexprint("WARNING: ", *objs, file=sys.stderr)
 
-def warn(*objs):
-    flexprint(*objs, file=sys.stderr)
+def default(dict, **kwargs):
+    for k,v in kwargs.items():
+        if not k in dict:
+            dict[k] = v
 
+def warning(*objs, **kwargs):
+    default(kwargs, level=1, file=sys.stderr)
+    warn("WARNING: ", *objs, **kwargs)
+def error(*objs, **kwargs):
+    default(kwargs, level=2, file=sys.stderr)
+    warn("ERROR: ", *objs, **kwargs)
 def log(*objs, **kwargs):
+    default(kwargs, level=-1)
+    warn(*objs, **kwargs)
+def progress(*objs, **kwargs):
+    default(kwargs, level=0)
+    warn(*objs, **kwargs)
+
+def warn(*objs, **kwargs):
     global outputfile
-    kwargs['file'] = sys.stderr if outputfile == '-' else sys.stdout
+    default(kwargs, level=1, file=sys.stderr)
     flexprint(*objs, **kwargs)
-
-
 
 if __name__ == '__main__': # not for documentation-building
     from pyzotero import zotero, zotero_errors
@@ -289,27 +309,27 @@ class Settings:
             for k, v in settings.__dict__.items():
                 if not "__" in k:  # even if default is not defined (e.g., function definitions for content_filter)
                     if not k in globals() and not callable(v):  # functions are usually harmless.
-                        warn("Settings file defines %s.  Not a configuration symbol." % k)
+                        warning("Settings file defines %s.  Not a configuration symbol." % k)
                     globals()[k] = v
                     # print(k,v)
-            log("Loaded settings from %s." % os.path.abspath(loadfile))
+            progress("Loaded settings from %s." % os.path.abspath(loadfile))
 
         except ImportError:
             pass
         except OSError as e:  # no settings file
             if e.errno == errno.ENOENT and file:
-                warn("%s file not found." % file)
+                error("%s file not found." % file)
                 sys.exit(1)
             else:
-                warn("%s file could not be read or processed." % loadfile)
+                error("%s file could not be read or processed." % loadfile)
                 raise e
         except IOError as e:  # no settings file
             if e.errno == errno.ENOENT:
                 if file:
-                    warn("%s file not found." % file)
+                    error("%s file not found." % file)
                     sys.exit(1)
             else:
-                warn("%s file could not be read or processed." % loadfile)
+                error("%s file could not be read or processed." % loadfile)
                 raise e
 
     @staticmethod
@@ -333,6 +353,9 @@ class Settings:
         parser.add_argument('--output', '-o', dest='output', type=str, action='store',
                             help='Output to this file   [outputfile]')
 
+        parser.add_argument('--verbose',  default=0, action='count', dest='verbosity',       help="output more information")
+        parser.add_argument('--quiet',  default=0, action='store_const', const=-2, dest='verbosity',       help="output no information")
+
         df = parser.add_mutually_exclusive_group(required=False)
         df.add_argument('--div',  default=None, action='store_false', dest='full',       help="output an HTML fragment  [write_full_html_header=False]")
         df.add_argument('--full', default=None, action='store_true', dest='full',       help="output full html         [write_full_html_header=True]")
@@ -354,10 +377,12 @@ class Settings:
         global clipboard_js_path, copy_button_path, no_cache, toplevelfilter
         global api_key
         global outputfile
+        global verbosity
 
         parser = Settings.make_arg_parser()
         args = parser.parse_args()
 
+        verbosity = args.verbosity or verbosity
         outputfile = args.output or outputfile  # set early because log() needs it
 
         if args.settingsfile:
@@ -388,12 +413,12 @@ class Settings:
         if not include_collections:
             if len(sys.argv) > 1:
                 if args.user or args.group:
-                    warn("No collections found in given libraries.")
+                    error("No collections found in given libraries.")
                 else:
-                    warn(
+                    error(
                         "You must give --user or --group, or add user_collection(..) or group_collection(..) in settings.py.")
             else:
-                parser.print_usage()
+                parser.print_usage(file=sys.stderr)
             sys.exit(1)
 
 make_arg_parser = Settings.make_arg_parser  # for Sphinx-argparse
@@ -889,12 +914,12 @@ def write_some_html(body, outfile, html_header, html_footer, title=None):
 
     if outfile=='-':
         sys.stdout.write(content.encode("utf-8"))
-        warn("Output written to stdout.")
+        log("Output written to stdout.")
     else:
         file = codecs.open(outfile, mode="w", encoding="utf-8")
         file.write(content)
         file.close()
-        warn("Output written to %s." % outfile)
+        progress("Output written to %s." % outfile)
 
 
 def flexible_html_regex(r):  # To Do: request non-HTML output from Zotero instead
@@ -1711,8 +1736,7 @@ class DBInstance:
                 log("Loading: %s" % library_id)
 
         except zotero_errors.UserNotAuthorised:
-            warn("UserNotAuthorised: Set correct Zotero API key in settings.py for library ID %s." % library_id,
-                  file=sys.stderr)
+            error("UserNotAuthorised: Set correct Zotero API key in settings.py for library ID %s." % library_id)
             raise SystemExit(1)
 
         return self
@@ -1752,7 +1776,7 @@ class DBInstance:
             return colls
 
         except zotero_errors.UserNotAuthorised:
-            warn("UserNotAuthorised: Set correct Zotero API key in settings.py and allow access.", file=sys.stderr)
+            error("UserNotAuthorised: Set correct Zotero API key in settings.py and allow access.")
             raise SystemExit(1)
 
     def retrieve_x(self, collection, **args):
@@ -1903,9 +1927,9 @@ class DBInstance:
                         f.write(self.zot.file(item.key))
                     return fn  # default
                 except ValueError:
-                    warn("Failed to save file %s into %s (%s), content type %s." % (
+                    error("Failed to save file %s into %s (%s), content type %s." % (
                     item.filename, outfile, item.key, item.contentType))
-                    warn("    Error in Pyzotero.")
+                    error("    Error in Pyzotero.")
                 return None
 
             # an odd convention: if it's HTML, it's a "snapshot", and .zip is required
@@ -1934,7 +1958,7 @@ class DBInstance:
                         os.remove(outfile)
                     except zipfile.BadZipfile:
                         # use default filename
-                        warn("Failed to deflate ZIP archive %s (%s)" % (item.filename, item.key))
+                        error("Failed to deflate ZIP archive %s (%s)" % (item.filename, item.key))
                         item.saved_filename = item.filename  # rename
                         os.rename(outfile, os.path.join(p, item.saved_filename))
                         pass
@@ -2271,7 +2295,7 @@ def generate_html(include, item_filters=[]):
                 sortedkeys = list(
                     filter(lambda e: (not collobj.key in [e.key] + ([] if top_level_only else e.parents)), sortedkeys))
             if not collobjs:
-                warn("Exclude: Collection %s not found." % coll)
+                error("Exclude: Collection %s not found." % coll)
         elif func == 'rename':
             coll, name = args
             for collobj in Coll.findSimilar(coll):
@@ -2285,7 +2309,7 @@ def generate_html(include, item_filters=[]):
             for collobj in collobjs:
                 collobj.specials += symb
             if not collobjs:
-                warn("Special %s: Collection %s not found." % (symb, coll))
+                error("Special %s: Collection %s not found." % (symb, coll))
 
     all_items, item_ids = retrieve_all_items(sortedkeys)
 
@@ -2294,7 +2318,7 @@ def generate_html(include, item_filters=[]):
             r = filter(item)
             return not r
         except Exception as e:
-            warn("Error while applying exclude_items filter: ", e)
+            error("Error while applying exclude_items filter: ", e)
         return False
 
     for f in item_filters:
