@@ -2002,7 +2002,7 @@ def detect_and_merge_doubles(items):
         elif atl in titles:
             for t in titles[atl]:
                 if a.date == t.date:
-                    if set(lastnames(a.creators)) == set(lastnames(t.creators)):
+                    if a.creators==t.creators or a.creators and t.creators and set(lastnames(a.creators)) == set(lastnames(t.creators)):
                         merge(a, iids[t.key])
                         break
                         # We're showing warnings for almost-equal items later
