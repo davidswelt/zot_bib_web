@@ -1512,11 +1512,11 @@ def make_header_htmls(all_items):
 entry_count = 0
 
 
-def div(cls=None, content="", style=None):
+def div(cls=None, content="", style=None, tag="div"):
     "Helper that creates a HTML DIV element."
     s = u' style="%s"' % style if style else u''
     c = u' class="%s"' % cls if cls else u''
-    return u'<div%s%s>%s</div>' % (c, s, content)
+    return u'<%s%s%s>%s</%s>' % (tag, c, s, content, tag)
 
 
 def make_html(all_items, exclude={}, shorten=False):
@@ -1666,6 +1666,8 @@ def make_html(all_items, exclude={}, shorten=False):
                                 bi = a_button('%s' % style.upper()) + div('bibshowhide',
                                                                           div('cite', item.txtstyle[style]))
                         else:
+                            bi = str(sl)
+                            blinkitem += div('blink', div('label', bi, tag="span"))
                             continue
                         blinkitem += div('blink', bi)
 
