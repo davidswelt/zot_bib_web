@@ -783,6 +783,7 @@ class ZotItem:
         self.journalAbbreviation = None
         self.conferenceName = None
         self.meetingName = None
+        self.title = "" # client code expects title to be always set.
         self.publicationTitle = None
         self.shortTitle = None
         self.series = None
