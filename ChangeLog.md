@@ -1,3 +1,31 @@
+Changes to Zot_bib_web
+
+https://github.com/davidswelt/zot_bib_web
+
+Author/Contact:
+	Dr. David Reitter, College of Information Sciences & Technology,
+	Penn State
+	reitter@psu.edu
+
+
+zot_bib_web 2.1.0
+-----------------------------------------
+
+- Add --quiet and --verbose arguments and a `verbosity' configuration
+  variable.  Output is now primarily made to stderr.  Other improvements
+  to progress output.
+
+- Links in bib entries are now clickable.
+
+- Fix bugs in connection with empty author and title fields.
+
+- Fix problems with Windows in connection with non-ASCII characters
+
+- Various bugfixes.
+
+-- David Reitter <reitter@psu.edu> 2018-01-04
+
+
 zot_bib_web 2.0.4
 -----------------------------------------
 

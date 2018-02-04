@@ -13,6 +13,15 @@ Documentation
 
 http://zot-bib-web.readthedocs.io/
 
+
+Author/Contact:
+-------------
+
+Dr. David Reitter, College of Information Sciences & Technology,
+Penn State
+reitter@psu.edu
+
+
 Features
 --------
 
@@ -219,10 +228,3 @@ Follow these steps:
    details about your WP installation.
 7. Run push.py regularly or on demand. It will call zot.py automatically
    and then update the page in WP.
-
-
-Author
-------
-
-David Reitter, Penn State
-david.reitter@gmail.com
