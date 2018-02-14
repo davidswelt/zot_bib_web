@@ -306,12 +306,16 @@ class Settings:
             # from settings import *
             settings = imp.load_source("settings", loadfile)
             # import settings into local namespace:
+            unknown_symbols = []
             for k, v in settings.__dict__.items():
                 if not "__" in k:  # even if default is not defined (e.g., function definitions for content_filter)
                     if not k in globals() and not callable(v):  # functions are usually harmless.
-                        warning("Settings file defines %s.  Not a configuration symbol." % k)
+                        unknown_symbols += [k]
                     globals()[k] = v
                     # print(k,v)
+            if unknown_symbols:
+                warning("Settings file sets unknown configuration symbol%s %s." % ("s" if len(unknown_symbols)>1 else "", ", ".join(unknown_symbols)))
+
             progress("Loaded settings from %s." % os.path.abspath(loadfile))
 
         except ImportError:
