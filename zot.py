@@ -763,10 +763,21 @@ def index_configuration():
     if not language_code in sortkeyname_order:
         language_code = 'en'  # fallback - should be present.
 
+    def enumerate_by_value(kv_list):
+        "Enumerate items in a k,v list; identical values will have same numbers."
+        # Users might reuse section titles and we want to sort within whole sections.
+        count=0
+        d={}
+        for k,v in kv_list:
+            if v not in d:
+                d[v] = count
+                count += 1
+            yield d[v], k, v
+        
     # use val as default if it is given as None
     sortkeyname_dict = {
-    key: {val: ("%03d" % idx, mappedVal or val) for idx, (val, mappedVal) in enumerate(list(the_list))} for
-    key, the_list in sortkeyname_order[language_code].items()}
+      key: {val: ("%03d" % idx, mappedVal or val) for idx, val, mappedVal in enumerate_by_value(list(the_list))} for
+           key, the_list in sortkeyname_order[language_code].items()}
 
 
 class ZotItem:
