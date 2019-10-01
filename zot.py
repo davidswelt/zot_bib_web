@@ -770,7 +770,7 @@ def index_configuration():
 
 
 class ZotItem:
-    __classversion__ = 5
+    __classversion__ = 7
 
     def __init__(self, entries):
         self.__version__ = ZotItem.__classversion__
@@ -802,6 +802,7 @@ class ZotItem:
         self.ris = None
         self.html = None
         self.coins = None
+        self.plain = None
         self.wikipedia = None
         self.saved_filename = None
         self.attachments = []
@@ -1561,6 +1562,9 @@ def make_html(all_items, exclude={}, shorten=False):
 
                 count += 1
 
+
+                log(item.plain, level=-2)
+
                 htmlitem = item.html
 
                 global show_links
@@ -1895,6 +1899,9 @@ class DBInstance:
             ai.coins = c[i]
             ai.wikipedia = w[i]
             ai.txtstyle = {s: st[i] for s, st in h_style.items()}
+            ai.plain = None
+            if bib_style.lower() in ai.txtstyle:
+                ai.plain = ai.txtstyle[bib_style.lower()]
 
         if not no_cache:
             make_sure_path_exists(os.path.dirname(cache_name))
@@ -1928,6 +1935,7 @@ class DBInstance:
                 # Returns the filename if successful
                 # PyZotero's "dump" is not available until in more recent versions
                 outfile = os.path.join(p, fn)
+
                 # uses zot
                 try:
                     with open(outfile, 'wb') as f:
