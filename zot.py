@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding: utf-8
 
 """Add a fast, interactive Zotero bibiography to your website.
