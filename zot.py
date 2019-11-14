@@ -21,7 +21,7 @@
 # The file settings.py is loaded by default, if present.
 # See settings_example.py for documentation.
 
-# (C) 2014,2015,2016,2017 David Reitter, The Pennsylvania State University
+# (C) 2014,2015,2016,2017,2019 David Reitter
 # Released under the GNU General Public License, V.3 or later.
 
 # For usage, see:   zot.py --help
@@ -291,7 +291,6 @@ import base64
 import os
 
 from collections import namedtuple, defaultdict
-
 import argparse
 
 class Settings:
@@ -300,11 +299,17 @@ class Settings:
     @staticmethod
     def load_settings(file=None):
         try:
-            import imp
-
             loadfile = file or "settings.py"
             # from settings import *
-            settings = imp.load_source("settings", loadfile)
+            try:
+                import importlib
+                settings = importlib.machinery.SourceFileLoader("settings", loadfile).load_module()
+            except AttributeError,ImportError:
+                # Python 2.7
+                import imp
+                settings = imp.load_source("settings", loadfile)
+                
+
             # import settings into local namespace:
             unknown_symbols = []
             for k, v in settings.__dict__.items():
@@ -427,6 +432,48 @@ class Settings:
 
 make_arg_parser = Settings.make_arg_parser  # for Sphinx-argparse
 ###########
+
+
+def flexible_html_regex(r):  # To Do: request non-HTML output from Zotero instead
+    r = re.escape(r)
+    r = r.replace("\\&", r"(&amp;|\\&)")
+    r = r.replace("\\<", r"(&lt;|\\<)")
+    r = r.replace("\\>", r"(&gt;|\\>)")
+    r = r.replace(" ", r"\s+")
+    r = r.replace(u" ", r"[\s ]+")  # repl string was "ur" - todo: check
+    return r
+
+def url_regex(prefix=""):
+    """Regex for matching URLs.
+Copied from: https://daringfireball.net/2010/07/improved_regex_for_matching_urls
+"""
+    return r"(?xi)" + prefix + r"""
+\b
+(							# Capture 1: entire matched URL
+  (?:
+    [a-z][\w-]+:				# URL protocol and colon
+    (?:
+      /{1,3}						# 1-3 slashes
+      |								#   or
+      [a-z0-9%]					# Single letter or digit or '%'
+      								# (Trying not to match e.g. "URI::Escape")
+    )
+    |							#   or
+    www\d{0,3}[.]				# "www.", "www1.", "www2." … "www999."
+    |							#   or
+    [a-z0-9.\-]+[.][a-z]{2,4}/	# looks like domain name followed by a slash
+  )
+  (?:							# One or more:
+    [^\s()<>]+						# Run of non-space, non-()<>
+    |								#   or
+    \(([^\s()<>]+|(\([^\s()<>]+\)))*\)	# balanced parens, up to 2 levels
+  )+
+  (?:							# End with:
+    \(([^\s()<>]+|(\([^\s()<>]+\)))*\)	# balanced parens, up to 2 levels
+    |									#   or
+    [^\s`!()\[\]{};:'".,<>?«»“”‘’]		# not a space or one of these punct char
+  )
+)"""
 
 def cleanup_lines(string):
     "Remove double line feeds to protect from <P> insertion in Wordpress."
@@ -639,8 +686,12 @@ except ImportError:
     pass
 
 
-def basicparse(value):
-    "Parse a date.  Cheap substitute for dateutil.parser. Returns a sortable string."
+def parse_date(value):
+    """Parse a date in English.
+    Cheap substitute for dateutil.parser. 
+  
+    Returns: a tuple of a sortable value and a year (int)."""
+    
     value = re.sub(r'(\s|\.|st|nd|rd|th|,)', '-', value)
     value = value.replace('--', '-')
     year = value
@@ -699,9 +750,9 @@ def sortkeyname(field, value):
                 sort_prefix = dt.isoformat()
                 value = str(dt.year)
             except ValueError:  # dateutil couldn't do it
-                sort_prefix, value = basicparse(value)
+                sort_prefix, value = parse_date(value)
         else:
-            sort_prefix, value = basicparse(value)
+            sort_prefix, value = parse_date(value)
 
     if field in sortkeyname_dict:
         if value in sortkeyname_dict[field]:
@@ -939,14 +990,6 @@ def write_some_html(body, outfile, html_header, html_footer, title=None):
         progress("Output written to %s." % outfile)
 
 
-def flexible_html_regex(r):  # To Do: request non-HTML output from Zotero instead
-    r = re.escape(r)
-    r = r.replace("\\&", r"(&amp;|\\&)")
-    r = r.replace("\\<", r"(&lt;|\\<)")
-    r = r.replace("\\>", r"(&gt;|\\>)")
-    r = r.replace(" ", r"\s+")
-    r = r.replace(u" ", r"[\s ]+")  # repl string was "ur" - todo: check
-    return r
 
 
 def tryreplacing(source, strings, repl):
@@ -1596,10 +1639,7 @@ def make_html(all_items, exclude={}, shorten=False):
 
                     if not new == htmlitem:  # replacement successful
                         # remove "Retrieved from"
-                        # URL detector from http://daringfireball.net/2010/07/improved_regex_for_matching_urls
-                        new = re.sub(
-                            r"Retrieved from (?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?]))",
-                            "", new)
+                        new = re.sub(url_regex(prefix="Retrieved from "), "", new)
                         # this is the new item
                         htmlitem = new
                 else:
