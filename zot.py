@@ -77,6 +77,7 @@ show_shortcuts = ['collection']
 #: List of Links.
 #: Possible values: ``'abstract', 'url', 'BIB', 'Wikipedia', 'EndNote', 'RIS', 'MLA', 'Cite.MLA', 'Cite.APA', 'Cite.<STYLE>'``
 show_links = ['abstract', 'url', 'BIB', 'Wikipedia', 'EndNote']
+file_link_button_label = "PDF"  #: Set to None for label specific to the document (link, PS, PDF)
 
 
 omit_COinS = False #: If True, do not include COInS metadata
@@ -1598,6 +1599,8 @@ def make_html(all_items, exclude={}, shorten=False):
             cls, title, url, js, (name if smart_selections else name))
 
     def button_label_for_object(obj, default):
+        if file_link_button_label:
+            return file_link_button_label  # always use, e.g., "PDF"
         if re.search(r'\.pdf$', obj, re.IGNORECASE):
             n = 'PDF'
         elif re.search(r'\.docx?$', obj, re.IGNORECASE):
