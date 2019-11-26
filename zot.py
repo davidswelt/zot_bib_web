@@ -305,7 +305,7 @@ class Settings:
             try:
                 import importlib
                 settings = importlib.machinery.SourceFileLoader("settings", loadfile).load_module()
-            except AttributeError,ImportError:
+            except (AttributeError, ImportError):
                 # Python 2.7
                 import imp
                 settings = imp.load_source("settings", loadfile)
