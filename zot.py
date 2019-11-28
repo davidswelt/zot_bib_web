@@ -998,11 +998,15 @@ def tryreplacing(source, strings, repl):
 def urlize(text):
     """
     Convert any URLs in text into clickable links.
+    Also turn any DOIs into links.
     """
     mexp = r'(?<=[^"\'])(((?:https?|ftp)://)(?:\S+(?::\S*)?@)?(?:(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]+-?)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]+-?)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:/[^\s<]*)?)'
-    #    for m in re.finditer(mexp, text):
-    #       print(m.group(1))
+    doiexp = r'(doi:\s?(10\.\d{4,9}/[-._;()/:A-Z0-9]+|10.1002/[^\s]+|10.\d{4}/\d+-\d+X?(\d+)\d+<[\d\w]+:[\d\w]*>\d+.\d+.\w+;\d|10.1021/\w\w\d+|10.1207/[\w\d]+\&\d+_\d+))'
+    
     text = re.sub(mexp, r'<a href="\1">\1</a>', text)
+    text = re.sub(r'doi:doi', r'doi', text)  # Cleanup of some common errors (in source data).
+    text = re.sub(r'doi://', r'doi:', text)
+    text = re.sub(doiexp, r'<a href="http://doi.org/\2">\1</a>', text, flags=re.IGNORECASE)
     return text
 
 
@@ -1039,7 +1043,9 @@ def collname_split(name):  # returns sort_prefix,modifiers,value
     return "", "", name
 
 
-class Coll:  # To do: use collection objects and collection path objects instead of key strings and lists thereof.
+# TODO(reitter): Use collection objects and collection path objects instead of key strings and lists thereof.
+
+class Coll:
     collection_info = {}
 
     @staticmethod
@@ -1615,45 +1621,44 @@ def make_html(all_items, exclude={}, shorten=False):
                 htmlitem = item.html
 
                 global show_links
-                show_items = show_links  # not a copy
+                show_items = show_links  # Not a copy.
                 t = item.title
                 u = None
                 if item.url:
                     u = item.url
 
-                t2 = t.replace(u"'", u'’')  # technically, we're going to have to do much more (or do a flexible match)
+                t2 = t.replace(u"'", u'’')  # Technically, we're going to have to do much more (or do a flexible match).
                 t_to_replace = ["<i>" + t + "</i>.", "<i>" + t2 + "</i>.", "<i>" + t + "</i>", "<i>" + t2 + "</i>",
                                 t + ".", t2 + ".", t, t2]
                 if u:
-                    # note: insert space before doctitle for copy/paste behavior
+                    # Note: insert space before doctitle for copy/paste behavior.
                     new = tryreplacing(htmlitem, t_to_replace,
                                        u"<span class=\"doctitle\"><a class=\"doctitle\" href=\"%s\">%s</a></span>" % (
                                            u, "\\0"))
 
-                    if not new == htmlitem:  # replacement successful
-                        # remove "Retrieved from"
+                    if not new == htmlitem:  # Replacement successful.
+                        # Remove "Retrieved from":
                         new = re.sub(url_regex(prefix="Retrieved from "), "", new)
-                        # this is the new item
-                        htmlitem = new
+                        htmlitem = new  # This is the new item.
                 else:
                     htmlitem = tryreplacing(htmlitem, t_to_replace, u"<span class=\"doctitle\">%s</span>" % ("\\0"))
 
                 if item.extra:
                     htmlitem += div('bib-extra', item.extra)
 
-                # links
+                # Links:
                 htmlitem = urlize(htmlitem)
 
-                # Insert searchable keywords (not displayed)
+                # Insert searchable keywords (not displayed).
                 search_tags = ''
                 if item.section_keyword:
-                    search_tags += " ".join(item.section_keyword)  # no special tag for collections
-                search_tags += " year__" + item.access('year')  # no search by date
+                    search_tags += " ".join(item.section_keyword)  # No special tag for collections.
+                search_tags += " year__" + item.access('year')  # No search by date.
                 if item.venue_short():
                     search_tags += " venue_short__" + item.venue_short()
                 if item.type:
                     search_tags += " type__" + item.type
-                search_tags += ' "' + '" "'.join(item.getTags()) + '"'  # no special tag for collections
+                search_tags += ' "' + '" "'.join(item.getTags()) + '"'  # No special tag for collections.
 
                 htmlitem += "<span class='bib-kw' style='display:none;'>%s</span>" % search_tags
 
@@ -1726,7 +1731,7 @@ def make_html(all_items, exclude={}, shorten=False):
                     if not omit_COinS and item.coins:
                         blinkitem += ("%s" % item.coins).strip()
 
-                    if shorten:  # to do - consider moving this to the CSS
+                    if shorten:  # TODO(reitter): Consider moving this to the CSS.
                         blinkitem = div(None, blinkitem)  # , style="padding-left:20px;")
 
                     htmlitem += div('blinkitems', blinkitem)
@@ -1870,7 +1875,7 @@ class DBInstance:
             for fil in ['bib', 'html', 'ris', 'coins', 'wikipedia']:
                 if hasattr(ai, fil):
                     setattr(ai, fil, cfilter(ai, fil, getattr(ai, fil)))
-                    # to do: txtstyle
+                    # TODO(reitter): txtstyle.
         return a
 
     def retrieve_data_cached(self, collection_id, exclude=None):
@@ -2235,7 +2240,7 @@ def pull_up_featured_remove_hidden_colls(all_items):
     # E.g., "selected works" might not be shown at the top of the bibliography,
     # but you still might filter for it.
 
-    hidden_categories = defaultdict(set)  # to do, use multi dict
+    hidden_categories = defaultdict(set)  # TODO(reitter): use multi dict.
     for it in all_items:
         if Coll.is_hidden_collection(it.collection) and not it.section_keyword in hidden_categories[it.key]:
             hidden_categories[it.key].update(it.section_keyword)
@@ -2275,7 +2280,7 @@ def section_generator(items, crits):
     collect = []
     prev_section = ""
     prev_crits_sec = ""
-    # crit = crits[0]  ## TO DO:  section headings for all sort criteria
+    # crit = crits[0]  ## TODO(reitter): Section headings for all sort criteria.
     crits_sec = []
     section = []
 
@@ -2283,15 +2288,15 @@ def section_generator(items, crits):
         cum_new_section = []
         do_rem = False
         for p, n in zip_longest(prev_section, section, fillvalue=None):
-            cum_new_section = cum_new_section + [n]  # make copy to preserve previous entries
-            if n and (p != n or do_rem):  # level is different
+            cum_new_section = cum_new_section + [n]  # Make copy to preserve previous entries.
+            if n and (p != n or do_rem):  # Level is different.
                 yield cum_new_section
                 do_rem = True
 
     for item_tuple in items:
         item = item_tuple
-        # construct section path identifier
-        # also, make matching criterion identifier
+        # Construct section path identifier.
+        # Also, make matching criterion identifier.
 
         section = []
         crits_sec = []
@@ -2300,18 +2305,18 @@ def section_generator(items, crits):
             section = list(Coll.get_featured_collections(item.collection))
             crits_sec += ['collection'] * len(section)
         else:
-            # Then, everything is organized according to the sort criteria
+            # Then, everything is organized according to the sort criteria.
             for crit in crits[:show_top_section_headings]:
                 val = item.access(crit)
-                if not crit == 'collection':  # for collections, need to preserve ID (will be converted later)
-                    # for everything else we want to aggregate bib items based on the display title of the section
-                    # that way, some sections can be unified via sortkeyname, or years can be used for dates
+                if not crit == 'collection':  # For collections, need to preserve ID (will be converted later).
+                    # For everything else we want to aggregate bib items based on the display title of the section
+                    # that way, some sections can be unified via sortkeyname, or years can be used for dates.
                     _sortkey, val = sortkeyname(crit, val)
-                if is_string(val):  # basic fields
+                if is_string(val):  # Basic fields.
                     section += [val]
                     crits_sec += [crit]
                 elif hasattr(val, '__iter__'):  # collection paths (val is a list)
-                    section += val  # flat concat
+                    section += val  # Flat concat.
                     crits_sec += [crit] * len(val)
 
         # section = item.access(crit)
@@ -2320,11 +2325,11 @@ def section_generator(items, crits):
             if changed_sections:
                 if len(collect) > 0:
                     yield prev_section, prev_crits_sec, collect
-                # new section, show a section header.  add as separate item.
-                # add a header for every level that has changed
-                # except for the last one - that'll come with the next set of items
+                # New section, show a section header.  Add as separate item.
+                # Add a header for every level that has changed,
+                # except for the last one - that'll come with the next set of items.
                 for s in changed_sections:  # [:-1]:
-                    if not s == section:  # because that would be the heading for the next set of items.
+                    if not s == section:  # Because that would be the heading for the next set of items.
                         yield s, crits_sec[:len(s)], []
 
                 collect = []
