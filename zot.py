@@ -296,8 +296,8 @@ class Settings:
     
     @staticmethod
     def load_settings(file=None):
+        loadfile = file or "settings.py"
         try:
-            loadfile = file or "settings.py"
             # from settings import *
             try:
                 import importlib
@@ -323,21 +323,14 @@ class Settings:
 
         except ImportError:
             pass
-        except OSError as e:  # no settings file
-            if e.errno == errno.ENOENT and file:
-                error("%s file not found." % file)
-                sys.exit(1)
-            else:
-                error("%s file could not be read or processed." % loadfile)
-                raise e
-        except IOError as e:  # no settings file
-            if e.errno == errno.ENOENT:
-                if file:
-                    error("%s file not found." % file)
+        except (OSError, IOError) as e:  # no settings file
+            if file:
+                if e.errno == errno.ENOENT:
+                    error("%s file (--settings) not found." % file)
                     sys.exit(1)
-            else:
-                error("%s file could not be read or processed." % loadfile)
-                raise e
+                else:
+                    error("%s file (--settings) could not be read or processed (IOError)." % loadfile)
+                    raise e
 
     @staticmethod
     def make_arg_parser():
