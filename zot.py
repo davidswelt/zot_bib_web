@@ -2,29 +2,26 @@
 # coding: utf-8
 
 """Add a fast, interactive Zotero bibiography to your website.
+
+This tool will retrieve a set of collections and format an interactive
+bibliography in HTML5.  The bibliography contains BibTeX records and
+abstracts that can be revealed upon clicking.  The output is ready
+to be included in other websites (there are options), and it can be
+easily styles using CSS (see style.css).
+
+The primary way to configure a web bibliography is via a settings file.
+The file settings.py is loaded by default, if present.
+See settings_example.py for documentation.
+
+Latest versions: https://github.com/davidswelt/zot_bib_web
+
+Documentation: http://zot-bib-web.readthedocs.io 
+
+(C) 2014,2015,2016,2017,2019 David Reitter
+Released under the GNU General Public License, V.3 or later.
+
+For usage, see:   zot.py --help
 """
-
-
-# Written by David Reitter.
-# Latest versions: https://github.com/davidswelt/zot_bib_web
-
-# Documentation: http://zot-bib-web.readthedocs.io
- 
-
-# This tool will retrieve a set of collections and format an interactive
-# bibliography in HTML5.  The bibliography contains BibTeX records and
-# abstracts that can be revealed upon clicking.  The output is ready
-# to be included in other websites (there are options), and it can be
-# easily styles using CSS (see style.css).
-
-# The primary way to configure a web bibliography is via a settings file.
-# The file settings.py is loaded by default, if present.
-# See settings_example.py for documentation.
-
-# (C) 2014,2015,2016,2017,2019 David Reitter
-# Released under the GNU General Public License, V.3 or later.
-
-# For usage, see:   zot.py --help
 
 # zot_bib_web
 
