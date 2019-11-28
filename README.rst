@@ -17,10 +17,8 @@ http://zot-bib-web.readthedocs.io/
 Author/Contact:
 -------------
 
-Dr. David Reitter, College of Information Sciences & Technology,
-Penn State
-reitter@psu.edu
-
+David Reitter -- david.reitter@gmail.com
+http://www.david-reitter.com
 
 Features
 --------
@@ -56,10 +54,11 @@ Demo
    are included.
 
 -  Run::
-     
+
      ./zot.py --settings demo/settings3.py
 
    to see it in action.
+
 
 License and Donations
 ---------------------
@@ -69,9 +68,8 @@ License and Donations
 -  Please e-mail david.reitter@gmail.com a link to the bibliography on
    your website if you decide to use zot\_bib\_web.
 
--  You may use this software for free. A donation is suggested, either
-   via Bitcoin (1CsboLGieSnxWeVC4dFZjBGPQEn5Uyfsia) or with a credit
-   card at http://aquamacs.org/donate
+-  You may use this software for free.
+
 
 Requirements
 ------------
@@ -127,15 +125,15 @@ Bibliography in Zotero
 Here's an example of a bibliography structure::
 
     My Publications [MGID90AT]
-        10 Selected Works
-        15 In Preparation / Under Review
-        20 Refereed Works by Topic
-            Semantics
-            Parsing
-            Dialogue
-            Machine Learning
-        30 Theses
-        40 Talks (Without Paper)
+	10 Selected Works
+	15 In Preparation / Under Review
+	20 Refereed Works by Topic
+	    Semantics
+	    Parsing
+	    Dialogue
+	    Machine Learning
+	30 Theses
+	40 Talks (Without Paper)
 
 To see this, use the provided settings.py as an example.
 
