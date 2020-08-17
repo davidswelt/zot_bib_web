@@ -2046,8 +2046,8 @@ def detect_and_merge_doubles(items):
         a.uniqueID = b.uniqueID
 
     # get last names of all creators.  exclude editors unless editors is all we have
-    lastnames = lambda creators: [c['lastName'] for c in creators if not c['creatorType'] == 'editor'] or \
-                                 [c['lastName'] for c in creators]
+    lastnames = lambda creators: [c.get('lastName', c.get('name')) for c in creators if not c['creatorType'] == 'editor'] or \
+                                 [c.get('lastName', c.get('name')) for c in creators]
 
     uniqueID = 0
     for a in items:
